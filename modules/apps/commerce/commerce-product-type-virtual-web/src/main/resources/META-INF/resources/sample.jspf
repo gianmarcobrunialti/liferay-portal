@@ -62,12 +62,10 @@
 </div>
 
 <aui:script use="liferay-item-selector-dialog">
-	var sampleFileEntryRemove = $('#<portlet:namespace />sampleFileEntryRemove');
-	var sampleFileEntryNameInput = $(
-		'#<portlet:namespace />sampleFileEntryNameInput'
-	);
+	var sampleFileEntryRemove = window.document.querySelector('#<portlet:namespace />sampleFileEntryRemove');
+	var sampleFileEntryNameInput = window.document.querySelector('#<portlet:namespace />sampleFileEntryNameInput');
 
-	$('#<portlet:namespace />selectSampleFile').on('click', function (event) {
+	window.document.querySelector('#<portlet:namespace />selectSampleFile').addEventListener('click', function (event) {
 		event.preventDefault();
 
 		var itemSelectorDialog = new A.LiferayItemSelectorDialog({
@@ -79,19 +77,17 @@
 					if (selectedItem) {
 						var value = JSON.parse(selectedItem.value);
 
-						$('#<portlet:namespace />sampleFileEntryId').val(
-							value.fileEntryId
-						);
+						window.document.querySelector('#<portlet:namespace />sampleFileEntryId').value = value.fileEntryId;
 
-						$('#<portlet:namespace />sampleUrl').attr('disabled', true);
+						window.document.querySelector('#<portlet:namespace />sampleUrl').setAttribute('disabled', true);
 
-						$(
+						window.document.querySelector(
 							'#lfr-definition-virtual-sample-button-row-message'
-						).addClass('hide');
+						).classList.add('hide');
 
-						sampleFileEntryRemove.removeClass('hide');
+						sampleFileEntryRemove.classList.remove('hide');
 
-						sampleFileEntryNameInput.html('<a>' + value.title + '</a>');
+						sampleFileEntryNameInput.innerHTML = '<a>' + value.title + '</a>';
 					}
 				},
 			},
@@ -103,22 +99,22 @@
 		itemSelectorDialog.open();
 	});
 
-	$('#<portlet:namespace />sampleFileEntryRemove').on('click', function (event) {
+	window.document.querySelector('#<portlet:namespace />sampleFileEntryRemove').addEventListener('click', function (event) {
 		event.preventDefault();
 
 		var useSampleCheckbox = A.one('#<portlet:namespace />useSample');
 
 		if (useSampleCheckbox.attr('checked')) {
-			$('#<portlet:namespace />sampleUrl').attr('disabled', false);
+			window.document.querySelector('#<portlet:namespace />sampleUrl').setAttribute('disabled', false);
 		}
 
-		$('#<portlet:namespace />sampleFileEntryId').val(0);
+		window.document.querySelector('#<portlet:namespace />sampleFileEntryId').value = 0;
 
-		$('#lfr-definition-virtual-sample-button-row-message').removeClass('hide');
+		window.document.querySelector('#lfr-definition-virtual-sample-button-row-message').classList.remove('hide');
 
-		sampleFileEntryNameInput.html('<liferay-ui:message key="none" />');
+		sampleFileEntryNameInput.innerHTML = '<liferay-ui:message key="none" />';
 
-		sampleFileEntryRemove.addClass('hide');
+		sampleFileEntryRemove.classList.add('hide');
 	});
 </aui:script>
 
