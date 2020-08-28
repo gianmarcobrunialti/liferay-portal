@@ -222,14 +222,19 @@ Map<String, String> contextParams = HashMapBuilder.<String, String>put(
 </div>
 
 <%
-String shippingTaxCategoryId = StringPool.BLANK;
+String shippingTaxCategoryJSON = StringPool.DOUBLE_APOSTROPHE;
 String shippingTaxCategoryLabel = LanguageUtil.get(request, "no-tax-category");
 
 CPTaxCategory shippingTaxCategory = commerceChannelDisplayContext.getActiveShippingTaxCategory();
 
 if (shippingTaxCategory != null) {
-	shippingTaxCategoryId = String.valueOf(shippingTaxCategory.getCPTaxCategoryId());
-	shippingTaxCategoryLabel = shippingTaxCategory.getName(locale);
+	JSONObject jsonObject = JSONUtil.put("id", shippingTaxCategory.getCPTaxCategoryId());
+
+	JSONObject nameJsonObject = JSONUtil.put(locale.toString(), shippingTaxCategory.getName(locale));
+
+	jsonObject.put("name", nameJsonObject);
+
+	shippingTaxCategoryJSON = jsonObject.toJSONString();
 }
 %>
 
@@ -237,7 +242,7 @@ if (shippingTaxCategory != null) {
 	autocomplete.default('autocomplete', 'autocomplete-root', {
 		apiUrl: '/o/headless-commerce-admin-channel/v1.0/tax-categories',
 		initialLabel: '<%= shippingTaxCategoryLabel %>',
-		initialValue: '<%= shippingTaxCategoryId %>',
+		initialValue: <%= shippingTaxCategoryJSON %>,
 		inputId: 'shippingTaxCategoryId',
 		inputName:
 			'<%= liferayPortletResponse.getNamespace() %>shippingTaxSettings--taxCategoryId--',
