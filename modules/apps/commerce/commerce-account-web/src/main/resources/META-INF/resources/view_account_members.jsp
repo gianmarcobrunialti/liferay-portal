@@ -19,6 +19,8 @@
 <%
 CommerceAccountDisplayContext commerceAccountDisplayContext = (CommerceAccountDisplayContext)request.getAttribute(WebKeys.PORTLET_DISPLAY_CONTEXT);
 
+long commerceAccountId = commerceAccountDisplayContext.getCurrentCommerceAccountId();
+
 CommerceAccount commerceAccount = commerceAccountDisplayContext.getCurrentCommerceAccount();
 
 Map<String, String> contextParams = HashMapBuilder.<String, String>put(
@@ -32,6 +34,7 @@ portletURL.setParameter(PortletQName.PUBLIC_RENDER_PARAMETER_NAMESPACE + "backUR
 
 <clay:data-set-display
 	contextParams="<%= contextParams %>"
+	creationMenu="<%= commerceAccountDisplayContext.getCreationMenu(renderResponse) %>"
 	dataProviderKey="<%= CommerceAccountUserClayDataSetDataSetDisplayView.NAME %>"
 	id="<%= CommerceAccountUserClayDataSetDataSetDisplayView.NAME %>"
 	itemsPerPage="<%= 10 %>"
@@ -42,76 +45,40 @@ portletURL.setParameter(PortletQName.PUBLIC_RENDER_PARAMETER_NAMESPACE + "backUR
 />
 
 <c:if test="<%= commerceAccountDisplayContext.hasCommerceAccountModelPermissions(CommerceAccountActionKeys.MANAGE_MEMBERS) %>">
-	<div class="commerce-cta is-visible">
-		<aui:button cssClass="btn-lg js-invite-user" onClick='<%= liferayPortletResponse.getNamespace() + "openUserInvitationModal();" %>' primary="<%= true %>" value="invite-user" />
-	</div>
-
-	<commerce-ui:user-invitation-modal
-		componentId="userInvitationModal"
-	/>
-
+	<%
+		String userInvitationComponentId = "user-invitation" + renderResponse.getNamespace();
+		String themeDisplayTheme = themeDisplay.getTheme();
+		String themeDisplayName = themeDisplayTheme.getName();
+	%>
 	<portlet:actionURL name="inviteUser" var="inviteUserActionURL" />
 
 	<aui:form action="<%= inviteUserActionURL %>" method="post" name="inviteUserFm">
 		<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.ASSIGN %>" />
 		<aui:input name="redirect" type="hidden" value="<%= portletURL %>" />
-		<aui:input name="commerceAccountId" type="hidden" value="<%= commerceAccountDisplayContext.getCurrentCommerceAccountId() %>" />
+		<aui:input name="commerceAccountId" type="hidden" value="<%= commerceAccountId %>" />
 		<aui:input name="userId" type="hidden" />
 		<aui:input name="userIds" type="hidden" />
 		<aui:input name="emailAddresses" type="hidden" />
 	</aui:form>
 
-	<aui:script>
-		Liferay.provide(
-			window,
-			'<portlet:namespace />openUserInvitationModal',
-			function (evt) {
-				var userInvitationModal = Liferay.component('userInvitationModal');
-				userInvitationModal.open();
-			}
-		);
+	<div class="user-invitation" id="<%= userInvitationComponentId %>"></div>
 
+	<aui:script require="commerce-frontend-js/components/user_invitation/entry as UserInvitation">
+		new UserInvitation.default('<%= userInvitationComponentId %>', '<%= userInvitationComponentId %>', {
+			accountId: <%= commerceAccountId %>,
+			cssClasses: '<%= themeDisplayName.toLowerCase() + "-styled" %>',
+			namespace: '<%= renderResponse.getNamespace() %>',
+			spritemap: '<%= themeDisplay.getPathThemeImages() + "/lexicon/icons.svg" %>'
+		});
+	</aui:script>
+
+	<aui:script>
 		Liferay.provide(window, 'removeCommerceAccountUser', function (id) {
 			document.querySelector('#<portlet:namespace /><%= Constants.CMD %>').value =
 				'<%= Constants.REMOVE %>';
 			document.querySelector('#<portlet:namespace />userId').value = id;
 
 			submitForm(document.<portlet:namespace />inviteUserFm);
-		});
-
-		Liferay.componentReady('userInvitationModal').then(function (
-			userInvitationModal
-		) {
-			userInvitationModal.on('inviteUserToAccount', function (users) {
-				var existingUsersIds = users
-					.filter(function (el) {
-						return el.userId;
-					})
-					.map(function (usr) {
-						return usr.userId;
-					})
-					.join(',');
-
-				var newUsersEmails = users
-					.filter(function (el) {
-						return !el.userId;
-					})
-					.map(function (usr) {
-						return usr.email;
-					})
-					.join(',');
-
-				document.querySelector(
-					'#<portlet:namespace />userIds'
-				).value = existingUsersIds;
-				document.querySelector(
-					'#<portlet:namespace />emailAddresses'
-				).value = newUsersEmails;
-
-				userInvitationModal.close();
-
-				submitForm(document.<portlet:namespace />inviteUserFm);
-			});
 		});
 	</aui:script>
 </c:if>

@@ -54,6 +54,7 @@ import java.util.List;
 
 import javax.portlet.PortletURL;
 
+import javax.portlet.RenderResponse;
 import javax.servlet.http.HttpServletRequest;
 
 /**
@@ -133,17 +134,14 @@ public class CommerceAccountDisplayContext {
 		return commerceAccountGroupServiceConfiguration.commerceSiteType();
 	}
 
-	public CreationMenu getCreationMenu() throws Exception {
+	public CreationMenu getCreationMenu(RenderResponse renderResponse) {
 		HttpServletRequest httpServletRequest =
 			_commerceAccountRequestHelper.getRequest();
-
-		LiferayPortletResponse liferayPortletResponse =
-			_commerceAccountRequestHelper.getLiferayPortletResponse();
 
 		return CreationMenuBuilder.addDropdownItem(
 			dropdownItem -> {
 				dropdownItem.setHref(
-					liferayPortletResponse.getNamespace() + "invite-users");
+					renderResponse.getNamespace() + "invite-users");
 				dropdownItem.setLabel(
 					LanguageUtil.get(httpServletRequest, "invite-users"));
 				dropdownItem.setTarget("event");

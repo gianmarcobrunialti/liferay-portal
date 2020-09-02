@@ -181,7 +181,7 @@ function UserInvitation({accountId, cssClasses = '', namespace, spritemap}) {
 
 UserInvitation.propTypes = {
 	accountId: PropTypes.number.isRequired,
-	additionalClasses: PropTypes.string,
+	cssClasses: PropTypes.string,
 	namespace: PropTypes.string.isRequired,
 	spritemap: PropTypes.string.isRequired
 };
