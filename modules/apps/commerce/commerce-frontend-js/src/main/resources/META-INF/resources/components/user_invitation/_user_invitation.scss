@@ -1,0 +1,40 @@
+.user-invitation-modal {
+	&-wrapper {
+		min-height: calc(301px - (#{$modal-body-default-padding} * 2));
+		position: relative;
+
+		.quick-action-menu {
+			display: flex;
+		}
+	}
+
+	&-form-group {
+		.validation-feedback {
+			visibility: visible;
+		}
+
+		.required {
+			color: #b95000;
+			margin-left: 3px;
+		}
+
+		&.has-success .validation-feedback {
+			visibility: hidden;
+		}
+	}
+
+	&-spinner {
+		align-items: center;
+		background-color: #fff;
+		display: flex;
+		height: 100%;
+		left: 0;
+		position: absolute;
+		top: 0;
+		width: 100%;
+	}
+}
+
+.autocomplete-dropdown-menu.show {
+	z-index: 1050;
+}

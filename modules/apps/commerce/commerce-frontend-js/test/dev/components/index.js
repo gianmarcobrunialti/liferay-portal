@@ -63,4 +63,9 @@ module.exports = [
 		name: 'Step tracker',
 		page: 'step-tracker.html',
 	},
+	{
+		entry: 'UserInvitation',
+		name: 'User Invitation',
+		page: 'user-invitation.html',
+	}
 ];
