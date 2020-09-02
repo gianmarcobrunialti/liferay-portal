@@ -12,18 +12,13 @@
  * details.
  */
 
-import AdminAccountAPI from './commerce-admin-account/index';
-import AdminCatalogAPI from './commerce-admin-catalog/index';
-import AdminPricingAPI from './commerce-admin-pricing/index';
-import AdminUserAPI from './admin-user/index';
-import DeliveryCartAPI from './commerce-delivery-cart/index';
+import {composeAPI} from '../composeAPI';
+import * as v1 from './v1.0/index';
 
-const ServiceProvider = {
-	AdminAccountAPI,
-	AdminCatalogAPI,
-	AdminPricingAPI,
-	AdminUserAPI,
-	DeliveryCartAPI,
+const BASE_ENDPOINT = '/o/headless-commerce-admin-account/';
+
+const APIs = {
+	v1
 };
 
-export default ServiceProvider;
+export default version => composeAPI(version, APIs, BASE_ENDPOINT);

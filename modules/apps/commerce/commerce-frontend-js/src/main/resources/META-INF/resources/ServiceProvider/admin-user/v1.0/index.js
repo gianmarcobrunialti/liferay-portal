@@ -12,18 +12,4 @@
  * details.
  */
 
-import AdminAccountAPI from './commerce-admin-account/index';
-import AdminCatalogAPI from './commerce-admin-catalog/index';
-import AdminPricingAPI from './commerce-admin-pricing/index';
-import AdminUserAPI from './admin-user/index';
-import DeliveryCartAPI from './commerce-delivery-cart/index';
-
-const ServiceProvider = {
-	AdminAccountAPI,
-	AdminCatalogAPI,
-	AdminPricingAPI,
-	AdminUserAPI,
-	DeliveryCartAPI,
-};
-
-export default ServiceProvider;
+export {default as RoleAPI} from './Role';

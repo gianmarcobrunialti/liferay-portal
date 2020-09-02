@@ -58,14 +58,6 @@ export function getValueFromItem(item, fieldName) {
 	return item[fieldName];
 }
 
-export function excludeFromList(matchingList, againstList) {
-	const matcher = JSON.stringify(matchingList);
-
-	return againstList.filter(
-		(item) => !matcher.includes(JSON.stringify(item))
-	);
-}
-
 export function executeAsyncAction(url, method = 'GET', body = null) {
 	return fetch(url, {
 		...fetchParams,

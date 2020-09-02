@@ -12,18 +12,16 @@
  * details.
  */
 
-import AdminAccountAPI from './commerce-admin-account/index';
-import AdminCatalogAPI from './commerce-admin-catalog/index';
-import AdminPricingAPI from './commerce-admin-pricing/index';
-import AdminUserAPI from './admin-user/index';
-import DeliveryCartAPI from './commerce-delivery-cart/index';
+export function compareLists(matchingList, againstList) {
+	const matcher = JSON.stringify(matchingList);
 
-const ServiceProvider = {
-	AdminAccountAPI,
-	AdminCatalogAPI,
-	AdminPricingAPI,
-	AdminUserAPI,
-	DeliveryCartAPI,
-};
+	return againstList.filter(item => !matcher.includes(JSON.stringify(item)));
+}
 
-export default ServiceProvider;
+export function isEmpty(collection) {
+	const {length} = Array.isArray(collection)
+		? collection
+		: Object.keys(collection);
+
+	return length === 0;
+}

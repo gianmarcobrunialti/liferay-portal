@@ -12,18 +12,16 @@
  * details.
  */
 
-import AdminAccountAPI from './commerce-admin-account/index';
-import AdminCatalogAPI from './commerce-admin-catalog/index';
-import AdminPricingAPI from './commerce-admin-pricing/index';
-import AdminUserAPI from './admin-user/index';
-import DeliveryCartAPI from './commerce-delivery-cart/index';
+import AJAX from '../../../utilities/AJAX/index';
 
-const ServiceProvider = {
-	AdminAccountAPI,
-	AdminCatalogAPI,
-	AdminPricingAPI,
-	AdminUserAPI,
-	DeliveryCartAPI,
-};
+const ROLES_PATH = '/roles';
 
-export default ServiceProvider;
+const VERSION = 'v1.0';
+
+function resolveRolesPath(basePath = '', userId = '') {
+	return `${basePath}${VERSION}${ROLES_PATH}/${userId}`;
+}
+
+export default basePath => ({
+	getRoles: () => AJAX.GET(resolveRolesPath(basePath))
+});

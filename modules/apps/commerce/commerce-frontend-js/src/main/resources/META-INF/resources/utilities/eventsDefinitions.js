@@ -24,6 +24,7 @@ export const CURRENT_PRODUCT_UPDATED = 'current-product-updated';
 export const DATASET_ACTION_PERFORMED = 'data-set-action-performed';
 export const DATASET_DISPLAY_UPDATED = 'data-set-display-updated';
 export const IFRAME_LOADED = 'iframe-loaded';
+export const INVITE_USERS = 'invite-users';
 export const IS_LOADING_MODAL = 'is-loading-modal';
 export const OPEN_MODAL = 'open-modal';
 export const OPEN_SIDE_PANEL = 'open-side-panel';
@@ -45,6 +46,7 @@ export default {
 	DATASET_ACTION_PERFORMED,
 	DATASET_DISPLAY_UPDATED,
 	IFRAME_LOADED,
+	INVITE_USERS,
 	IS_LOADING_MODAL,
 	OPEN_MODAL,
 	OPEN_SIDE_PANEL,

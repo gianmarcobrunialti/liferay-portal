@@ -12,18 +12,23 @@
  * details.
  */
 
-import AdminAccountAPI from './commerce-admin-account/index';
-import AdminCatalogAPI from './commerce-admin-catalog/index';
-import AdminPricingAPI from './commerce-admin-pricing/index';
-import AdminUserAPI from './admin-user/index';
-import DeliveryCartAPI from './commerce-delivery-cart/index';
+import AJAX from '../../../utilities/AJAX/index';
 
-const ServiceProvider = {
-	AdminAccountAPI,
-	AdminCatalogAPI,
-	AdminPricingAPI,
-	AdminUserAPI,
-	DeliveryCartAPI,
-};
+const ACCOUNTS_PATH = '/accounts';
 
-export default ServiceProvider;
+const VERSION = 'v1.0';
+
+function resolveAccountsPath(basePath = '', accountId = '') {
+	return `${basePath}${VERSION}${ACCOUNTS_PATH}/${accountId}`;
+}
+
+export default basePath => ({
+	getAccountMembersByAccountId: accountId =>
+		AJAX.GET(resolveAccountsPath(basePath, accountId)),
+
+	createAccountMembersByAccountId: (accountId, json) =>
+		AJAX.POST(
+			`${resolveAccountsPath(basePath, accountId)}/accountMembers/batch`,
+			json
+		)
+});
