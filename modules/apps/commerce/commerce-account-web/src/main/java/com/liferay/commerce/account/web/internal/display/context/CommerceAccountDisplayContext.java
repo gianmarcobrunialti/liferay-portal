@@ -28,10 +28,13 @@ import com.liferay.commerce.model.CommerceRegion;
 import com.liferay.commerce.service.CommerceAddressService;
 import com.liferay.commerce.service.CommerceCountryService;
 import com.liferay.commerce.service.CommerceRegionService;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -128,6 +131,24 @@ public class CommerceAccountDisplayContext {
 						CommerceAccountConstants.SERVICE_NAME));
 
 		return commerceAccountGroupServiceConfiguration.commerceSiteType();
+	}
+
+	public CreationMenu getCreationMenu() throws Exception {
+		HttpServletRequest httpServletRequest =
+			_commerceAccountRequestHelper.getRequest();
+
+		LiferayPortletResponse liferayPortletResponse =
+			_commerceAccountRequestHelper.getLiferayPortletResponse();
+
+		return CreationMenuBuilder.addDropdownItem(
+			dropdownItem -> {
+				dropdownItem.setHref(
+					liferayPortletResponse.getNamespace() + "invite-users");
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "invite-users"));
+				dropdownItem.setTarget("event");
+			}
+		).build();
 	}
 
 	public CommerceAccount getCurrentCommerceAccount() throws PortalException {
