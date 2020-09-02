@@ -1,4 +1,5 @@
-.minium-frame .btn:not(.btn-unstyled) {
+.minium-frame .btn:not(.btn-unstyled),
+.minium-styled .btn:not(.btn-unstyled) {
 	align-content: center;
 	align-items: center;
 	background: transparent;
