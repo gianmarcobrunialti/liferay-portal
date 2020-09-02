@@ -3,6 +3,10 @@
 		border: none !important;
 		border-radius: 8px;
 		overflow: hidden;
+
+		.nav-item svg {
+			position: absolute;
+		}
 	}
 
 	.table {
