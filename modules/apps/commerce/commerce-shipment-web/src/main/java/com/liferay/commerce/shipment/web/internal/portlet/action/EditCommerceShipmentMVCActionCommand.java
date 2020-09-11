@@ -42,6 +42,8 @@ import javax.portlet.ActionResponse;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
+import static com.liferay.commerce.constants.CommerceShipmentConstants.SHIPMENT_STATUS_PROCESSING;
+
 /**
  * @author Alessio Antonio Rendina
  * @author Alec Sloan
@@ -366,6 +368,10 @@ public class EditCommerceShipmentMVCActionCommand extends BaseMVCActionCommand {
 			actionRequest, "commerceShipmentId");
 
 		int status = ParamUtil.getInteger(actionRequest, "transitionName");
+
+		if (status == SHIPMENT_STATUS_PROCESSING) {
+			return _commerceShipmentService.reprocessShipment(commerceShipmentId);
+		}
 
 		return _commerceShipmentService.updateStatus(
 			commerceShipmentId, status);
