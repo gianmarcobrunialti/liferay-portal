@@ -59,6 +59,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 
+import static com.liferay.commerce.constants.CommerceShipmentConstants.SHIPMENT_STATUS_PROCESSING;
+
 /**
  * @author Alessio Antonio Rendina
  */
@@ -519,6 +521,22 @@ public class CommerceShipmentLocalServiceImpl
 		commerceShipment.setStatus(status);
 
 		if (ArrayUtil.contains(messageShipmentStatuses, status)) {
+			sendShipmentStatusMessage(commerceShipmentId);
+		}
+
+		return commerceShipmentPersistence.update(commerceShipment);
+	}
+
+	@Indexable(type = IndexableType.REINDEX)
+	@Override
+	public CommerceShipment reprocessShipment(long commerceShipmentId) throws PortalException {
+
+		CommerceShipment commerceShipment =
+			commerceShipmentPersistence.findByPrimaryKey(commerceShipmentId);
+
+		commerceShipment.setStatus(SHIPMENT_STATUS_PROCESSING);
+
+		if (ArrayUtil.contains(messageShipmentStatuses, SHIPMENT_STATUS_PROCESSING)) {
 			sendShipmentStatusMessage(commerceShipmentId);
 		}
 

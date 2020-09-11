@@ -409,6 +409,17 @@ public class CommerceShipmentServiceImpl
 			commerceShipmentId, status);
 	}
 
+	@Override
+	public CommerceShipment reprocessShipment(long commerceShipmentId)
+		throws PortalException {
+
+		PortalPermissionUtil.check(
+			getPermissionChecker(),
+			CommerceActionKeys.MANAGE_COMMERCE_SHIPMENTS);
+
+		return commerceShipmentLocalService.reprocessShipment(commerceShipmentId);
+	}
+
 	@ServiceReference(type = CommerceChannelService.class)
 	private CommerceChannelService _commerceChannelService;
 
