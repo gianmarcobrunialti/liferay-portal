@@ -103,6 +103,7 @@ public class ProcessingCommerceShipmentItemDataSetActionProvider
 						shipmentItem.getShipmentItemId(), httpServletRequest));
 				dropdownItem.setLabel(
 					LanguageUtil.get(httpServletRequest, "delete"));
+				dropdownItem.setTarget("modal");
 			}
 		).build();
 	}
