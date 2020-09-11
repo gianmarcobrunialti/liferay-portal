@@ -14,6 +14,8 @@
 
 package com.liferay.commerce.shipment.web.internal.portlet.action;
 
+import static com.liferay.commerce.constants.CommerceShipmentConstants.SHIPMENT_STATUS_PROCESSING;
+
 import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.exception.CommerceShipmentItemQuantityException;
 import com.liferay.commerce.exception.CommerceShipmentShippingDateException;
@@ -41,8 +43,6 @@ import javax.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import static com.liferay.commerce.constants.CommerceShipmentConstants.SHIPMENT_STATUS_PROCESSING;
 
 /**
  * @author Alessio Antonio Rendina
@@ -370,7 +370,8 @@ public class EditCommerceShipmentMVCActionCommand extends BaseMVCActionCommand {
 		int status = ParamUtil.getInteger(actionRequest, "transitionName");
 
 		if (status == SHIPMENT_STATUS_PROCESSING) {
-			return _commerceShipmentService.reprocessShipment(commerceShipmentId);
+			return _commerceShipmentService.reprocessShipment(
+				commerceShipmentId);
 		}
 
 		return _commerceShipmentService.updateStatus(
