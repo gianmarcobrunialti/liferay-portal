@@ -995,6 +995,46 @@ public class CommerceShipmentServiceHttp {
 		}
 	}
 
+	public static com.liferay.commerce.model.CommerceShipment reprocessShipment(
+			HttpPrincipal httpPrincipal, long commerceShipmentId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				CommerceShipmentServiceUtil.class, "reprocessShipment",
+				_reprocessShipmentParameterTypes22);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, commerceShipmentId);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception exception) {
+				if (exception instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						exception;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					exception);
+			}
+
+			return (com.liferay.commerce.model.CommerceShipment)returnObj;
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException
+					systemException) {
+
+			_log.error(systemException, systemException);
+
+			throw systemException;
+		}
+	}
+
 	private static Log _log = LogFactoryUtil.getLog(
 		CommerceShipmentServiceHttp.class);
 
@@ -1084,5 +1124,7 @@ public class CommerceShipmentServiceHttp {
 		};
 	private static final Class<?>[] _updateStatusParameterTypes21 =
 		new Class[] {long.class, int.class};
+	private static final Class<?>[] _reprocessShipmentParameterTypes22 =
+		new Class[] {long.class};
 
 }

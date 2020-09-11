@@ -537,6 +537,25 @@ public class CommerceShipmentServiceSoap {
 		}
 	}
 
+	public static com.liferay.commerce.model.CommerceShipmentSoap
+			reprocessShipment(long commerceShipmentId)
+		throws RemoteException {
+
+		try {
+			com.liferay.commerce.model.CommerceShipment returnValue =
+				CommerceShipmentServiceUtil.reprocessShipment(
+					commerceShipmentId);
+
+			return com.liferay.commerce.model.CommerceShipmentSoap.toSoapModel(
+				returnValue);
+		}
+		catch (Exception exception) {
+			_log.error(exception, exception);
+
+			throw new RemoteException(exception.getMessage());
+		}
+	}
+
 	private static Log _log = LogFactoryUtil.getLog(
 		CommerceShipmentServiceSoap.class);
 
