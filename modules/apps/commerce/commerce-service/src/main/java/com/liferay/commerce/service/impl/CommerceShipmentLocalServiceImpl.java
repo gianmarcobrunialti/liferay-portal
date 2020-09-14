@@ -14,8 +14,6 @@
 
 package com.liferay.commerce.service.impl;
 
-import static com.liferay.commerce.constants.CommerceShipmentConstants.SHIPMENT_STATUS_PROCESSING;
-
 import com.liferay.commerce.constants.CommerceDestinationNames;
 import com.liferay.commerce.constants.CommerceShipmentConstants;
 import com.liferay.commerce.exception.CommerceShipmentExpectedDateException;
@@ -292,10 +290,12 @@ public class CommerceShipmentLocalServiceImpl
 		CommerceShipment commerceShipment =
 			commerceShipmentPersistence.findByPrimaryKey(commerceShipmentId);
 
-		commerceShipment.setStatus(SHIPMENT_STATUS_PROCESSING);
+		commerceShipment.setStatus(
+			CommerceShipmentConstants.SHIPMENT_STATUS_PROCESSING);
 
 		if (ArrayUtil.contains(
-				messageShipmentStatuses, SHIPMENT_STATUS_PROCESSING)) {
+				messageShipmentStatuses,
+				CommerceShipmentConstants.SHIPMENT_STATUS_PROCESSING)) {
 
 			sendShipmentStatusMessage(commerceShipmentId);
 		}
