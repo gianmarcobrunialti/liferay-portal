@@ -47,7 +47,7 @@ portletURL.setParameter(PortletQName.PUBLIC_RENDER_PARAMETER_NAMESPACE + "backUR
 <c:if test="<%= commerceAccountDisplayContext.hasCommerceAccountModelPermissions(CommerceAccountActionKeys.MANAGE_MEMBERS) %>">
 	<%
 		String userInvitationComponentId = "user-invitation" + renderResponse.getNamespace();
-		String themeDisplayTheme = themeDisplay.getTheme();
+		Theme themeDisplayTheme = themeDisplay.getTheme();
 		String themeDisplayName = themeDisplayTheme.getName();
 	%>
 	<portlet:actionURL name="inviteUser" var="inviteUserActionURL" />
