@@ -12,19 +12,12 @@
  * details.
  */
 
-import {getDefaultFieldsShape, updateFields} from './formsHelper';
-import {
-	CP_INSTANCE_CHANGED
-} from '../eventsDefinitions';
 import AJAX from '../AJAX/index';
+import {CP_INSTANCE_CHANGED} from '../eventsDefinitions';
+import {getDefaultFieldsShape, updateFields} from './formsHelper';
 
 class DDMFormHandler {
-	constructor({
-		actionURL,
-		addToCartId = '',
-		DDMFormInstance,
-		portletId
-	}) {
+	constructor({DDMFormInstance, actionURL, addToCartId = '', portletId}) {
 		this.actionURL = actionURL;
 		this.addToCartId = addToCartId;
 		this.DDMFormInstance = DDMFormInstance;
@@ -35,7 +28,7 @@ class DDMFormHandler {
 	}
 
 	_bindEventListeners() {
-		this.DDMFormInstance.on('fieldEdited', field => {
+		this.DDMFormInstance.on('fieldEdited', (field) => {
 			this.fields = updateFields(this.fields, field);
 			this.checkCPInstance();
 		});
@@ -43,13 +36,13 @@ class DDMFormHandler {
 
 	checkCPInstance() {
 		AJAX.POST(this.actionURL, {
-			[`_${this.portletId}_ddmFormValues`]: this.fields
+			[`_${this.portletId}_ddmFormValues`]: this.fields,
 		}).then(({cpInstanceExist, ...cpInstance}) => {
 			if (cpInstanceExist) {
 				const dispatchedPayload = {
 					addToCartId: this.addToCartId,
 					cpInstance,
-					formFields: this.fields
+					formFields: this.fields,
 				};
 
 				Liferay.fire(CP_INSTANCE_CHANGED, dispatchedPayload);
@@ -61,8 +54,7 @@ class DDMFormHandler {
 Liferay.component(
 	'DDMFormHandler',
 	(() => ({
-		attach: configuration =>
-			new DDMFormHandler(configuration)
+		attach: (configuration) => new DDMFormHandler(configuration),
 	}))()
 );
 
