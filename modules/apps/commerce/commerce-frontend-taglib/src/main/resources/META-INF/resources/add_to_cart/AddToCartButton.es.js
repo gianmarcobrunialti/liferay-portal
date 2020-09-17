@@ -16,6 +16,8 @@ import {fetch} from 'frontend-js-web';
 import Component from 'metal-component';
 import Soy, {Config} from 'metal-soy';
 
+import {CP_INSTANCE_CHANGED} from 'commerce-frontend-js/utilities/eventsDefinitions';
+
 import template from './AddToCartButton.soy';
 
 import '../quantity_selector/QuantitySelector.es';
@@ -157,10 +159,8 @@ class AddToCartButton extends Component {
 			this
 		);
 
-		// TODO: event definition to be imported as a constant
-
 		window.Liferay.on(
-			'current-product-status-changed',
+			CP_INSTANCE_CHANGED,
 			this._handleCurrentProductStatusChange,
 			this
 		);
@@ -178,10 +178,8 @@ class AddToCartButton extends Component {
 			this
 		);
 
-		// TODO: event definition to be imported as a constant
-
 		window.Liferay.detach(
-			'current-product-status-changed',
+			CP_INSTANCE_CHANGED,
 			this._handleCurrentProductStatusChange,
 			this
 		);
@@ -196,16 +194,27 @@ class AddToCartButton extends Component {
 		this._handleSubmitClick();
 	}
 
-	_handleCurrentProductStatusChange(e) {
+	_handleCurrentProductStatusChange({
+		addToCartId,
+		cpInstance,
+		formFields: options,
+	}) {
 		if (this.id) {
-			if (this.id !== e.addToCartId) {
+			if (this.id !== addToCartId) {
 				return;
 			}
-			if (e.productId) {
-				this.productId = e.productId;
-				this.options = e.options;
-				this.quantity = e.quantity;
-				this.settings = e.settings;
+
+			const {cpInstanceId: productId} = cpInstance;
+
+			if (productId) {
+				this.productId = productId;
+				this.options = JSON.stringify(options);
+				this.quantity = 0;
+				this.settings = {
+					maxQuantity: 1000,
+					minQuantity: 1,
+					multipleQuantities: 1,
+				};
 				this.disabled = false;
 			}
 			else {

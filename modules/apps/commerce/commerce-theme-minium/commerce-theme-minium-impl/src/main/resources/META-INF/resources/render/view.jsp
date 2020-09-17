@@ -31,7 +31,10 @@ String addToCartId = PortalUtil.generateRandomKey(request, "add-to-cart");
 <div class="mb-5 product-detail" id="<portlet:namespace /><%= cpDefinitionId %>ProductContent">
 	<div class="row">
 		<div class="col-md-6 col-xs-12">
-			<commerce-ui:gallery CPDefinitionId="<%= cpDefinitionId %>" />
+			<commerce-ui:gallery
+				CPDefinitionId="<%= cpDefinitionId %>"
+				viewAttachmentURL="<%= String.valueOf(cpContentHelper.getViewAttachmentURL(liferayPortletRequest, liferayPortletResponse)) %>"
+			/>
 		</div>
 
 		<div class="col-md-6 col-xs-12">

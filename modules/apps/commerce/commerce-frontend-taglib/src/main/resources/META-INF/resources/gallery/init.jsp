@@ -30,6 +30,7 @@ page import="com.liferay.portal.kernel.util.PortalUtil" %>
 <%
 List<CPMedia> images = (List<CPMedia>)request.getAttribute("liferay-commerce:gallery:images");
 JSONSerializer jsonSerializer = JSONFactoryUtil.createJSONSerializer();
+String viewAttachmentURL = (String)request.getAttribute("liferay-commerce:gallery:viewAttachmentURL");
 
 String randomNamespace = PortalUtil.generateRandomKey(request, "taglib_gallery") + StringPool.UNDERLINE;
 

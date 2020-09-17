@@ -15,7 +15,8 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 
-import {PRODUCT_OPTIONS_CHANGED} from '../../utilities/eventsDefinitions';
+import {CP_INSTANCE_CHANGED} from '../../utilities/eventsDefinitions';
+import AJAX from '../../utilities/AJAX/index';
 import MainImage from './MainImage';
 import Overlay from './Overlay';
 import Thumbnails from './Thumbnails';
@@ -51,20 +52,29 @@ export default class Gallery extends React.Component {
 	}
 
 	componentDidMount() {
-		Liferay.on(PRODUCT_OPTIONS_CHANGED, this._handleImagesUpdate, this);
+		Liferay.on(CP_INSTANCE_CHANGED, this._handleImagesUpdate, this);
 	}
 
 	componentWillUnmount() {
-		Liferay.detach(PRODUCT_OPTIONS_CHANGED, this._handleImagesUpdate, this);
+		Liferay.detach(CP_INSTANCE_CHANGED, this._handleImagesUpdate, this);
 	}
 
-	_handleImagesUpdate(e) {
-		if (e.images) {
-			this.setState({
-				images: e.images,
-				selected: 0,
-			});
-		}
+	_handleImagesUpdate({formFields}) {
+		AJAX.POST(this.props.viewAttachmentURL, {
+			[`_${this.portletId}_ddmFormValues`]: formFields,
+			groupId: Liferay.ThemeDisplay.getScopeGroupId(),
+		}).then((rawImages) => {
+			if (rawImages.length) {
+				this.setState({
+					images: rawImages.map((rawImage) => ({
+						thumbnailUrl: rawImage.url,
+						url: rawImage.url,
+						title: '',
+					})),
+					selected: 0,
+				});
+			}
+		});
 	}
 
 	fullscreenOpen() {
@@ -176,4 +186,5 @@ Gallery.propTypes = {
 			url: PropTypes.string.isRequired,
 		})
 	),
+	viewAttachmentURL: PropTypes.string.isRequired,
 };

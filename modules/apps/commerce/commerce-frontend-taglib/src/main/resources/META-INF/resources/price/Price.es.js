@@ -14,21 +14,28 @@
 
 import Component from 'metal-component';
 import Soy, {Config} from 'metal-soy';
+import {CP_INSTANCE_CHANGED} from 'commerce-frontend-js/utilities/eventsDefinitions';
 
 import template from './Price.soy';
 
 class Price extends Component {
 	created() {
-		window.Liferay.on('priceUpdated', this._updatePrice, this);
+		window.Liferay.on(CP_INSTANCE_CHANGED, this._updatePrice, this);
 	}
 
 	detached() {
-		window.Liferay.detach('priceUpdated', this._updatePrice, this);
+		window.Liferay.detach(CP_INSTANCE_CHANGED, this._updatePrice, this);
 	}
-	_updatePrice(e) {
-		if (e.id === this.id) {
-			this.displayDiscountLevels = e.displayDiscountLevels;
-			this.prices = e.prices;
+
+	_updatePrice({cpInstance}) {
+		const {cpInstanceId, displayDiscountLevels, prices} = cpInstance;
+		const shouldUpdate =
+			!!this.id &&
+			(this.id === cpInstanceId || cpInstanceId.indexOf(this.id) > -1);
+
+		if (shouldUpdate) {
+			this.displayDiscountLevels = displayDiscountLevels;
+			this.prices = prices;
 		}
 	}
 }

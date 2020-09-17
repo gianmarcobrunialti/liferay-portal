@@ -126,10 +126,8 @@ class AddToCart extends Component {
 		}
 	}
 
-	_instanceChange(event) {
-		if (event.cpInstanceExist) {
-			this.cpInstanceId = event.cpInstanceId;
-		}
+	_instanceChange(cpInstance) {
+		this.cpInstanceId = cpInstance.cpInstanceId;
 	}
 
 	_showNotification(message, type) {

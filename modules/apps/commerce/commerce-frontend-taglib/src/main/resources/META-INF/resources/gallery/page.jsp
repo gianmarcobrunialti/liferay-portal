@@ -22,5 +22,6 @@
 	gallery.default('<%= galleryId %>', '<%= galleryId %>', {
 		images: <%= jsonSerializer.serializeDeep(images) %>,
 		portletId: '<%= portletDisplay.getRootPortletId() %>',
+		viewAttachmentURL: '<%= viewAttachmentURL %>',
 	});
 </aui:script>

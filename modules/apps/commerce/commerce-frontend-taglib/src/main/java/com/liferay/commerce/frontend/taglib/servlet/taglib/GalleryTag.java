@@ -54,6 +54,10 @@ public class GalleryTag extends IncludeTag {
 		return _cpDefinitionId;
 	}
 
+	public String getViewAttachmentURL() {
+		return _viewAttachmentURL;
+	}
+
 	public void setCPDefinitionId(long cpDefinitionId) {
 		_cpDefinitionId = cpDefinitionId;
 	}
@@ -66,6 +70,10 @@ public class GalleryTag extends IncludeTag {
 		servletContext = ServletContextUtil.getServletContext();
 	}
 
+	public void setViewAttachmentURL(String viewAttachmentURL) {
+		_viewAttachmentURL = viewAttachmentURL;
+	}
+
 	@Override
 	protected void cleanUp() {
 		super.cleanUp();
@@ -73,6 +81,7 @@ public class GalleryTag extends IncludeTag {
 		_cpContentHelper = null;
 		_cpDefinitionId = 0;
 		_images = null;
+		_viewAttachmentURL = null;
 	}
 
 	@Override
@@ -82,7 +91,10 @@ public class GalleryTag extends IncludeTag {
 
 	@Override
 	protected void setAttributes(HttpServletRequest httpServletRequest) {
-		request.setAttribute("liferay-commerce:gallery:images", _images);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:gallery:images", _images);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:gallery:viewAttachmentURL", _viewAttachmentURL);
 	}
 
 	private static final String _PAGE = "/gallery/page.jsp";
@@ -92,5 +104,6 @@ public class GalleryTag extends IncludeTag {
 	private CPContentHelper _cpContentHelper;
 	private long _cpDefinitionId;
 	private List<CPMedia> _images;
+	private String _viewAttachmentURL;
 
 }
