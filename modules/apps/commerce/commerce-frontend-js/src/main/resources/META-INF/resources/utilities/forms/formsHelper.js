@@ -43,3 +43,45 @@ export function toJSON(formData) {
 
 	return json;
 }
+
+export function getDefaultFieldsShape(formInstance) {
+	try {
+		const options = formInstance.props.pages[0].rows;
+		const fields = options.map(option => option.columns[0].fields[0]);
+
+		return fields.map(field => {
+			const {
+				fieldName: key,
+				predefinedValue
+			} = field;
+
+			return {
+				key,
+				value: Array.isArray(predefinedValue) ?
+					predefinedValue : [predefinedValue]
+			}
+		});
+	} catch(_ignore) {
+		return [];
+	}
+}
+
+export function updateFields(currentFields, nextField) {
+	return currentFields.reduce(
+		(nextFields, currentField) => {
+			const {key} = currentField;
+			const {fieldInstance, value} = nextField;
+			const {fieldName} = fieldInstance;
+
+
+			if (fieldName === key) {
+				nextFields.push({ key: fieldName, value });
+			} else {
+				nextFields.push(currentField);
+			}
+
+			return nextFields;
+		},
+		[]
+	);
+}

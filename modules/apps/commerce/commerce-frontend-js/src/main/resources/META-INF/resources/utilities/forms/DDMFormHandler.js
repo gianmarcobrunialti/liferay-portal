@@ -1,0 +1,69 @@
+/**
+ * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ */
+
+import {getDefaultFieldsShape, updateFields} from './formsHelper';
+import {
+	CP_INSTANCE_CHANGED
+} from '../eventsDefinitions';
+import AJAX from '../AJAX/index';
+
+class DDMFormHandler {
+	constructor({
+		actionURL,
+		addToCartId = '',
+		DDMFormInstance,
+		portletId
+	}) {
+		this.actionURL = actionURL;
+		this.addToCartId = addToCartId;
+		this.DDMFormInstance = DDMFormInstance;
+		this.portletId = portletId;
+		this.fields = getDefaultFieldsShape(DDMFormInstance);
+
+		this._bindEventListeners();
+	}
+
+	_bindEventListeners() {
+		this.DDMFormInstance.on('fieldEdited', field => {
+			this.fields = updateFields(this.fields, field);
+			this.checkCPInstance();
+		});
+	}
+
+	checkCPInstance() {
+		AJAX.POST(this.actionURL, {
+			[`_${this.portletId}_ddmFormValues`]: this.fields
+		}).then(({cpInstanceExist, ...cpInstance}) => {
+			if (cpInstanceExist) {
+				const dispatchedPayload = {
+					addToCartId: this.addToCartId,
+					cpInstance,
+					formFields: this.fields
+				};
+
+				Liferay.fire(CP_INSTANCE_CHANGED, dispatchedPayload);
+			}
+		});
+	}
+}
+
+Liferay.component(
+	'DDMFormHandler',
+	(() => ({
+		attach: configuration =>
+			new DDMFormHandler(configuration)
+	}))()
+);
+
+export default DDMFormHandler;
