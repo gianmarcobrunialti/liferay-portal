@@ -52,7 +52,7 @@ function CartItem({item: cartItem}) {
 	} = cartItem;
 
 	const {
-			AJAX,
+			CartResource,
 			cartState,
 			displayDiscountLevels,
 			setIsUpdating,
@@ -106,7 +106,7 @@ function CartItem({item: cartItem}) {
 						isGettingRemoved: true,
 						isRemoved: true,
 						removalTimeoutRef: setTimeout(() => {
-							AJAX.deleteItemById(cartItemId)
+							CartResource.deleteItemById(cartItemId)
 								.then(() => updateCartModel({orderId}))
 								.then(() => {
 									setIsUpdating(false);
@@ -126,7 +126,7 @@ function CartItem({item: cartItem}) {
 			if (quantity !== itemQuantity) {
 				setIsUpdating(true);
 
-				AJAX.updateItemById(cartItemId, {
+				CartResource.updateItemById(cartItemId, {
 					...cartItem,
 					quantity,
 				})
@@ -162,7 +162,7 @@ function CartItem({item: cartItem}) {
 
 			return Promise.resolve();
 		}, // eslint-disable-next-line react-hooks/exhaustive-deps
-		[AJAX, cartItem, cartItemId, orderId]
+		[CartResource, cartItem, cartItemId, orderId]
 	);
 
 	const {
