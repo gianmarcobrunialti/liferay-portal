@@ -20,15 +20,14 @@ import ServiceProvider from '../../ServiceProvider/index';
 import {
 	ADD_TO_ORDER,
 	CHANGE_ACCOUNT,
-	CHANGE_ORDER
+	CHANGE_ORDER,
 } from '../../utilities/eventsDefinitions';
 import {showErrorNotification} from '../../utilities/notifications';
+import CartItemsList from './CartItemsList';
 import MiniCartContext from './MiniCartContext';
 import Opener from './Opener';
-import {regenerateOrderDetailURL, resolveView} from './util/index';
-
-import CartItemsList from './CartItemsList';
 import Wrapper from './Wrapper';
+import {regenerateOrderDetailURL, resolveView} from './util/index';
 
 const DEFAULT_CART_VIEW = {component: Wrapper},
 	DEFAULT_CART_ITEMS_LIST_VIEW = {component: CartItemsList};
@@ -40,9 +39,8 @@ function MiniCart({
 	displayDiscountLevels,
 	orderId,
 	spritemap,
-	toggleable
+	toggleable,
 }) {
-
 	const CartResource = ServiceProvider.DeliveryCartAPI('v1');
 
 	const [isOpen, setIsOpen] = useState(false),
@@ -54,13 +52,13 @@ function MiniCart({
 	const closeCart = () => setIsOpen(false),
 		openCart = () => setIsOpen(true),
 		resetCartState = useCallback(() => updateCartState({}), [
-			updateCartState
+			updateCartState,
 		]);
 
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	const updateCartModel = ({orderId: cartId}) =>
 		CartResource.getCartByIdWithItems(cartId)
-			.then(model => {
+			.then((model) => {
 				if (model.id !== cartId) {
 					const {orderUUID} = model,
 						{checkoutURL, orderDetailURL} = actionURLs;
@@ -70,7 +68,7 @@ function MiniCart({
 						orderDetailURL: regenerateOrderDetailURL(
 							orderDetailURL,
 							orderUUID
-						)
+						),
 					});
 				}
 
@@ -81,7 +79,7 @@ function MiniCart({
 	useEffect(() => {
 		resolveView(cartView)
 			.catch(() => resolveView(DEFAULT_CART_VIEW))
-			.then(view => setCartView(() => view));
+			.then((view) => setCartView(() => view));
 	}, [cartView, cartItemsListView]);
 
 	useEffect(() => {
@@ -123,16 +121,16 @@ function MiniCart({
 				spritemap,
 				toggleable,
 				updateCartModel,
-				updateCartState
+				updateCartState,
 			}}
 		>
 			{!!CartView && (
-				<div className={
-					classnames(
+				<div
+					className={classnames(
 						'mini-cart',
-			 (!toggleable || isOpen) && 'is-open'
-					)
-				}>
+						(!toggleable || isOpen) && 'is-open'
+					)}
+				>
 					{toggleable && (
 						<>
 							<div
@@ -155,34 +153,34 @@ MiniCart.defaultProps = {
 	cartItemsListView: DEFAULT_CART_ITEMS_LIST_VIEW,
 	cartView: DEFAULT_CART_VIEW,
 	displayDiscountLevels: false,
-	toggleable: true
+	toggleable: true,
 };
 
 MiniCart.propTypes = {
 	cartActionURLs: PropTypes.shape({
 		checkoutURL: PropTypes.string,
-		orderDetailURL: PropTypes.string
+		orderDetailURL: PropTypes.string,
 	}).isRequired,
 	cartItemsListView: PropTypes.oneOfType([
 		PropTypes.shape({
-			component: PropTypes.func
+			component: PropTypes.func,
 		}),
 		PropTypes.shape({
-			contentRendererModuleUrl: PropTypes.string
-		})
+			contentRendererModuleUrl: PropTypes.string,
+		}),
 	]),
 	cartView: PropTypes.oneOfType([
 		PropTypes.shape({
-			component: PropTypes.func
+			component: PropTypes.func,
 		}),
 		PropTypes.shape({
-			contentRendererModuleUrl: PropTypes.string
-		})
+			contentRendererModuleUrl: PropTypes.string,
+		}),
 	]),
 	displayDiscountLevels: PropTypes.bool,
 	orderId: PropTypes.number,
 	spritemap: PropTypes.string,
-	toggleable: PropTypes.bool
+	toggleable: PropTypes.bool,
 };
 
 export default MiniCart;
