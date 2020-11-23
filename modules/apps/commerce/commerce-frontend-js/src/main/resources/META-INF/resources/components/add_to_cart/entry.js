@@ -12,18 +12,7 @@
  * details.
  */
 
-import launcher from '../../../src/main/resources/META-INF/resources/components/quantity_selector/entry';
+import launcher from '../../utilities/launcher';
+import AddToCartWrapper from './AddToCartWrapper';
 
-import '../../../src/main/resources/META-INF/resources/styles/main.scss';
-
-launcher('quantity-selector', 'quantity-selector', {
-	inputName: 'test-name',
-	inputSize: 'default',
-	orderQuantity: 1,
-	settings: {
-		maxQuantity: 29,
-		minQuantity: 1,
-	},
-	size: 'large',
-	spritemap: './assets/icons.svg',
-});
+export default (...data) => launcher(AddToCartWrapper, ...data);

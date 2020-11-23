@@ -12,18 +12,30 @@
  * details.
  */
 
-import launcher from '../../../src/main/resources/META-INF/resources/components/quantity_selector/entry';
+import launcher from '../../../src/main/resources/META-INF/resources/components/add_to_cart/entry';
 
 import '../../../src/main/resources/META-INF/resources/styles/main.scss';
 
-launcher('quantity-selector', 'quantity-selector', {
-	inputName: 'test-name',
-	inputSize: 'default',
-	orderQuantity: 1,
+launcher('add_to_cart', 'add-to-cart', {
+	accountId: 43936, //48323,
+	addToCartButton: {
+		disabled: false,
+		rtl: true,
+	},
+	channelId: 41005, //43940,
+	currencyCode: 'USD',
+	orderId: 43939,
+	orderQuantity: Array.from({length: 99}, (_, i) => i + 1),
+	productId: 43939, //43657, // "Mount"   no"43630",
+
 	settings: {
-		maxQuantity: 29,
+		allowedQuantity: [],
+
+		// allowedQuantity: [2, 4, 6667, 3, 44, 1],
+
+		maxQuantity: 23,
 		minQuantity: 1,
 	},
-	size: 'large',
+	skuId: 43712, //43657,
 	spritemap: './assets/icons.svg',
 });
