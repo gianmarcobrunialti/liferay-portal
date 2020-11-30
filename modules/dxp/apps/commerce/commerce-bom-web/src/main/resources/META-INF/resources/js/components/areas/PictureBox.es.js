@@ -11,6 +11,7 @@
 
 import React, {useEffect, useRef, useState} from 'react';
 
+import { liferayNavigate } from '../../utilities/index.es';
 import {StoreContext} from '../StoreContext.es';
 
 export function Resume(props) {
@@ -78,7 +79,11 @@ export function PartDetail(props) {
 		>
 			<a
 				className="part-detail__number"
-				href={product.url && state.app.basePathUrl + product.url}
+				href="#"
+				onClick={(event) => {
+					event.preventDefault();
+					liferayNavigate(product.url && state.app.basePathUrl + product.url)
+				}}
 				onMouseOut={() => actions.highlightDetail(null)}
 				onMouseOver={() => actions.highlightDetail(props.number)}
 				ref={numberRef}

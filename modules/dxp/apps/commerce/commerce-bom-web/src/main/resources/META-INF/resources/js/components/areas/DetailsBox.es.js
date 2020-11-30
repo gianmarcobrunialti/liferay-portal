@@ -11,6 +11,7 @@
 
 import React from 'react';
 
+import { liferayNavigate } from '../../utilities/index.es';
 import {StoreContext} from '../StoreContext.es';
 
 export function DetailsListElement(props) {
@@ -25,7 +26,11 @@ export function DetailsListElement(props) {
 	return (
 		<a
 			className={`detail-row d-table-row${highlightedModifierClass}`}
-			href={props.url && state.app.basePathUrl + props.url}
+			href="#"
+			onClick={(event) => {
+				event.preventDefault();
+				liferayNavigate(props.url && state.app.basePathUrl + props.url)
+			}}
 			onFocus={() => actions.highlightDetail(props.number, true)}
 			onMouseOut={() => actions.highlightDetail(null)}
 			onMouseOver={() => actions.highlightDetail(props.number, true)}

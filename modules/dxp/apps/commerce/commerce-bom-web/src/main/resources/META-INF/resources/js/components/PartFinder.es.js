@@ -13,11 +13,9 @@ import React, {
 	useCallback,
 	useContext,
 	useEffect,
-	useMemo,
 	useState,
 } from 'react';
 
-import Connector from '../utilities/data_connectors/Connector.es';
 import BaseContainer from './BaseContainer.es';
 import Breadcrumbs from './Breadcrumbs.es';
 import ErrorMessage from './ErrorMessage.es';
@@ -31,15 +29,6 @@ export function PartFinder(props) {
 	const [page, updatePage] = useState('base');
 	const {actions, state} = useContext(StoreContext);
 
-	useMemo(() => {
-		if (props.connectorSettings) {
-			return new Connector(props.connectorSettings);
-		}
-
-		return null;
-	}, [props.connectorSettings]);
-
-	// eslint-disable-next-line react-hooks/exhaustive-deps
 	const updateData = useCallback(() => {
 		const filteredUrl = /^.*(folderId|areaId)=([0-9a-zA-Z-]+)/.exec(
 			props.history.location.search
@@ -59,7 +48,7 @@ export function PartFinder(props) {
 			default:
 				break;
 		}
-	});
+	}, [actions, props.areasEndpoint, props.foldersEndpoint, props.history.location.search]);
 
 	function initialize() {
 		actions.initialize({

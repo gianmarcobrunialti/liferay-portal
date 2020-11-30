@@ -9,7 +9,11 @@
  * distribution rights of the Software.
  */
 
-export const pipe = (...fns) => (initialVal) =>
-	fns.reduce((prevVal, currentFn) => currentFn(prevVal), initialVal);
-export const compose = (...fns) => (initialVal) =>
-	fns.reduceRight((prevVal, currentFn) => currentFn(prevVal), initialVal);
+export function liferayNavigate(url) {
+	if (Liferay.SPA) {
+		Liferay.SPA.app.navigate(url);
+	}
+	else {
+		window.location.href = url;
+	}
+}

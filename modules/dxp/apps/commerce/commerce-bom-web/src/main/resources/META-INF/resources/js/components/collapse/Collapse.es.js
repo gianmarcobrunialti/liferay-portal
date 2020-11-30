@@ -16,48 +16,56 @@ export default function Dropdown(props) {
 	const bodyRef = useRef(null);
 
 	function toggle() {
-		switch (true) {
-			case state === 'expanded':
-				setState('collapsing');
-				bodyRef.current.style.maxHeight =
-					bodyRef.current.scrollHeight + 'px';
-				bodyRef.current.addEventListener(
-					'transitionend',
-					() => setState('collapsed'),
-					{once: true}
-				);
-				break;
-			case state === 'collapsed':
-				setState('expanding');
-				bodyRef.current.style.maxHeight = '0px';
-				bodyRef.current.addEventListener(
-					'transitionend',
-					() => setState('expanded'),
-					{once: true}
-				);
-				break;
-			default:
-				break;
+		if(state === 'expanded') {
+			setState('collapsing');
+			bodyRef.current.style.maxHeight =
+				bodyRef.current.scrollHeight + 'px';
+			bodyRef.current.addEventListener(
+				'transitionend',
+				() => setState('collapsed'),
+				{once: true}
+			);
+
+			return;
+		}
+
+		if(state === 'collapsed') {
+			setState('expanding');
+			bodyRef.current.style.maxHeight = '0px';
+			bodyRef.current.addEventListener(
+				'transitionend',
+				() => setState('expanded'),
+				{once: true}
+			);
+
+			return;
 		}
 	}
 
 	useEffect(() => {
-		switch (true) {
-			case state === 'expanding':
-				bodyRef.current.style.maxHeight =
-					bodyRef.current.scrollHeight + 'px';
-				break;
-			case state === 'expanded':
-				bodyRef.current.style.maxHeight = '';
-				break;
-			case state === 'collapsing':
-				bodyRef.current.style.maxHeight = '0px';
-				break;
-			case state === 'collapsed':
-				bodyRef.current.style.maxHeight = '';
-				break;
-			default:
-				break;
+		if(state === 'expanding') {
+			bodyRef.current.style.maxHeight =
+				bodyRef.current.scrollHeight + 'px';
+				
+			return;
+		}
+
+		if(state === 'expanded') {
+			bodyRef.current.style.maxHeight = '';
+				
+			return;
+		}
+
+		if(state === 'collapsing') {
+			bodyRef.current.style.maxHeight = '0px';
+				
+			return;
+		}
+
+		if(state === 'collapsed') {
+			bodyRef.current.style.maxHeight = '';
+				
+			return;
 		}
 	}, [state]);
 
