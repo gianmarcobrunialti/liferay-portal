@@ -26,6 +26,7 @@ window.Liferay = {
 		getDefaultLanguageId: () => 'en_US',
 		getLanguageId: () => 'it_IT',
 		getPathThemeImages: () => '/assets',
+		getScopeGroupId: () => '123',
 		getPortalURL: () => window.location.origin,
 	},
 	component: () => {},
