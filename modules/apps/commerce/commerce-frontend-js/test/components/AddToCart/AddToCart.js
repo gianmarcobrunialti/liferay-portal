@@ -59,7 +59,7 @@ describe('AddToCart', () => {
 			Component = render(<AddToCart {...props} />);
 
 			const WrapperWithQuantityContainer = Component.container.querySelector(
-				'.add-to-cart'
+				'.add-to-cart-wrapper'
 			);
 			const QuantitySelectorInputElement = Component.container.querySelector(
 				'input'

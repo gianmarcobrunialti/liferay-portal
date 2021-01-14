@@ -436,14 +436,17 @@ describe('AddToCartButton', () => {
 					cpInstance: {
 						...INTERACTION_PROPS.cpInstance,
 					},
+					settings: {
+						willUpdate: true,
+					},
 				};
 
-				const outerCPInstanceId = 7777;
+				const outerCPInstance = {cpInstance: {skuId: 7777}};
 
 				Component = render(<AddToCartButton {...props} />);
 
 				await act(async () => {
-					resetCBTrigger({cpInstanceId: outerCPInstanceId});
+					resetCBTrigger(outerCPInstance);
 				});
 
 				await wait(() => {
@@ -451,7 +454,7 @@ describe('AddToCartButton', () => {
 
 					expect(
 						ServiceProvider.DeliveryCartAPI('v1').getItemById
-					).toHaveBeenCalledWith(outerCPInstanceId);
+					).toHaveBeenCalledWith(outerCPInstance.cpInstance.skuId);
 					expect(element.classList.contains('is-added')).toBe(true);
 				});
 			}
@@ -479,14 +482,17 @@ describe('AddToCartButton', () => {
 					cpInstance: {
 						...INTERACTION_PROPS.cpInstance,
 					},
+					settings: {
+						willUpdate: true,
+					},
 				};
 
-				const outerCPInstanceId = 7777;
+				const outerCPInstance = {cpInstance: {skuId: 7777}};
 
 				Component = render(<AddToCartButton {...props} />);
 
 				await act(async () => {
-					resetCBTrigger({cpInstanceId: outerCPInstanceId});
+					resetCBTrigger(outerCPInstance);
 				});
 
 				await wait(() => {
@@ -494,7 +500,7 @@ describe('AddToCartButton', () => {
 
 					expect(
 						ServiceProvider.DeliveryCartAPI('v1').getItemById
-					).toHaveBeenCalledWith(outerCPInstanceId);
+					).toHaveBeenCalledWith(outerCPInstance.cpInstance.skuId);
 					expect(element.classList.contains('is-added')).toBe(false);
 				});
 			}

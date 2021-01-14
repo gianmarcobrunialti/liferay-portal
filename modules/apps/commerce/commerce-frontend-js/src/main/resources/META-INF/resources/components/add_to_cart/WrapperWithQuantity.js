@@ -14,19 +14,39 @@
 
 import classnames from 'classnames';
 import PropTypes from 'prop-types';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 
 import QuantitySelector from '../quantity_selector/QuantitySelector';
+import {CP_INSTANCE_CHANGED} from '../../utilities/eventsDefinitions';
 
 function WrapperWithQuantity({AddToCartButton, ...props}) {
-	const [currentQuantity, setCurrentQuantity] = useState();
+	const {
+		cpInstance,
+		settings
+	} = props;
 
+	const [currentQuantity, setCurrentQuantity] = useState();
+	const [disabled, setDisabled] = useState(
+		settings.disabled || !cpInstance.accountId);
+
+	const onCPInstanceChange = ({cpInstance}) => setDisabled(
+		!cpInstance.stockQuantity > 0);
 	const onQuantityUpdate = (quantity) => setCurrentQuantity(quantity);
+
+	useEffect(() => {
+		if (settings.willUpdate) {
+			Liferay.on(CP_INSTANCE_CHANGED, onCPInstanceChange);
+		}
+
+		return () => {
+			Liferay.detach(CP_INSTANCE_CHANGED, onCPInstanceChange)
+		}
+	}, []);
 
 	return (
 		<div
 			className={classnames({
-				'add-to-cart': true,
+				'add-to-cart-wrapper': true,
 				'align-items-center': true,
 				'd-flex': true,
 				'flex-column': props.settings.block,
@@ -34,9 +54,7 @@ function WrapperWithQuantity({AddToCartButton, ...props}) {
 		>
 			<QuantitySelector
 				{...props.settings.withQuantity}
-				disabled={
-					props.settings.disabled || !props?.cpInstance.accountId
-				}
+				disabled={disabled}
 				large={!props.settings.block}
 				onUpdate={onQuantityUpdate}
 			/>
@@ -55,6 +73,7 @@ WrapperWithQuantity.propTypes = {
 	settings: PropTypes.shape({
 		block: PropTypes.bool,
 		disabled: PropTypes.bool,
+		willUpdate: PropTypes.bool,
 		withQuantity: PropTypes.shape({
 			allowedQuantities: PropTypes.arrayOf(PropTypes.number),
 			disabled: PropTypes.bool,
