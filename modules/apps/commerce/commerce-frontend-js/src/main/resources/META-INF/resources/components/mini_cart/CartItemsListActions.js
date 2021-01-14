@@ -17,10 +17,11 @@ import classnames from 'classnames';
 import PropTypes from 'prop-types';
 import React, {useContext, useState} from 'react';
 
-import {PRODUCT_REMOVED} from '../../utilities/eventsDefinitions';
+import {PRODUCT_REMOVED_FROM_CART} from '../../utilities/eventsDefinitions';
 import {liferayNavigate} from '../../utilities/index';
 import MiniCartContext from './MiniCartContext';
 import {REMOVE_ALL_ITEMS, VIEW_DETAILS} from './util/constants';
+import {ALL} from '../add_to_cart/constants';
 
 function CartItemsListActions({numberOfItems}) {
 	const {
@@ -48,9 +49,7 @@ function CartItemsListActions({numberOfItems}) {
 				setIsAsking(false);
 				setIsUpdating(false);
 
-				Liferay.fire(PRODUCT_REMOVED, {
-					skuId: 'all',
-				});
+				Liferay.fire(PRODUCT_REMOVED_FROM_CART, {skuId: ALL});
 			});
 	};
 

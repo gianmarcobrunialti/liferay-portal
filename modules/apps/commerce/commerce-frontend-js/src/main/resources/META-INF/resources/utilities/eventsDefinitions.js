@@ -27,6 +27,7 @@ export const IFRAME_LOADED = 'iframe-loaded';
 export const IS_LOADING_MODAL = 'is-loading-modal';
 export const OPEN_MODAL = 'open-modal';
 export const OPEN_SIDE_PANEL = 'open-side-panel';
+export const ORDER_CHANGED = 'order-changed';
 export const PRODUCT_OPTIONS_CHANGED = 'product-options-changed';
 export const PRODUCT_REMOVED_FROM_CART = 'product-removed-from-cart';
 export const SIDE_PANEL_CLOSED = 'side-panel-closed';
@@ -48,6 +49,7 @@ export default {
 	IS_LOADING_MODAL,
 	OPEN_MODAL,
 	OPEN_SIDE_PANEL,
+	ORDER_CHANGED,
 	PRODUCT_OPTIONS_CHANGED,
 	PRODUCT_REMOVED_FROM_CART,
 	SIDE_PANEL_CLOSED,

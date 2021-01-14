@@ -15,11 +15,11 @@
 import AJAX from '../AJAX/index';
 import {CP_INSTANCE_CHANGED} from '../eventsDefinitions';
 import {getDefaultFieldsShape, updateFields} from './formsHelper';
+import {toInt} from '../dataTypes';
 
 class DDMFormHandler {
-	constructor({DDMFormInstance, actionURL, addToCartId = '', portletId}) {
+	constructor({DDMFormInstance, actionURL, portletId}) {
 		this.actionURL = actionURL;
-		this.addToCartId = addToCartId;
 		this.DDMFormInstance = DDMFormInstance;
 		this.portletId = portletId;
 		this.fields = getDefaultFieldsShape(DDMFormInstance);
@@ -36,20 +36,21 @@ class DDMFormHandler {
 	}
 
 	checkCPInstance() {
+		const ddmFormValues = JSON.stringify(this.fields);
 		const fieldsParam = new FormData();
 
-		fieldsParam.append(
-			`_${this.portletId}_ddmFormValues`,
-			JSON.stringify(this.fields)
-		);
+		fieldsParam.append(`_${this.portletId}_ddmFormValues`, ddmFormValues);
 
 		AJAX.POST(this.actionURL, null, {
 			body: fieldsParam,
 			headers: new Headers({'x-csrf-token': Liferay.authToken}),
 		}).then((cpInstance) => {
 			if (cpInstance.cpInstanceExist) {
+				cpInstance.options = ddmFormValues;
+				cpInstance.skuId = toInt(cpInstance.cpInstanceId);
+				cpInstance.stockQuantity = toInt(cpInstance.stockQuantity);
+
 				const dispatchedPayload = {
-					addToCartId: this.addToCartId,
 					cpInstance,
 					formFields: this.fields,
 				};
