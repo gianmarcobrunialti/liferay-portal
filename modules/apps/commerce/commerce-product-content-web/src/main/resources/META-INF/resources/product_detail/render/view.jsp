@@ -25,7 +25,24 @@ CPSku cpSku = cpContentHelper.getDefaultCPSku(cpCatalogEntry);
 
 long cpDefinitionId = cpCatalogEntry.getCPDefinitionId();
 
-String addToCartId = PortalUtil.generateRandomKey(request, "add-to-cart");
+HashMap<String, Object> displayProductInformation =
+	(HashMap<String, Object>) request.getAttribute("displayProductInformation");
+
+long commerceAccountId = (long) displayProductInformation.get("commerceAccountId");
+String currencyCode = (String) displayProductInformation.get("currencyCode");
+long channelId = (long) displayProductInformation.get("channelId");
+boolean isInCart = (boolean) displayProductInformation.get("isInCart");
+boolean isInWishList = (boolean) displayProductInformation.get("isInWishList");
+boolean isLowStock = (boolean) displayProductInformation.get("isLowStock");
+long commerceOrderId = (long) displayProductInformation.get("commerceOrderId");
+int stockQuantity = (int) displayProductInformation.get("stockQuantity");
+String spritemap = (String) displayProductInformation.get("spritemap");
+
+long skuId = 0;
+
+if (cpSku != null) {
+	skuId = cpSku.getCPInstanceId();
+}
 %>
 
 <div class="mb-5 product-detail" id="<portlet:namespace /><%= cpDefinitionId %>ProductContent">
@@ -56,7 +73,7 @@ String addToCartId = PortalUtil.generateRandomKey(request, "add-to-cart");
 				</h4>
 			</header>
 
-			<p class="mt-3 procuct-description"><%= cpCatalogEntry.getDescription() %></p>
+			<p class="mt-3 product-description"><%= cpCatalogEntry.getDescription() %></p>
 
 			<h4 class="commerce-subscription-info mt-3 w-100">
 				<c:if test="<%= cpSku != null %>">
@@ -72,17 +89,23 @@ String addToCartId = PortalUtil.generateRandomKey(request, "add-to-cart");
 			<div class="product-detail-options">
 				<%= cpContentHelper.renderOptions(renderRequest, renderResponse) %>
 
-				<%@ include file="/render/form_handlers/metal_js.jspf" %>
+				<%@ include file="/product_detail/render/form_handlers/metal_js.jspf" %>
+			</div>
+
+			<div class="availability my-1">
+				<commerce-ui:availability-label
+					isLowStock="<%= isLowStock %>"
+					stockQuantity="<%= stockQuantity %>"
+					willUpdate="<%= true %>"
+				/>
 			</div>
 
 			<c:choose>
 				<c:when test="<%= cpSku != null %>">
-					<div class="availability mt-1"><%= cpContentHelper.getAvailabilityLabel(request) %></div>
 					<div class="availability-estimate mt-1"><%= cpContentHelper.getAvailabilityEstimateLabel(request) %></div>
 					<div class="mt-1 stock-quantity"><%= cpContentHelper.getStockQuantityLabel(request) %></div>
 				</c:when>
 				<c:otherwise>
-					<div class="availability mt-1" data-text-cp-instance-availability></div>
 					<div class="availability-estimate mt-1" data-text-cp-instance-availability-estimate></div>
 					<div class="stock-quantity mt-1" data-text-cp-instance-stock-quantity></div>
 				</c:otherwise>
@@ -103,13 +126,28 @@ String addToCartId = PortalUtil.generateRandomKey(request, "add-to-cart");
 				/>
 			</c:if>
 
-			<div class="mt-3 product-detail-actions">
-				<div class="autofit-col">
-					<commerce-ui:add-to-cart
-						CPInstanceId="<%= (cpSku == null) ? 0 : cpSku.getCPInstanceId() %>"
-						id="<%= addToCartId %>"
-					/>
-				</div>
+			<div class="mt-3 product-detail-actions d-flex align-items-center">
+				<commerce-ui:add-to-order
+					commerceAccountId="<%= commerceAccountId %>"
+					currencyCode="<%= currencyCode %>"
+					channelId="<%= channelId %>"
+					disabled="<%= skuId == 0 %>"
+					isInCart="<%= isInCart %>"
+					orderId="<%= commerceOrderId %>"
+					skuId="<%= skuId %>"
+					spritemap="<%= spritemap %>"
+					stockQuantity="<%= stockQuantity %>"
+					willUpdate="<%= true %>"
+				/>
+
+				<commerce-ui:add-to-wish-list
+					commerceAccountId="<%= commerceAccountId %>"
+					cpDefinitionId="<%= cpDefinitionId %>"
+					large="<%= true %>"
+					isInWishList="<%= isInWishList %>"
+					skuId="<%= skuId %>"
+					spritemap="<%= spritemap %>"
+				/>
 			</div>
 		</div>
 	</div>
@@ -129,9 +167,30 @@ List<CPMedia> cpAttachmentFileEntries = cpContentHelper.getCPAttachmentFileEntri
 		<dl class="specification-list">
 
 			<%
-			for (CPDefinitionSpecificationOptionValue cpDefinitionSpecificationOptionValue : cpDefinitionSpecificationOptionValues) {
-				CPSpecificationOption cpSpecificationOption = cpDefinitionSpecificationOptionValue.getCPSpecificationOption();
+				for (CPDefinitionSpecificationOptionValue cpDefinitionSpecificationOptionValue : cpDefinitionSpecificationOptionValues) {
+					CPSpecificationOption cpSpecificationOption = cpDefinitionSpecificationOptionValue.getCPSpecificationOption();
 			%>
+
+			<dt class="specification-term">
+				<%= HtmlUtil.escape(cpSpecificationOption.getTitle(languageId)) %>
+			</dt>
+			<dd class="specification-desc">
+				<%= HtmlUtil.escape(cpDefinitionSpecificationOptionValue.getValue(languageId)) %>
+			</dd>
+
+			<%
+				}
+
+				for (CPOptionCategory cpOptionCategory : cpOptionCategories) {
+					List<CPDefinitionSpecificationOptionValue> categorizedCPDefinitionSpecificationOptionValues = cpContentHelper.getCategorizedCPDefinitionSpecificationOptionValues(cpDefinitionId, cpOptionCategory.getCPOptionCategoryId());
+			%>
+
+			<c:if test="<%= !categorizedCPDefinitionSpecificationOptionValues.isEmpty() %>">
+
+				<%
+					for (CPDefinitionSpecificationOptionValue cpDefinitionSpecificationOptionValue : categorizedCPDefinitionSpecificationOptionValues) {
+						CPSpecificationOption cpSpecificationOption = cpDefinitionSpecificationOptionValue.getCPSpecificationOption();
+				%>
 
 				<dt class="specification-term">
 					<%= HtmlUtil.escape(cpSpecificationOption.getTitle(languageId)) %>
@@ -140,35 +199,14 @@ List<CPMedia> cpAttachmentFileEntries = cpContentHelper.getCPAttachmentFileEntri
 					<%= HtmlUtil.escape(cpDefinitionSpecificationOptionValue.getValue(languageId)) %>
 				</dd>
 
-			<%
-			}
-
-			for (CPOptionCategory cpOptionCategory : cpOptionCategories) {
-				List<CPDefinitionSpecificationOptionValue> categorizedCPDefinitionSpecificationOptionValues = cpContentHelper.getCategorizedCPDefinitionSpecificationOptionValues(cpDefinitionId, cpOptionCategory.getCPOptionCategoryId());
-			%>
-
-				<c:if test="<%= !categorizedCPDefinitionSpecificationOptionValues.isEmpty() %>">
-
-					<%
-					for (CPDefinitionSpecificationOptionValue cpDefinitionSpecificationOptionValue : categorizedCPDefinitionSpecificationOptionValues) {
-						CPSpecificationOption cpSpecificationOption = cpDefinitionSpecificationOptionValue.getCPSpecificationOption();
-					%>
-
-						<dt class="specification-term">
-							<%= HtmlUtil.escape(cpSpecificationOption.getTitle(languageId)) %>
-						</dt>
-						<dd class="specification-desc">
-							<%= HtmlUtil.escape(cpDefinitionSpecificationOptionValue.getValue(languageId)) %>
-						</dd>
-
-					<%
+				<%
 					}
-					%>
+				%>
 
-				</c:if>
+			</c:if>
 
 			<%
-			}
+				}
 			%>
 
 		</dl>
@@ -183,31 +221,31 @@ List<CPMedia> cpAttachmentFileEntries = cpContentHelper.getCPAttachmentFileEntri
 		<dl class="specification-list">
 
 			<%
-			int attachmentsCount = 0;
+				int attachmentsCount = 0;
 
-			for (CPMedia curCPAttachmentFileEntry : cpAttachmentFileEntries) {
+				for (CPMedia curCPAttachmentFileEntry : cpAttachmentFileEntries) {
 			%>
 
-				<dt class="specification-term">
-					<%= HtmlUtil.escape(curCPAttachmentFileEntry.getTitle()) %>
-				</dt>
-				<dd class="specification-desc">
-					<aui:icon cssClass="icon-monospaced" image="download" markupView="lexicon" target="_blank" url="<%= curCPAttachmentFileEntry.getDownloadUrl() %>" />
-				</dd>
+			<dt class="specification-term">
+				<%= HtmlUtil.escape(curCPAttachmentFileEntry.getTitle()) %>
+			</dt>
+			<dd class="specification-desc">
+				<aui:icon cssClass="icon-monospaced" image="download" markupView="lexicon" target="_blank" url="<%= curCPAttachmentFileEntry.getDownloadUrl() %>" />
+			</dd>
 
-				<%
+			<%
 				attachmentsCount = attachmentsCount + 1;
 
 				if (attachmentsCount >= 2) {
-				%>
+			%>
 
-					<dt class="specification-empty specification-term"></dt>
-					<dd class="specification-desc specification-empty"></dd>
+			<dt class="specification-empty specification-term"></dt>
+			<dd class="specification-desc specification-empty"></dd>
 
 			<%
-					attachmentsCount = 0;
+						attachmentsCount = 0;
+					}
 				}
-			}
 			%>
 
 		</dl>

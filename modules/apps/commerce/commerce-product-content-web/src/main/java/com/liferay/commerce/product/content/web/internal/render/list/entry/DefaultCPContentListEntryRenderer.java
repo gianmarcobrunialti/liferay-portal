@@ -1,22 +1,9 @@
-/**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
- */
-
-package com.liferay.commerce.theme.minium.internal.product.renderer.list.entry;
+package com.liferay.commerce.product.content.web.internal.render.list.entry;
 
 import com.liferay.commerce.account.model.CommerceAccount;
 import com.liferay.commerce.constants.CommerceWebKeys;
 import com.liferay.commerce.context.CommerceContext;
+import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.frontend.model.PriceModel;
 import com.liferay.commerce.frontend.model.ProductSettingsModel;
 import com.liferay.commerce.frontend.util.ProductHelper;
@@ -33,7 +20,7 @@ import com.liferay.commerce.service.CommerceOrderItemLocalService;
 import com.liferay.commerce.wish.list.model.CommerceWishList;
 import com.liferay.commerce.wish.list.service.CommerceWishListItemService;
 import com.liferay.commerce.wish.list.service.CommerceWishListService;
-import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
+import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -45,47 +32,45 @@ import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.template.soy.renderer.ComponentDescriptor;
-import com.liferay.portal.template.soy.renderer.SoyComponentRenderer;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.ResourceBundle;
-import java.util.Set;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
-
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.ResourceBundle;
 
 /**
- * @author Marco Leo
+ * @author Gianmarco Brunialti Masera
  */
 @Component(
 	enabled = false, immediate = true,
 	property = {
-		"commerce.product.content.list.entry.renderer.key=" + MiniumCPContentListEntryRenderer.KEY,
-		"commerce.product.content.list.entry.renderer.portlet.name=" + CPPortletKeys.CP_COMPARE_CONTENT_WEB,
-		"commerce.product.content.list.entry.renderer.portlet.name=" + CPPortletKeys.CP_PUBLISHER_WEB,
-		"commerce.product.content.list.entry.renderer.portlet.name=" + CPPortletKeys.CP_SEARCH_RESULTS,
+		"commerce.product.content.list.entry.renderer.key=" + DefaultCPContentListEntryRenderer.KEY,
+		"commerce.product.content.list.entry.renderer.order=" + Integer.MIN_VALUE,
+		"commerce.product.content.list.entry.renderer.portlet.name=" +
+		CPPortletKeys.CP_COMPARE_CONTENT_WEB,
+		"commerce.product.content.list.entry.renderer.portlet.name=" +
+		CPPortletKeys.CP_PUBLISHER_WEB,
+		"commerce.product.content.list.entry.renderer.portlet.name=" +
+		CPPortletKeys.CP_SEARCH_RESULTS,
 		"commerce.product.content.list.entry.renderer.type=grouped",
 		"commerce.product.content.list.entry.renderer.type=simple",
 		"commerce.product.content.list.entry.renderer.type=virtual"
 	},
 	service = CPContentListEntryRenderer.class
 )
-public class MiniumCPContentListEntryRenderer
+public class DefaultCPContentListEntryRenderer
 	implements CPContentListEntryRenderer {
 
-	public static final String KEY = "list-entry-minium";
+	public static final String KEY = "list-entry-default";
 
 	@Override
 	public String getKey() {
@@ -97,21 +82,21 @@ public class MiniumCPContentListEntryRenderer
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			"content.Language", locale, getClass());
 
-		return LanguageUtil.get(resourceBundle, "minium");
+		return LanguageUtil.get(resourceBundle, "default");
 	}
 
 	@Override
 	public void render(
-			HttpServletRequest httpServletRequest,
-			HttpServletResponse httpServletResponse)
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse)
 		throws Exception {
 
 		CommerceContext commerceContext =
-			(CommerceContext)httpServletRequest.getAttribute(
+			(CommerceContext) httpServletRequest.getAttribute(
 				CommerceWebKeys.COMMERCE_CONTEXT);
 
 		CPContentHelper cpContentHelper =
-			(CPContentHelper)httpServletRequest.getAttribute(
+			(CPContentHelper) httpServletRequest.getAttribute(
 				CPContentWebKeys.CP_CONTENT_HELPER);
 
 		CPCatalogEntry cpCatalogEntry = cpContentHelper.getCPCatalogEntry(
@@ -126,10 +111,10 @@ public class MiniumCPContentListEntryRenderer
 		}
 
 		ThemeDisplay themeDisplay =
-			(ThemeDisplay)httpServletRequest.getAttribute(
+			(ThemeDisplay) httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		Map<String, Object> context = new HashMap<>();
+		Map<String, Object> displayProductInformation = new HashMap<>();
 
 		CommerceAccount commerceAccount = commerceContext.getCommerceAccount();
 
@@ -146,13 +131,13 @@ public class MiniumCPContentListEntryRenderer
 			editCompareProductActionURL.setParameter(
 				ActionRequest.ACTION_NAME, "editCompareProduct");
 
-			context.put("compareCheckboxVisible", false);
-			context.put(
+			displayProductInformation.put("compareCheckboxVisible", false);
+			displayProductInformation.put(
 				"compareContentNamespace",
 				_portal.getPortletNamespace(
 					CPPortletKeys.CP_COMPARE_CONTENT_WEB));
-			context.put("deleteButtonVisible", true);
-			context.put(
+			displayProductInformation.put("deleteButtonVisible", true);
+			displayProductInformation.put(
 				"editCompareProductActionURL",
 				editCompareProductActionURL.toString());
 		}
@@ -162,6 +147,8 @@ public class MiniumCPContentListEntryRenderer
 			if (commerceAccount != null) {
 				commerceAccountId = commerceAccount.getCommerceAccountId();
 			}
+
+			displayProductInformation.put("commerceAccountId", commerceAccountId);
 
 			HttpServletRequest originalHttpServletRequest =
 				_portal.getOriginalServletRequest(httpServletRequest);
@@ -181,44 +168,45 @@ public class MiniumCPContentListEntryRenderer
 				cpDefinitionIds.contains(cpCatalogEntry.getCPDefinitionId())
 			);
 
-			context.put("compareCheckboxVisible", true);
-			context.put("compareState", jsonObject);
-			context.put("deleteButtonVisible", false);
-		}
-
-		context.put("orderQuantity", 0);
-
-		if (commerceAccount != null) {
-			context.put("accountId", commerceAccount.getCommerceAccountId());
+			displayProductInformation.put("compareCheckboxVisible", true);
+			displayProductInformation.put("compareState", jsonObject);
+			displayProductInformation.put("deleteButtonVisible", false);
 		}
 
 		CommerceOrder commerceOrder = commerceContext.getCommerceOrder();
 
+		long commerceOrderId = 0;
+
 		if (commerceOrder != null) {
-			context.put("orderId", commerceOrder.getCommerceOrderId());
+			commerceOrderId = commerceOrder.getCommerceOrderId();
 		}
 
-		context.put("addToCartButtonVisible", true);
+		displayProductInformation.put("orderId", commerceOrderId);
 
-		context.put(
-			"cartAPI",
-			_portal.getPortalURL(httpServletRequest) +
-				"/o/commerce-ui/cart-item");
-		context.put("categories", null);
-		context.put("description", cpCatalogEntry.getShortDescription());
-		context.put(
-			"detailsLink",
+		displayProductInformation.put("description", cpCatalogEntry.getShortDescription());
+
+		displayProductInformation.put("isInCart", false);
+
+		displayProductInformation.put(
+			"productDetailURL",
 			cpContentHelper.getFriendlyURL(cpCatalogEntry, themeDisplay));
-		context.put("name", cpCatalogEntry.getName());
-		context.put("pictureUrl", cpCatalogEntry.getDefaultImageFileUrl());
-		context.put("productId", cpCatalogEntry.getCPDefinitionId());
+
+		displayProductInformation.put("name", cpCatalogEntry.getName());
+		displayProductInformation.put("productImageURL", cpCatalogEntry.getDefaultImageFileUrl());
+
+		displayProductInformation.put("cpDefinitionId", cpCatalogEntry.getCPDefinitionId());
 
 		boolean hasChildCPDefinitions = cpContentHelper.hasChildCPDefinitions(
 			cpCatalogEntry.getCPDefinitionId());
 
+		String sku = StringPool.BLANK;
+		long skuId = 0;
+		int stockQuantity = 0;
+		boolean isLowStock = false;
+
 		if ((cpSku != null) && !hasChildCPDefinitions) {
-			context.put("sku", cpSku.getSku());
-			context.put("skuId", cpSku.getCPInstanceId());
+			sku = cpSku.getSku();
+			skuId = cpSku.getCPInstanceId();
 
 			ProductSettingsModel productSettingsModel =
 				_productHelper.getProductSettingsModel(cpSku.getCPInstanceId());
@@ -227,9 +215,9 @@ public class MiniumCPContentListEntryRenderer
 				cpSku.getCPInstanceId(), productSettingsModel.getMinQuantity(),
 				commerceContext, StringPool.BLANK, themeDisplay.getLocale());
 
-			context.put("prices", priceModel);
+			displayProductInformation.put("prices", priceModel);
 
-			context.put("settings", productSettingsModel);
+			displayProductInformation.put("settings", productSettingsModel);
 
 			if (commerceOrder != null) {
 				List<CommerceOrderItem> commerceOrderItems =
@@ -238,101 +226,89 @@ public class MiniumCPContentListEntryRenderer
 						cpSku.getCPInstanceId(), 0, 1);
 
 				if (!commerceOrderItems.isEmpty()) {
-					context.put("orderQuantity", 1);
+					displayProductInformation.put("isInCart", true);
 				}
 			}
 
-			if (productSettingsModel.isShowAvailabilityDot()) {
-				Map<String, Integer> stockQuantities =
-					(Map<String, Integer>)httpServletRequest.getAttribute(
-						"stockQuantities");
+			Map<String, Integer> stockQuantities =
+				(Map<String, Integer>) httpServletRequest.getAttribute(
+					"stockQuantities");
 
-				int stockQuantity = 0;
-
-				if (MapUtil.isNotEmpty(stockQuantities)) {
-					stockQuantity = MapUtil.getInteger(
-						stockQuantities, cpSku.getSku());
-				}
-
-				String status = "inStock";
-
-				if (stockQuantity <= 0) {
-					status = "notAvailable";
-				}
-				else if (stockQuantity <=
-							productSettingsModel.getLowStockQuantity()) {
-
-					status = "available";
-				}
-
-				context.put("availability", status);
+			if (MapUtil.isNotEmpty(stockQuantities)) {
+				stockQuantity = MapUtil.getInteger(
+					stockQuantities, cpSku.getSku());
 			}
+
+			isLowStock = (stockQuantity > 0 &&
+						  stockQuantity <= productSettingsModel.getLowStockQuantity());
 		}
 		else if (hasChildCPDefinitions) {
 			PriceModel priceModel = _productHelper.getMinPrice(
 				cpCatalogEntry.getCPDefinitionId(), commerceContext,
 				themeDisplay.getLocale());
 
-			context.put("prices", priceModel);
+			displayProductInformation.put("prices", priceModel);
 		}
+
+		displayProductInformation.put("sku", sku);
+		displayProductInformation.put("skuId", skuId);
+		displayProductInformation.put("stockQuantity", stockQuantity);
+		displayProductInformation.put("isLowStock", isLowStock);
+
+		boolean isInWishList = false;
 
 		CommerceWishList commerceWishList =
 			_commerceWishListService.getDefaultCommerceWishList(
 				themeDisplay.getScopeGroupId(), themeDisplay.getUserId());
 
 		if (commerceWishList != null) {
-			boolean addedToWishlist = false;
-
 			if (cpSku != null) {
 				if (_commerceWishListItemService.
-						getCommerceWishListItemByContainsCPInstanceCount(
-							commerceWishList.getCommerceWishListId(),
-							cpSku.getCPInstanceUuid()) > 0) {
+					getCommerceWishListItemByContainsCPInstanceCount(
+						commerceWishList.getCommerceWishListId(),
+						cpSku.getCPInstanceUuid()) > 0) {
 
-					addedToWishlist = true;
+					isInWishList = true;
 				}
 			}
 			else {
 				if (_commerceWishListItemService.
-						getCommerceWishListItemByContainsCProductCount(
-							commerceWishList.getCommerceWishListId(),
-							cpCatalogEntry.getCProductId()) > 0) {
+					getCommerceWishListItemByContainsCProductCount(
+						commerceWishList.getCommerceWishListId(),
+						cpCatalogEntry.getCProductId()) > 0) {
 
-					addedToWishlist = true;
+					isInWishList = true;
 				}
 			}
-
-			context.put("addedToWishlist", addedToWishlist);
-
-			context.put("addToWishlistButtonVisible", true);
-			context.put(
-				"wishlistAPI",
-				_portal.getPortalURL(httpServletRequest) +
-					"/o/commerce-ui/wish-list-item");
-		}
-		else {
-			context.put("addToWishlistButtonVisible", false);
 		}
 
-		context.put(
-			"spritemap", themeDisplay.getPathThemeImages() + "/icons.svg");
+		displayProductInformation.put("isInWishList", isInWishList);
 
-		Set<String> dependencies = new HashSet<>();
+		displayProductInformation.put("channelId",
+			commerceContext.getCommerceChannelId());
 
-		dependencies.add(
-			"commerce-frontend-taglib/add_to_cart/AddToCartButton.es");
-		dependencies.add(
-			"commerce-frontend-taglib/compare_checkbox/CompareCheckbox.es");
-		dependencies.add("commerce-frontend-taglib/price/Price.es");
+		CommerceCurrency commerceCurrency =
+			commerceContext.getCommerceCurrency();
 
-		ComponentDescriptor componentDescriptor = new ComponentDescriptor(
-			"ProductCard.render",
-			"commerce-frontend-taglib/product_card/ProductCard.es", null,
-			dependencies, false, true, false);
+		displayProductInformation.put("currencyCode",
+			commerceCurrency.getCode());
 
-		_soyComponentRenderer.renderSoyComponent(
-			httpServletRequest, httpServletResponse, componentDescriptor,
-			context);
+		String pathThemeImages = themeDisplay.getPathThemeImages();
+
+		String spritemap = pathThemeImages + "/icons.svg";
+
+		if (pathThemeImages.contains("classic")) {
+			spritemap = pathThemeImages + "/lexicon/icons.svg";
+		}
+
+		displayProductInformation.put("spritemap", spritemap);
+
+		httpServletRequest.setAttribute(
+			"displayProductInformation", displayProductInformation);
+
+		_jspRenderer.renderJSP(
+			_servletContext, httpServletRequest, httpServletResponse,
+			"/product_publisher/render/list/entry/view.jsp");
 	}
 
 	@Reference
@@ -348,7 +324,7 @@ public class MiniumCPContentListEntryRenderer
 	private JSONFactory _jsonFactory;
 
 	@Reference
-	private NPMResolver _npmResolver;
+	private JSPRenderer _jspRenderer;
 
 	@Reference
 	private Portal _portal;
@@ -356,7 +332,8 @@ public class MiniumCPContentListEntryRenderer
 	@Reference
 	private ProductHelper _productHelper;
 
-	@Reference
-	private SoyComponentRenderer _soyComponentRenderer;
-
+	@Reference(
+		target = "(osgi.web.symbolicname=com.liferay.commerce.product.content.web)"
+	)
+	private ServletContext _servletContext;
 }
