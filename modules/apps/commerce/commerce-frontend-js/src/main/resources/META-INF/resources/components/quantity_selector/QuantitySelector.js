@@ -34,10 +34,7 @@ function QuantitySelector({
 	...optionSettings
 }) {
 	const initialQuantity = Math.max(
-		getMinMultipleQuantity(
-			optionSettings.minQuantity,
-			optionSettings.multipleQuantity
-		),
+		getMinMultipleQuantity(optionSettings),
 		quantity
 	);
 
@@ -102,10 +99,7 @@ function QuantitySelector({
 			) : (
 				<ClayInput
 					max={optionSettings.maxQuantity}
-					min={getMinMultipleQuantity(
-						optionSettings.minQuantity,
-						optionSettings.multipleQuantity
-					)}
+					min={getMinMultipleQuantity(optionSettings)}
 					step={optionSettings.multipleQuantity}
 					type="number"
 					{...commonProps}

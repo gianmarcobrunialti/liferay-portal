@@ -14,85 +14,112 @@
 
 import * as Utils from '../../../../src/main/resources/META-INF/resources/components/quantity_selector/utils';
 
-describe('QuantitySelector Util -> generateQuantityOptions', () => {
-	it('returns allowedQuantities, if non-empty, as formatted options', () => {
-		const allowedQuantities = [
-			2,
-			4,
-			42,
-			65,
-			33,
-			913,
-			267,
-			323,
-			122,
-			90,
-			113,
-		];
+describe('QuantitySelector Util', () => {
+	describe('generateQuantityOptions', () => {
+		it('returns allowedQuantities, if non-empty, as formatted options', () => {
+			const allowedQuantities = [
+				2,
+				4,
+				42,
+				65,
+				33,
+				913,
+				267,
+				323,
+				122,
+				90,
+				113,
+			];
 
-		expect(Utils.generateQuantityOptions({allowedQuantities})).toEqual(
-			allowedQuantities.map((value) => ({
-				label: value.toString(),
-				value,
-			}))
-		);
+			expect(Utils.generateQuantityOptions({allowedQuantities})).toEqual(
+				allowedQuantities.map((value) => ({
+					label: value.toString(),
+					value,
+				}))
+			);
+		});
+
+		it('returns formatted options range from minQuantity to maxQuantity if allowedQuantities is empty', () => {
+			expect(
+				Utils.generateQuantityOptions({
+					allowedQuantities: [],
+					maxQuantity: 5,
+					minQuantity: 2,
+				})
+			).toEqual(
+				[1, 2, 3, 4, 5].map((value) => ({
+					label: value.toString(),
+					value,
+				}))
+			);
+		});
+
+		it('ignores minQuantity and maxQuantity and returns allowedQuantities as formatted options if it is not empty', () => {
+			const allowedQuantities = [3, 5, 7, 9];
+
+			expect(
+				Utils.generateQuantityOptions({
+					allowedQuantities,
+					maxQuantity: 9,
+					minQuantity: 1,
+					multipleQuantity: 2,
+				})
+			).toEqual(
+				allowedQuantities.map((value) => ({
+					label: value.toString(),
+					value,
+				}))
+			);
+		});
+
+		it('returns as formatted options computed quantities as multiples if multipleQuantity is greater than 1', () => {
+			expect(
+				Utils.generateQuantityOptions({
+					allowedQuantities: [],
+					maxQuantity: 4,
+					minQuantity: 1,
+					multipleQuantity: 2,
+				})
+			).toEqual(
+				[2, 4].map((value) => ({
+					label: value.toString(),
+					value,
+				}))
+			);
+		});
+
+		it('returns only one option if allowedQuantities, maxQuantity, minQuantity and multipleQuantity are not passed in', () => {
+			expect(Utils.generateQuantityOptions({})).toEqual(
+				[1].map((value) => ({
+					label: value.toString(),
+					value,
+				}))
+			);
+		});
 	});
 
-	it('returns formatted options range from minQuantity to maxQuantity if allowedQuantities is empty', () => {
-		expect(
-			Utils.generateQuantityOptions({
-				allowedQuantities: [],
-				maxQuantity: 5,
-				minQuantity: 2,
-			})
-		).toEqual(
-			[1, 2, 3, 4, 5].map((value) => ({
-				label: value.toString(),
-				value,
-			}))
-		);
-	});
+	describe('getMinMultipleQuantity', () => {
+		it('returns the multiple quantity if it is greater than or equal to the minimum quantity', () => {
+			expect(
+				Utils.getMinMultipleQuantity({
+					minQuantity: 3,
+					multipleQuantity: 4,
+				})
+			).toEqual(4);
+		});
 
-	it('ignores minQuantity and maxQuantity and returns allowedQuantities as formatted options if it is not empty', () => {
-		const allowedQuantities = [3, 5, 7, 9];
-
-		expect(
-			Utils.generateQuantityOptions({
-				allowedQuantities,
-				maxQuantity: 9,
-				minQuantity: 1,
-				multipleQuantity: 2,
-			})
-		).toEqual(
-			allowedQuantities.map((value) => ({
-				label: value.toString(),
-				value,
-			}))
-		);
-	});
-
-	it('returns as formatted options computed quantities as multiples if multipleQuantity is greater than 1', () => {
-		expect(
-			Utils.generateQuantityOptions({
-				allowedQuantities: [],
-				maxQuantity: 4,
-				minQuantity: 1,
-				multipleQuantity: 2,
-			})
-		).toEqual(
-			[2, 4].map((value) => ({
-				label: value.toString(),
-				value,
-			}))
-		);
-	});
-
-	it('returns only one option if allowedQuantities, maxQuantity, minQuantity and multipleQuantity are not passed in', () => {
-		expect(Utils.generateQuantityOptions({})).toEqual(
-			[1].map((value) => ({
-				label: value.toString(),
-				value,
-			}))
+		it(
+			'returns the lowest possible value that is greater than the minimum' +
+				'quantity and a multiple of the multiple quantity' +
+				'if the latter is greater than the former',
+			() => {
+				expect(
+					Utils.getMinMultipleQuantity({
+						minQuantity: 5,
+						multipleQuantity: 2,
+					})
+				).toEqual(6);
+			}
 		);
 	});
 });

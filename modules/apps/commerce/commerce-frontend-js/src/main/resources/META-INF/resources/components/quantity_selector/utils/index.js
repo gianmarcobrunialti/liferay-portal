@@ -54,7 +54,10 @@ export const generateQuantityOptions = ({
 	return quantityOptions;
 };
 
-export function getMinMultipleQuantity(minQuantity, multipleQuantity) {
+export function getMinMultipleQuantity({
+	minQuantity = 1,
+	multipleQuantity = 1,
+}) {
 	if (minQuantity <= multipleQuantity) {
 		return multipleQuantity;
 	}
