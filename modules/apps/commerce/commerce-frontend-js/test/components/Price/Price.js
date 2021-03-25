@@ -420,11 +420,6 @@ describe('Price', () => {
 			const wrapper = container.querySelector('.price');
 
 			expect(wrapper).not.toBeInTheDocument();
-
-			const hasStandAloneClass =
-				container.querySelector('.price-standalone') !== null;
-
-			expect(hasStandAloneClass).toBe(true);
 		});
 
 		it('displays the price of an item in a non-compact visualization by default', () => {
