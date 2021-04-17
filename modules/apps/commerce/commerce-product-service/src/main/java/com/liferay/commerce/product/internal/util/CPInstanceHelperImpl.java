@@ -359,6 +359,12 @@ public class CPInstanceHelperImpl implements CPInstanceHelper {
 	}
 
 	@Override
+	public int getCPInstanceOptionsCount(long cpDefinitionId) {
+		return _cpDefinitionOptionRelLocalService.
+			getCPDefinitionOptionRelsCount(cpDefinitionId);
+	}
+
+	@Override
 	public String getCPInstanceThumbnailSrc(long cpInstanceId)
 		throws Exception {
 

@@ -23,6 +23,8 @@ CPCatalogEntry cpCatalogEntry = cpContentHelper.getCPCatalogEntry(request);
 
 CPSku cpSku = cpContentHelper.getDefaultCPSku(cpCatalogEntry);
 
+boolean hasOptions = cpContentHelper.hasOptions(cpCatalogEntry.getCPDefinitionId());
+
 String productDetailURL = cpContentHelper.getFriendlyURL(cpCatalogEntry, themeDisplay);
 %>
 
@@ -72,7 +74,7 @@ String productDetailURL = cpContentHelper.getFriendlyURL(cpCatalogEntry, themeDi
 
 			<div>
 				<c:choose>
-					<c:when test="<%= cpSku == null %>">
+					<c:when test="<%= cpSku == null || hasOptions %>">
 						<div class="add-to-cart d-flex my-2 pt-5" id="<%= PortalUtil.generateRandomKey(request, "taglib") + StringPool.UNDERLINE + "add_to_cart" %>">
 							<a class="btn btn-block btn-secondary" href="<%= productDetailURL %>" role="button" style="margin-top: 0.35rem;">
 								<liferay-ui:message key="view-all-variants" />

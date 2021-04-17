@@ -498,6 +498,15 @@ public class CPContentHelperImpl implements CPContentHelper {
 	}
 
 	@Override
+	public boolean hasOptions(long cpDefinitionId) {
+		if (_cpInstanceHelper.getCPInstanceOptionsCount(cpDefinitionId) > 0) {
+			return true;
+		}
+
+		return false;
+	}
+
+	@Override
 	public boolean isInWishList(
 			CPSku cpSku, CPCatalogEntry cpCatalogEntry,
 			ThemeDisplay themeDisplay)

@@ -78,6 +78,8 @@ public interface CPInstanceHelper {
 	public List<CPInstanceOptionValueRel>
 		getCPInstanceCPInstanceOptionValueRels(long cpInstanceId);
 
+	public int getCPInstanceOptionsCount(long cpDefinitionId);
+
 	public String getCPInstanceThumbnailSrc(long cpInstanceId) throws Exception;
 
 	public CPInstance getDefaultCPInstance(long cpDefinitionId)
