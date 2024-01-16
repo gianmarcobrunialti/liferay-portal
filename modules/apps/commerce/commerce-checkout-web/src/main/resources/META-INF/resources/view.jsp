@@ -109,11 +109,7 @@ CheckoutDisplayContext checkoutDisplayContext = (CheckoutDisplayContext)request.
 							</c:if>
 						</aui:form>
 
-						<aui:script>
-							function <portlet:namespace />saveCheckoutStep() {
-								submitForm(document.<portlet:namespace />fm);
-							}
-						</aui:script>
+						<liferay-frontend:component module="js/saveCheckoutStep" />
 					</c:otherwise>
 				</c:choose>
 			</div>
