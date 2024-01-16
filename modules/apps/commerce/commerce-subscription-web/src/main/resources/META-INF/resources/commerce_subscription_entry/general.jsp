@@ -62,7 +62,6 @@ if (deliveryMaxSubscriptionCycles > 0) {
 	elementClasses="flex-fill"
 	title='<%= LanguageUtil.get(request, "reference-order") %>'
 >
-
 <div class="row">
 	<div class="col-3">
 		<commerce-ui:info-box
@@ -142,7 +141,7 @@ if (deliveryMaxSubscriptionCycles > 0) {
 					</aui:select>
 
 					<div class="never-ends-header">
-						<aui:input checked="<%= ending ? false : true %>" name="neverEnds" onClick='<%= liferayPortletResponse.getNamespace() + "neverEndsToggle();" %>' type="toggle-switch" />
+						<aui:input checked="<%= ending ? false : true %>" name="neverEnds" type="toggle-switch" />
 					</div>
 
 					<div class="never-ends-content <%= ending ? StringPool.BLANK : "hide" %>">
@@ -150,6 +149,7 @@ if (deliveryMaxSubscriptionCycles > 0) {
 							<aui:validator name="digits" />
 
 							<aui:validator errorMessage='<%= LanguageUtil.format(request, "please-enter-a-value-greater-than-or-equal-to-x", 1) %>' name="custom">
+								<%-- TODO AUI:VALIDATOR scriptlet  --%>
 								function(val) {
 									var subscriptionNeverEndsCheckbox = window.document.querySelector('#<portlet:namespace />neverEnds');
 
@@ -209,7 +209,7 @@ if (deliveryMaxSubscriptionCycles > 0) {
 		>
 			<div class="row">
 				<div class="col-6">
-					<aui:select name="subscriptionType" onChange='<%= liferayPortletResponse.getNamespace() + "selectSubscriptionType();" %>' showEmptyOption="<%= true %>">
+					<aui:select name="subscriptionType" showEmptyOption="<%= true %>">
 
 						<%
 						for (CPSubscriptionType curCPSubscriptionType : cpSubscriptionTypes) {
@@ -270,11 +270,13 @@ if (deliveryMaxSubscriptionCycles > 0) {
 						<aui:input checked="<%= deliveryEnding ? false : true %>" label="never-ends" name="deliveryNeverEnds" onClick='<%= liferayPortletResponse.getNamespace() + "deliveryNeverEndsToggle();" %>' type="toggle-switch" />
 					</div>
 
-					<div class="never-ends-content <%= ending ? StringPool.BLANK : "hide" %>">
+					<div class="never-ends-content delivery-never-ends-content <%= ending ? StringPool.BLANK : "hide" %>">
 						<aui:input helpMessage="max-subscription-cycles-help" label="end-after" name="deliveryMaxSubscriptionCycles" suffix='<%= LanguageUtil.get(request, "cycles") %>' value="<%= String.valueOf(deliveryMaxSubscriptionCycles) %>">
 							<aui:validator name="digits" />
 
 							<aui:validator errorMessage='<%= LanguageUtil.format(request, "please-enter-a-value-greater-than-or-equal-to-x", 1) %>' name="custom">
+								<%-- TODO AUI:VALIDATOR scriptlet  --%>
+
 								function(val) {
 									var deliveryNeverEndsCheckbox = window.document.querySelector('#<portlet:namespace />deliveryNeverEnds');
 
@@ -334,7 +336,7 @@ if (deliveryMaxSubscriptionCycles > 0) {
 		>
 			<div class="row">
 				<div class="col-6">
-					<aui:select label="subscription-type" name="deliverySubscriptionType" onChange='<%= liferayPortletResponse.getNamespace() + "selectDeliverySubscriptionType();" %>' showEmptyOption="<%= true %>">
+					<aui:select label="subscription-type" name="deliverySubscriptionType" showEmptyOption="<%= true %>">
 
 						<%
 						for (CPSubscriptionType curCPSubscriptionType : cpSubscriptionTypes) {
@@ -382,80 +384,13 @@ if (deliveryMaxSubscriptionCycles > 0) {
 />
 </commerce-ui:panel>
 
-<aui:script require="frontend-js-web/index as frontendJsWeb">
-	const {createPortletURL} = frontendJsWeb;
+<liferay-frontend:component
+	context='<%=
+		HashMapBuilder.<String, Object>put(
+			"currentURL", currentURL
+		).build()
+	%>'
+	module="js/onSubscriptionTypeSelected"
+/>
 
-	Liferay.provide(window, '<portlet:namespace />selectSubscriptionType', () => {
-		const portletURL = createPortletURL('<%= currentURLObj %>', {
-			subscriptionLength: document.getElementById(
-				'<portlet:namespace />subscriptionLength'
-			).value,
-			subscriptionType: document.getElementById(
-				'<portlet:namespace />subscriptionType'
-			).value,
-			maxSubscriptionCycles: document.getElementById(
-				'<portlet:namespace />maxSubscriptionCycles'
-			).value,
-		});
-
-		window.location.replace(portletURL.toString());
-	});
-
-	Liferay.provide(
-		window,
-		'<portlet:namespace />selectDeliverySubscriptionType',
-		() => {
-			const portletURL = createPortletURL('<%= currentURLObj %>', {
-				deliverySubscriptionLength: document.getElementById(
-					'<portlet:namespace />deliverySubscriptionLength'
-				).value,
-				deliverySubscriptionType: document.getElementById(
-					'<portlet:namespace />deliverySubscriptionType'
-				).value,
-				deliveryMaxSubscriptionCycles: document.getElementById(
-					'<portlet:namespace />deliveryMaxSubscriptionCycles'
-				).value,
-			});
-
-			window.location.replace(portletURL.toString());
-		}
-	);
-</aui:script>
-
-<aui:script use="liferay-form">
-	document
-		.getElementById('<portlet:namespace />neverEnds')
-		.addEventListener('change', (event) => {
-			const formValidator = Liferay.Form.get('<portlet:namespace />fm')
-				.formValidator;
-
-			formValidator.validateField(
-				'<portlet:namespace />maxSubscriptionCycles'
-			);
-		});
-
-	document
-		.getElementById('<portlet:namespace />deliveryNeverEnds')
-		.addEventListener('change', (event) => {
-			const formValidator = Liferay.Form.get('<portlet:namespace />fm')
-				.formValidator;
-
-			formValidator.validateField(
-				'<portlet:namespace />deliveryMaxSubscriptionCycles'
-			);
-		});
-</aui:script>
-
-<aui:script>
-	function <portlet:namespace />neverEndsToggle() {
-		document.querySelector('.never-ends-content').classList.toggle('hide');
-	}
-
-	function <portlet:namespace />deliveryNeverEndsToggle() {
-		document
-			.querySelector(
-				'#<portlet:namespace />deliveryNeverEndsContainer .never-ends-content'
-			)
-			.classList.toggle('hide');
-	}
-</aui:script>
+<liferay-frontend:component module="js/neverEnds" />

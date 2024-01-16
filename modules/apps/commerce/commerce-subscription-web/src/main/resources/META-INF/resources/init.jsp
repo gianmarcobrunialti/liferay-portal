@@ -53,6 +53,7 @@ page import="com.liferay.taglib.servlet.PipingServletResponseFactory" %>
 <%@ page import="java.util.Calendar" %><%@
 page import="java.util.Date" %><%@
 page import="java.util.HashMap" %><%@
+page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
 page import="java.util.List" %><%@
 page import="java.util.Map" %><%@
 page import="java.util.StringJoiner" %>
