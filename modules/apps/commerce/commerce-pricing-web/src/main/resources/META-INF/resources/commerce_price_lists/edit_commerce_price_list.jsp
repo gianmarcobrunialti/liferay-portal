@@ -42,27 +42,11 @@ if (commercePriceList != null) {
 	portletURL="<%= currentURLObj %>"
 />
 
-<aui:script>
-	document
-		.getElementById('<portlet:namespace />publishButton')
-		.addEventListener('click', (e) => {
-			e.preventDefault();
-
-			var form = document.getElementById('<portlet:namespace />fm');
-
-			if (!form) {
-				throw new Error('Form with id: <portlet:namespace />fm not found!');
-			}
-
-			var workflowActionInput = document.getElementById(
-				'<portlet:namespace />workflowAction'
-			);
-
-			if (workflowActionInput) {
-				workflowActionInput.value =
-					'<%= WorkflowConstants.ACTION_PUBLISH %>';
-			}
-
-			submitForm(form);
-		});
-</aui:script>
+<liferay-frontend:component
+	context='<%=
+		HashMapBuilder.<String, Object>put(
+			"workflowAction", WorkflowConstants.ACTION_PUBLISH
+		).build()
+	%>'
+	module="js/onEdit"
+/>
