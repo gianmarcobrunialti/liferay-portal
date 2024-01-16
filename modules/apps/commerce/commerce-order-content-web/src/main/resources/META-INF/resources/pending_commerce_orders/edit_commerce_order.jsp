@@ -50,6 +50,7 @@ List<String> errorMessages = (List<String>)request.getAttribute(CommerceWebKeys.
 %>
 
 <c:if test="<%= (errorMessages != null) && !errorMessages.isEmpty() %>">
+	<%-- TODO Migrate? --%>
 	<aui:script>
 		Liferay.Util.openModal({
 			bodyHTML: '<%= errorMessages.get(0) %>',
@@ -534,17 +535,3 @@ List<String> errorMessages = (List<String>)request.getAttribute(CommerceWebKeys.
 <liferay-frontend:component
 	module="js/view"
 />
-
-<aui:script use="aui-base">
-	var orderTransition = A.one('#<portlet:namespace />orderTransition');
-
-	if (orderTransition) {
-		orderTransition.delegate(
-			'click',
-			(event) => {
-				<portlet:namespace />transition(event);
-			},
-			'.transition-link'
-		);
-	}
-</aui:script>

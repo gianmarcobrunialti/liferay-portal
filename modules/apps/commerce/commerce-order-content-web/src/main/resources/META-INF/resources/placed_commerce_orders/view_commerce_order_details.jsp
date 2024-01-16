@@ -282,14 +282,16 @@ if (commerceOrder != null) {
 	</aui:form>
 
 	<c:if test="<%= commerceOrderContentDisplayContext.isShowProcessQuote() %>">
-		<aui:button cssClass="btn-lg" onClick='<%= liferayPortletResponse.getNamespace() + "processQuote();" %>' value="process-quote" />
+		<aui:button cssClass="btn-lg process-quote-button" value="process-quote" />
 	</c:if>
 
-	<aui:button cssClass="btn-lg" onClick='<%= liferayPortletResponse.getNamespace() + "reorderCommerceOrder();" %>' value="reorder" />
+	<aui:button cssClass="btn-lg reorder-button" value="reorder" />
 
 	<c:if test="<%= commerceOrderContentDisplayContext.isShowRetryPayment() %>">
 		<aui:button cssClass="btn-lg" href="<%= commerceOrderContentDisplayContext.getRetryPaymentURL() %>" primary="<%= true %>" value="retry-payment" />
 	</c:if>
+
+	<liferay-frontend:component module="js/viewCommerceOrderDetails" />
 
 	<liferay-util:dynamic-include key="com.liferay.commerce.order.content.web#/place_order_detail_cta#" />
 </div>
@@ -402,35 +404,3 @@ if (commerceOrder != null) {
 		</div>
 	</div>
 </div>
-
-<aui:script>
-	function <portlet:namespace />viewCommerceOrderShipments(uri) {
-		Liferay.Util.openWindow({
-			dialog: {
-				centered: true,
-				destroyOnClose: true,
-				modal: true,
-			},
-			dialogIframe: {
-				bodyCssClass: 'dialog',
-			},
-			id: 'viewCommerceOrderShipmentsDialog',
-			title: '',
-			uri: uri,
-		});
-	}
-
-	function <portlet:namespace />reorderCommerceOrder() {
-		document.<portlet:namespace />fm.<portlet:namespace /><%= Constants.CMD %>.value =
-			'reorder';
-
-		submitForm(document.<portlet:namespace />fm);
-	}
-
-	function <portlet:namespace />processQuote() {
-		document.<portlet:namespace />fm.<portlet:namespace /><%= Constants.CMD %>.value =
-			'processQuote';
-
-		submitForm(document.<portlet:namespace />fm);
-	}
-</aui:script>

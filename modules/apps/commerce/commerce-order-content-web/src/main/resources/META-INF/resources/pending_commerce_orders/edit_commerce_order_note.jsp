@@ -64,8 +64,4 @@ PortletURL backURL = PortletURLBuilder.createRenderURL(
 	</aui:button-row>
 </aui:form>
 
-<aui:script>
-	function <portlet:namespace />saveCommerceOrderNote() {
-		submitForm(document.<portlet:namespace />fm);
-	}
-</aui:script>
+<liferay-frontend:component module="js/saveCommerceOrderNote" />

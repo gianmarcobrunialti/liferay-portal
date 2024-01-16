@@ -10,10 +10,10 @@ export default function ({namespace}) {
 		document.getElementById(`${namespace}requestQuote`) ||
 		document.getElementById(`requestQuote`);
 
-	let delegateHandler = null;
+	let requestQuoteDelegate = null;
 
 	if (requestQuote) {
-		delegateHandler = delegate(
+		requestQuoteDelegate = delegate(
 			requestQuote,
 			'click',
 			'.request-quote',
@@ -23,10 +23,29 @@ export default function ({namespace}) {
 		);
 	}
 
+	const orderTransition = document.getElementById(`${namespace}orderTransition`);
+
+	let orderTransitionDelegate = null;
+
+	if (orderTransition) {
+		orderTransitionDelegate = delegate(
+			orderTransition,
+			'click',
+			'.transition-link',
+			(event) => {
+				window[`${namespace}transition`](event);
+			},
+		);
+	}
+
 	return {
 		dispose() {
-			if (delegateHandler) {
-				delegateHandler.dispose();
+			if (requestQuoteDelegate) {
+				requestQuoteDelegate.dispose();
+			}
+
+			if (orderTransitionDelegate) {
+				orderTransitionDelegate.dispose();
 			}
 		},
 	};
