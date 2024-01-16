@@ -41,9 +41,4 @@ String messageAsLocalizedXML = moneyOrderGroupServiceConfiguration.messageAsLoca
 	</aui:button-row>
 </aui:form>
 
-<aui:script>
-	Liferay.Util.toggleBoxes(
-		'<portlet:namespace />showMessagePage',
-		'<portlet:namespace />message'
-	);
-</aui:script>
+<liferay-frontend:component module="js/index" />
