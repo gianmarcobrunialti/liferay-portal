@@ -16,6 +16,7 @@ import java.util.Map;
 /**
  * @author Roberto Díaz
  * @author Sergio González
+ * @author Gianmarco Brunialti Masera
  */
 public class RoleMembershipPolicyUtil {
 
@@ -24,7 +25,7 @@ public class RoleMembershipPolicyUtil {
 		throws PortalException {
 
 		RoleMembershipPolicy roleMembershipPolicy =
-			RoleMembershipPolicyFactoryUtil.getRoleMembershipPolicy();
+			RoleMembershipPolicyFactoryUtil.getRoleMembershipPolicy(userIds);
 
 		roleMembershipPolicy.checkRoles(userIds, addRoleIds, removeRoleIds);
 	}
@@ -33,7 +34,7 @@ public class RoleMembershipPolicyUtil {
 		throws PortalException {
 
 		RoleMembershipPolicy roleMembershipPolicy =
-			RoleMembershipPolicyFactoryUtil.getRoleMembershipPolicy();
+			RoleMembershipPolicyFactoryUtil.getRoleMembershipPolicy(userId);
 
 		return roleMembershipPolicy.isRoleAllowed(userId, roleId);
 	}
@@ -42,7 +43,7 @@ public class RoleMembershipPolicyUtil {
 		throws PortalException {
 
 		RoleMembershipPolicy roleMembershipPolicy =
-			RoleMembershipPolicyFactoryUtil.getRoleMembershipPolicy();
+			RoleMembershipPolicyFactoryUtil.getRoleMembershipPolicy(userId);
 
 		return roleMembershipPolicy.isRoleRequired(userId, roleId);
 	}
@@ -52,7 +53,7 @@ public class RoleMembershipPolicyUtil {
 		throws PortalException {
 
 		RoleMembershipPolicy roleMembershipPolicy =
-			RoleMembershipPolicyFactoryUtil.getRoleMembershipPolicy();
+			RoleMembershipPolicyFactoryUtil.getRoleMembershipPolicy(userIds);
 
 		roleMembershipPolicy.propagateRoles(userIds, addRoleIds, removeRoleIds);
 	}

@@ -11,6 +11,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.security.membershippolicy.RoleMembershipPolicy;
+import com.liferay.portal.security.CompanyViolationChecker;
 import com.liferay.portal.util.PropsValues;
 
 import org.osgi.framework.BundleContext;
@@ -20,6 +21,7 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
  * @author Roberto Díaz
+ * @author Gianmarco Brunialti Masera
  */
 public class RoleMembershipPolicyFactoryUtil {
 
@@ -29,6 +31,30 @@ public class RoleMembershipPolicyFactoryUtil {
 				RoleMembershipPolicyFactoryUtil::_createServiceTracker);
 
 		return serviceTracker.getService();
+	}
+
+	public static RoleMembershipPolicy getRoleMembershipPolicy(long userId)
+		throws PortalException {
+
+		if (CompanyViolationChecker.check(userId)) {
+			return getRoleMembershipPolicy();
+		}
+
+		throw new PortalException("Company violation");
+	}
+
+	public static RoleMembershipPolicy getRoleMembershipPolicy(long[] userIds)
+		throws PortalException {
+
+		for (long userId : userIds) {
+			if (CompanyViolationChecker.check(userId)) {
+				continue;
+			}
+
+			throw new PortalException("Company violation");
+		}
+
+		return getRoleMembershipPolicy();
 	}
 
 	private static ServiceTracker<RoleMembershipPolicy, RoleMembershipPolicy>
