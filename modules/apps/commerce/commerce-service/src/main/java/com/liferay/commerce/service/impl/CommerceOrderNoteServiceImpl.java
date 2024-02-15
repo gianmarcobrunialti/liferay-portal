@@ -42,12 +42,9 @@ public class CommerceOrderNoteServiceImpl
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		String actionId = CommerceOrderActionKeys.MANAGE_COMMERCE_ORDER_NOTES;
-
-		if (restricted) {
-			actionId =
-				CommerceOrderActionKeys.MANAGE_COMMERCE_ORDER_RESTRICTED_NOTES;
-		}
+		String actionId = restricted 
+			? CommerceOrderActionKeys.MANAGE_COMMERCE_ORDER_RESTRICTED_NOTES
+			: CommerceOrderActionKeys.MANAGE_COMMERCE_ORDER_NOTES;
 
 		_portletResourcePermission.check(
 			getPermissionChecker(), commerceOrderId, actionId);
