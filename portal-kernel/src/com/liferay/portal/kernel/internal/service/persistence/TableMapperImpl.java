@@ -22,9 +22,11 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.internal.cache.DummyPortalCache;
 import com.liferay.portal.kernel.internal.dao.orm.TableMapperArgumentResolver;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.ModelListener;
 import com.liferay.portal.kernel.model.ModelListenerRegistrationUtil;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.impl.TableMapper;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -36,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import javax.sql.DataSource;
 
@@ -444,12 +447,23 @@ public class TableMapperImpl<L extends BaseModel<L>, R extends BaseModel<R>>
 			return Collections.emptyList();
 		}
 
+		long currentCompanyId = CompanyThreadLocal.getCompanyId();
 		List<T> slaveBaseModels = new ArrayList<>(slavePrimaryKeys.length);
 
 		try {
 			for (long slavePrimaryKey : slavePrimaryKeys) {
-				slaveBaseModels.add(
-					slaveBasePersistence.findByPrimaryKey(slavePrimaryKey));
+				T slaveBaseModel =
+					slaveBasePersistence.findByPrimaryKey(slavePrimaryKey);
+
+				long checkableCompanyId =
+					_getCheckableCompanyId(slaveBaseModel);
+
+				boolean isSkipCheck =
+					checkableCompanyId == CompanyConstants.SYSTEM;
+
+				if (isSkipCheck || checkableCompanyId == currentCompanyId) {
+					slaveBaseModels.add(slaveBaseModel);
+				}
 			}
 		}
 		catch (NoSuchModelException noSuchModelException) {
@@ -696,6 +710,15 @@ public class TableMapperImpl<L extends BaseModel<L>, R extends BaseModel<R>>
 		}
 
 		return false;
+	}
+
+	private static <T extends BaseModel<T>> long _getCheckableCompanyId(T model) {
+
+		Map<String, Object> modelAttributes =
+			model.getModelAttributes();
+
+		return (long) modelAttributes.getOrDefault(
+			"companyId", CompanyConstants.SYSTEM);
 	}
 
 	private final ServiceRegistration<?> _serviceRegistration;
