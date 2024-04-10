@@ -37,7 +37,7 @@ export default function ({namespace, viewReturnableCommerceOrderItemsURL}) {
 						<div id="returnable-items-header-tooltip" class="position-relative fade tooltip clay-tooltip-right" role="tooltip">
 							<div class="arrow"></div>
 							<div class="tooltip-inner small">${Liferay.Language.get(
-								'items-not-displayed-here-dont-support-return'
+								'only-items-that-support-return-are-displayed-here'
 							)}</div>
 						</div>
 					</div>
