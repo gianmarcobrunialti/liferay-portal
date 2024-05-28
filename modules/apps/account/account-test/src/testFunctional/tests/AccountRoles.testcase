@@ -1041,7 +1041,7 @@ definition {
 			for (var index : list "1,2") {
 				AssertElementNotPresent(
 					key_entryName = "Commerce Account ${index}",
-					locator1 = "CommerceNavigation#ENTRY_NAME");
+					locator1 = "CommerceNavigation#ENTRY_NAME_ACCOUNT");
 			}
 
 			AssertElementPresent(
@@ -1069,7 +1069,7 @@ definition {
 
 			AssertElementPresent(
 				key_entryName = "Commerce Account 1",
-				locator1 = "CommerceNavigation#ENTRY_NAME");
+				locator1 = "CommerceNavigation#ENTRY_NAME_ACCOUNT");
 		}
 
 		task ("And can view and manage the Channel Defaults of account 1") {
@@ -1142,7 +1142,7 @@ definition {
 			for (var index : list "1,2") {
 				AssertElementNotPresent(
 					key_entryName = "Commerce Account ${index}",
-					locator1 = "CommerceNavigation#ENTRY_NAME");
+					locator1 = "CommerceNavigation#ENTRY_NAME_ACCOUNT");
 			}
 
 			AssertElementPresent(
@@ -1180,7 +1180,7 @@ definition {
 			for (var index : list "1,2") {
 				AssertElementPresent(
 					key_entryName = "Commerce Account ${index}",
-					locator1 = "CommerceNavigation#ENTRY_NAME");
+					locator1 = "CommerceNavigation#ENTRY_NAME_ACCOUNT");
 			}
 		}
 
