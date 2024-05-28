@@ -87,7 +87,7 @@
 </tr>
 <tr>
 	<td>CLOSE</td>
-	<td>//button[contains(@class,'close')] | //a[contains(@id,'closePanelAdd') and contains(@class,'close')]</td>
+	<td>//div[contains(@class, 'is-visible')]//button[contains(@class,'close')] | //a[contains(@id,'closePanelAdd') and contains(@class,'close')]</td>
 	<td></td>
 </tr>
 <tr>
