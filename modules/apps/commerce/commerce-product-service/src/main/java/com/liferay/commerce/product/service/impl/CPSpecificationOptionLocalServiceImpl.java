@@ -238,9 +238,9 @@ public class CPSpecificationOptionLocalServiceImpl
 	@Override
 	public CPSpecificationOption updateCPSpecificationOption(
 			long cpSpecificationOptionId, long cpOptionCategoryId,
-			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
-			boolean facetable, String key, double priority,
-			ServiceContext serviceContext)
+			long listTypeDefinitionId, Map<Locale, String> titleMap,
+			Map<Locale, String> descriptionMap, boolean facetable, String key,
+			double priority, ServiceContext serviceContext)
 		throws PortalException {
 
 		CPSpecificationOption cpSpecificationOption =
@@ -256,6 +256,7 @@ public class CPSpecificationOptionLocalServiceImpl
 			cpSpecificationOption.getCompanyId(), titleMap, key);
 
 		cpSpecificationOption.setCPOptionCategoryId(cpOptionCategoryId);
+		cpSpecificationOption.setListTypeDefinitionId(listTypeDefinitionId);
 		cpSpecificationOption.setTitleMap(titleMap);
 		cpSpecificationOption.setDescriptionMap(descriptionMap);
 		cpSpecificationOption.setFacetable(facetable);
