@@ -1,0 +1,9 @@
+assemble:
+    - from: build/buildTheme/img
+      into: static/img
+liferay-minium4-theme-css:
+    clayURL: css/clay.css
+    frontendTokenDefinitionJSON: src/frontend-token-definition.json
+    mainURL: css/main.css
+    name: Liferay Commerce Minium 4.0 Theme CSS
+    type: themeCSS

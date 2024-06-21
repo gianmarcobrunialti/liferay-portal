@@ -1,0 +1,24 @@
+{
+	"fieldSets": [
+		{
+			"fields": [
+				{
+					"dataType": "string",
+					"defaultValue": true,
+					"description": "Show Site Logo",
+					"label": "Show Site Logo",
+					"name": "showSiteLogo",
+					"type": "checkbox"
+				},
+				{
+					"dataType": "string",
+					"defaultValue": true,
+					"description": "Show Sign In",
+					"label": "Show Sign In",
+					"name": "showSignIn",
+					"type": "checkbox"
+				}
+			]
+		}
+	]
+}

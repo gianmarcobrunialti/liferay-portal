@@ -1,0 +1,7 @@
+assemble:
+    - from: assets
+      into: static
+liferay-learn-global-css:
+    name: Commerce Minium Global CSS
+    type: globalCSS
+    url: global.css

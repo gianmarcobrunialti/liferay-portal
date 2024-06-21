@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="25794ca1-19fc-41a7-9458-a3226759ca69" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/.blade.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/Dockerfile.ext" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/GETTING_STARTED.markdown" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/build.gradle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/client-extensions/liferay-minium4-site-initializer/client-extension.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/client-extensions/liferay-minium4-site-initializer/site-initializer/commerce-channel.config.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/client-extensions/liferay-minium4-site-initializer/site-initializer/commerce-channel.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/client-extensions/liferay-minium4-site-initializer/site-initializer/commerce-minium/frontend-tokens-values.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/client-extensions/liferay-minium4-site-initializer/site-initializer/commerce-minium/style-book.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/client-extensions/liferay-minium4-site-initializer/site-initializer/commerce-minium/thumbnail.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/client-extensions/liferay-minium4-site-initializer/site-initializer/layout-page-templates/master-pages/minium-master/css.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/client-extensions/liferay-minium4-site-initializer/site-initializer/layout-page-templates/master-pages/minium-master/master-page.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/client-extensions/liferay-minium4-site-initializer/site-initializer/layout-page-templates/master-pages/minium-master/page-definition.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/client-extensions/liferay-minium4-site-initializer/site-initializer/layout-page-templates/master-pages/minium-master/thumbnail.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/client-extensions/liferay-minium4-site-initializer/site-initializer/site-navigation-menus.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/client-extensions/liferay-minium4-site-initializer/site-initializer/thumbnail.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/configs/common/.touch" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/configs/common/portal-setup-wizard.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/configs/dev/portal-ext.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/configs/docker/.touch" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/configs/docker/portal-ext.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/configs/local/portal-ext.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/configs/prod/osgi/configs/com.liferay.portal.search.elasticsearch.configuration.ElasticsearchConfiguration.config" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/configs/prod/portal-ext.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/configs/uat/osgi/configs/com.liferay.portal.search.elasticsearch.configuration.ElasticsearchConfiguration.config" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/configs/uat/portal-ext.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/gradle.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/gradle/wrapper/gradle-wrapper.jar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/gradle/wrapper/gradle-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/gradlew" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/gradlew.bat" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/platform.bndrun" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/liferay-minium4-workspace/settings.gradle" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 8
+}]]></component>
+  <component name="ProjectId" id="2i9RJRCqupp1jfCllhUx2fLDAyX" />
+  <component name="ProjectViewState">
+    <option name="flattenPackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+    <option name="showMembers" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "nodejs_package_manager_path": "yarn",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="25794ca1-19fc-41a7-9458-a3226759ca69" name="Changes" comment="" />
+      <created>1718900733591</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1718900733591</updated>
+      <workItem from="1718900734616" duration="12000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
