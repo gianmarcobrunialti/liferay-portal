@@ -19,6 +19,7 @@ import {
 export {default as searchBar} from './search_bar/SearchBar';
 export {default as searchResults} from './search_results/SearchResults';
 export {default as discontinuedLabelCPInstanceChangeHandler} from './discontinued_label/DiscontinuedLabelCPInstanceChangeHandler';
+export {default as infoBoxHandler} from './info_box';
 
 export function accountSelectorTag({
 	accountEntryAllowedTypes,
@@ -199,6 +200,7 @@ export function cart({
 	cartViews,
 	checkoutURL,
 	currencyCode,
+	detachedOpener,
 	displayDiscountLevels,
 	displayTotalItemsQuantity,
 	groupId,
@@ -227,6 +229,7 @@ export function cart({
 			groupId,
 			id,
 		},
+		detachedOpener,
 		displayDiscountLevels,
 		displayTotalItemsQuantity,
 		itemsQuantity: Number(itemsQuantity),
