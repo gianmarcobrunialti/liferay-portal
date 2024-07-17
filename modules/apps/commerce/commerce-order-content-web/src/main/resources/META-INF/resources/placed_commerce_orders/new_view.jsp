@@ -285,7 +285,7 @@ CommerceOrder commerceOrder = commerceOrderContentDisplayContext.getCommerceOrde
 						"portletId", portletDisplay.getRootPortletId()
 					).build()
 				%>'
-				module="{newViews} from commerce-order-content-web"
+				module="{newView} from commerce-order-content-web"
 			/>
 		</commerce-ui:panel>
 	</div>
