@@ -763,6 +763,9 @@ public class CommerceOrderContentDisplayContext {
 					"btn-primary", null, portletURL, null, "reorder"));
 		}
 
+		List<CommerceOrderItem> commerceOrderItems =
+			commerceOrder.getCommerceOrderItems();
+
 		List<CommerceOrderStatus> commerceOrderStatuses =
 			_commerceOrderEngine.getNextCommerceOrderStatuses(commerceOrder);
 
@@ -785,7 +788,10 @@ public class CommerceOrderContentDisplayContext {
 
 				if (!hasPermission(
 						CommerceOrderActionKeys.
-							CHECKOUT_OPEN_COMMERCE_ORDERS)) {
+							CHECKOUT_OPEN_COMMERCE_ORDERS) ||
+					ListUtil.exists(
+						commerceOrderItems,
+						CommerceOrderItemModel::isPriceOnApplication)) {
 
 					continue;
 				}
@@ -800,7 +806,10 @@ public class CommerceOrderContentDisplayContext {
 			}
 			else if ((commerceOrderStatus.getKey() ==
 						CommerceOrderConstants.ORDER_STATUS_QUOTE_REQUESTED) &&
-					 isRequestQuoteEnabled()) {
+					 (isRequestQuoteEnabled() ||
+					  ListUtil.exists(
+						  commerceOrderItems,
+						  CommerceOrderItemModel::isPriceOnApplication))) {
 
 				if (!isValidCommerceOrder()) {
 					continue;
@@ -823,8 +832,9 @@ public class CommerceOrderContentDisplayContext {
 				label = "accept-order";
 				transitionName = String.valueOf(commerceOrderStatus.getKey());
 			}
-			else if (commerceOrderStatus.getKey() ==
-						CommerceOrderConstants.ORDER_STATUS_QUOTE_PROCESSED) {
+			else if ((commerceOrderStatus.getKey() ==
+						CommerceOrderConstants.ORDER_STATUS_QUOTE_PROCESSED) &&
+					 isShowProcessQuote()) {
 
 				label = "process-quote";
 				transitionName = String.valueOf(commerceOrderStatus.getKey());
