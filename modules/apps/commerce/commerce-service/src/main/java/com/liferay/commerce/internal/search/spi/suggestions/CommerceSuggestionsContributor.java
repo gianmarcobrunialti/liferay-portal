@@ -5,6 +5,9 @@
 
 package com.liferay.commerce.internal.search.spi.suggestions;
 
+import com.liferay.account.manager.CurrentAccountEntryManager;
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountGroupLocalService;
 import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
 import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
@@ -27,6 +30,7 @@ import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.search.asset.AssetURLViewProvider;
+import com.liferay.portal.search.constants.SearchContextAttributes;
 import com.liferay.portal.search.document.Document;
 import com.liferay.portal.search.hits.SearchHit;
 import com.liferay.portal.search.hits.SearchHits;
@@ -54,7 +58,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Lianne Louie
  */
 @Component(
-	enabled = true, property = "search.suggestions.contributor.name=commerce",
+	property = "search.suggestions.contributor.name=commerce",
 	service = SuggestionsContributor.class
 )
 public class CommerceSuggestionsContributor implements SuggestionsContributor {
@@ -90,6 +94,22 @@ public class CommerceSuggestionsContributor implements SuggestionsContributor {
 				searchContext.setAttribute(
 					"commerceChannelGroupId", commerceChannelGroupId);
 			}
+		}
+
+		try {
+			AccountEntry accountEntry =
+				_currentAccountEntryManager.getCurrentAccountEntry(
+					themeDisplay.getScopeGroupId(), themeDisplay.getUserId());
+
+			if (accountEntry != null) {
+				searchContext.setAttribute(
+					"commerceAccountGroupIds",
+					_accountGroupLocalService.getAccountGroupIds(
+						accountEntry.getAccountEntryId()));
+			}
+		}
+		catch (Exception exception) {
+			_log.error(exception);
 		}
 
 		SearchResponse searchResponse = _searcher.search(
@@ -145,7 +165,9 @@ public class CommerceSuggestionsContributor implements SuggestionsContributor {
 		searchRequestBuilder.withSearchContext(
 			searchContext2 -> {
 				searchContext2.setAttribute(
-					"search.contribute.tuning.rankings", Boolean.TRUE);
+					SearchContextAttributes.
+						ATTRIBUTE_KEY_CONTRIBUTE_TUNING_RANKINGS,
+					Boolean.TRUE);
 
 				if (searchContext1.getAttribute("commerceChannelGroupId") !=
 						null) {
@@ -153,6 +175,15 @@ public class CommerceSuggestionsContributor implements SuggestionsContributor {
 					searchContext2.setAttribute(
 						"commerceChannelGroupId",
 						searchContext1.getAttribute("commerceChannelGroupId"));
+					searchContext2.setAttribute("secure", Boolean.TRUE);
+				}
+
+				if (searchContext1.getAttribute("commerceAccountGroupIds") !=
+						null) {
+
+					searchContext2.setAttribute(
+						"commerceAccountGroupIds",
+						searchContext1.getAttribute("commerceAccountGroupIds"));
 					searchContext2.setAttribute("secure", Boolean.TRUE);
 				}
 
@@ -285,10 +316,16 @@ public class CommerceSuggestionsContributor implements SuggestionsContributor {
 		CommerceSuggestionsContributor.class);
 
 	@Reference
+	private AccountGroupLocalService _accountGroupLocalService;
+
+	@Reference
 	private AssetURLViewProvider _assetURLViewProvider;
 
 	@Reference
 	private CommerceChannelLocalService _commerceChannelLocalService;
+
+	@Reference
+	private CurrentAccountEntryManager _currentAccountEntryManager;
 
 	@Reference
 	private Searcher _searcher;
