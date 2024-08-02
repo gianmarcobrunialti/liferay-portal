@@ -13,6 +13,8 @@ import com.liferay.fragment.renderer.FragmentRenderer;
 import com.liferay.fragment.renderer.FragmentRendererContext;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
 import com.liferay.frontend.data.set.constants.FDSEntityFieldTypes;
+import com.liferay.frontend.data.set.resolver.FDSRestURLParameterResolver;
+import com.liferay.frontend.data.set.resolver.FDSRestURLParameterResolverRegistry;
 import com.liferay.list.type.model.ListTypeDefinition;
 import com.liferay.list.type.model.ListTypeEntry;
 import com.liferay.list.type.service.ListTypeDefinitionLocalService;
@@ -349,6 +351,7 @@ public class FDSAdminFragmentRenderer implements FragmentRenderer {
 		sb.append(String.valueOf(properties.get("restEndpoint")));
 
 		return _interpolateURL(
+			String.valueOf(properties.get("restEndpoint")),
 			_getNestedFields(sb.toString(), fdsFieldObjectEntries),
 			httpServletRequest);
 	}
@@ -1062,7 +1065,7 @@ public class FDSAdminFragmentRenderer implements FragmentRenderer {
 	}
 
 	private String _interpolateURL(
-		String apiURL, HttpServletRequest httpServletRequest) {
+		String restEndpoint, String apiURL, HttpServletRequest httpServletRequest) {
 
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)httpServletRequest.getAttribute(
@@ -1075,6 +1078,15 @@ public class FDSAdminFragmentRenderer implements FragmentRenderer {
 			String.valueOf(themeDisplay.getScopeGroupId()));
 		apiURL = StringUtil.replace(
 			apiURL, "{userId}", String.valueOf(themeDisplay.getUserId()));
+
+		FDSRestURLParameterResolver fdsRestURLParameterResolver =
+			_fdsRestURLParameterResolverRegistry
+				.getFDSRestURLParameterResolver(restEndpoint);
+
+		if (fdsRestURLParameterResolver != null) {
+			apiURL =
+				fdsRestURLParameterResolver.resolve(apiURL, httpServletRequest);
+		}
 
 		if (StringUtil.contains(apiURL, "{") && _log.isWarnEnabled()) {
 			_log.warn("Unsupported parameter in API URL: " + apiURL);
@@ -1112,6 +1124,10 @@ public class FDSAdminFragmentRenderer implements FragmentRenderer {
 
 	@Reference
 	private ReactRenderer _reactRenderer;
+
+	@Reference
+	private FDSRestURLParameterResolverRegistry
+		_fdsRestURLParameterResolverRegistry;
 
 	private static class ObjectEntryComparator
 		implements Comparator<ObjectEntry> {
