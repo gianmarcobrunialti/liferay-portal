@@ -1,0 +1,311 @@
+[
+	{
+		"actions": [
+			{
+				"actionIds": [
+					"ACCESS_IN_CONTROL_PANEL",
+					"CONFIGURATION",
+					"PERMISSIONS",
+					"PREFERENCES",
+					"VIEW"
+				],
+				"resource": "com_liferay_asset_categories_admin_web_portlet_AssetCategoriesAdminPortlet"
+			},
+			{
+				"actionIds": [
+					"ACCESS_IN_CONTROL_PANEL",
+					"ADD_TO_PAGE",
+					"CONFIGURATION",
+					"PERMISSIONS",
+					"PREFERENCES",
+					"VIEW"
+				],
+				"resource": "com_liferay_asset_tags_admin_web_portlet_AssetTagsAdminPortlet"
+			},
+			{
+				"actionIds": [
+					"ACCESS_IN_CONTROL_PANEL"
+				],
+				"resource": "com_liferay_commerce_catalog_web_internal_portlet_CommerceCatalogsPortlet"
+			},
+			{
+				"actionIds": [
+					"ACCESS_IN_CONTROL_PANEL"
+				],
+				"resource": "com_liferay_commerce_product_definitions_web_internal_portlet_CPDefinitionsPortlet"
+			},
+			{
+				"actionIds": [
+					"ADD_CATEGORY",
+					"ADD_VOCABULARY",
+					"PERMISSIONS"
+				],
+				"resource": "com.liferay.asset.categories"
+			},
+			{
+				"actionIds": [
+					"ADD_CATEGORY",
+					"DELETE",
+					"PERMISSIONS",
+					"UPDATE",
+					"VIEW"
+				],
+				"resource": "com.liferay.asset.kernel.model.AssetCategory"
+			},
+			{
+				"actionIds": [
+					"DELETE",
+					"PERMISSIONS",
+					"UPDATE",
+					"VIEW"
+				],
+				"resource": "com.liferay.asset.kernel.model.AssetVocabulary"
+			},
+			{
+				"actionIds": [
+					"ADD_COMMERCE_CATALOG"
+				],
+				"resource": "com.liferay.commerce.catalog"
+			},
+			{
+				"actionIds": [
+					"UPDATE",
+					"VIEW"
+				],
+				"resource": "com.liferay.commerce.product.model.CommerceCatalog"
+			},
+			{
+				"actionIds": [
+					"VIEW_SITE_ADMINISTRATION"
+				],
+				"resource": "com.liferay.portal.kernel.model.Group"
+			},
+			{
+				"actionIds": [
+					"VIEW_CONTROL_PANEL"
+				],
+				"resource": "90"
+			}
+		],
+		"name": "Category Manager",
+		"scope": 1,
+		"type": 1
+	},
+	{
+		"actions": [
+			{
+				"actionIds": [
+					"ACCESS_IN_CONTROL_PANEL",
+					"CONFIGURATION",
+					"PERMISSIONS",
+					"PREFERENCES",
+					"VIEW"
+				],
+				"resource": "com_liferay_commerce_pricing_web_internal_portlet_CommerceDiscountPortlet"
+			},
+			{
+				"actionIds": [
+					"ACCESS_IN_CONTROL_PANEL"
+				],
+				"resource": "com_liferay_commerce_pricing_web_internal_portlet_CommercePriceListPortlet"
+			},
+			{
+				"actionIds": [
+					"ACCESS_IN_CONTROL_PANEL"
+				],
+				"resource": "com_liferay_commerce_pricing_web_internal_portlet_CommercePromotionPortlet"
+			},
+			{
+				"actionIds": [
+					"MANAGE_COMMERCE_CURRENCIES"
+				],
+				"resource": "com.liferay.commerce.currency"
+			},
+			{
+				"actionIds": [
+					"ADD_COMMERCE_DISCOUNT",
+					"PERMISSIONS",
+					"VIEW_COMMERCE_DISCOUNTS"
+				],
+				"resource": "com.liferay.commerce.discount"
+			},
+			{
+				"actionIds": [
+					"DELETE",
+					"PERMISSIONS",
+					"UPDATE",
+					"VIEW"
+				],
+				"resource": "com.liferay.commerce.discount.model.CommerceDiscount"
+			},
+			{
+				"actionIds": [
+					"ADD_COMMERCE_PRICE_LIST"
+				],
+				"resource": "com.liferay.commerce.price.list"
+			},
+			{
+				"actionIds": [
+					"DELETE",
+					"UPDATE",
+					"VIEW"
+				],
+				"resource": "com.liferay.commerce.price.list.model.CommercePriceList"
+			},
+			{
+				"actionIds": [
+					"VIEW"
+				],
+				"resource": "com.liferay.commerce.product.model.CommerceCatalog"
+			},
+			{
+				"actionIds": [
+					"VIEW_CONTROL_PANEL"
+				],
+				"resource": "90"
+			}
+		],
+		"name": "Discount Manager",
+		"scope": 1,
+		"type": 1
+	},
+	{
+		"actions": [
+			{
+				"actionIds": [
+					"ACCESS_IN_CONTROL_PANEL"
+				],
+				"resource": "com_liferay_commerce_inventory_web_internal_portlet_CommerceInventoryPortlet"
+			},
+			{
+				"actionIds": [
+					"ACCESS_IN_CONTROL_PANEL"
+				],
+				"resource": "com_liferay_commerce_order_web_internal_portlet_CommerceOrderPortlet"
+			},
+			{
+				"actionIds": [
+					"ACCESS_IN_CONTROL_PANEL"
+				],
+				"resource": "com_liferay_commerce_shipment_web_internal_portlet_CommerceShipmentPortlet"
+			},
+			{
+				"actionIds": [
+					"ACCESS_IN_CONTROL_PANEL"
+				],
+				"resource": "com_liferay_commerce_subscription_web_internal_portlet_CommerceSubscriptionEntryPortlet"
+			},
+			{
+				"actionIds": [
+					"VIEW"
+				],
+				"resource": "com.liferay.account.model.AccountEntry"
+			},
+			{
+				"actionIds": [
+					"MANAGE_INVENTORY"
+				],
+				"resource": "com.liferay.commerce.inventory"
+			},
+			{
+				"actionIds": [
+					"VIEW"
+				],
+				"resource": "com.liferay.commerce.inventory.model.CommerceInventoryWarehouse"
+			},
+			{
+				"actionIds": [
+					"VIEW"
+				],
+				"resource": "com.liferay.commerce.model.CommerceOrder"
+			},
+			{
+				"actionIds": [
+					"MANAGE_COMMERCE_ORDER_DELIVERY_TERMS",
+					"MANAGE_COMMERCE_ORDER_PAYMENT_STATUSES",
+					"MANAGE_COMMERCE_ORDER_PAYMENT_TERMS",
+					"MANAGE_COMMERCE_ORDERS"
+				],
+				"resource": "com.liferay.commerce.order"
+			},
+			{
+				"actionIds": [
+					"MANAGE_COMMERCE_PRODUCT_MEASUREMENT_UNITS"
+				],
+				"resource": "com.liferay.commerce.product"
+			},
+			{
+				"actionIds": [
+					"MANAGE_ALL_ACCOUNTS",
+					"MANAGE_COMMERCE_SHIPMENTS"
+				],
+				"resource": "com.liferay.commerce.shipment"
+			},
+			{
+				"actionIds": [
+					"MANAGE_COMMERCE_SUBSCRIPTIONS"
+				],
+				"resource": "com.liferay.commerce.subscription"
+			},
+			{
+				"actionIds": [
+					"VIEW_CONTROL_PANEL"
+				],
+				"resource": "90"
+			}
+		],
+		"name": "Operations Manager",
+		"scope": 1,
+		"type": 1
+	},
+	{
+		"actions": [
+			{
+				"actionIds": [
+					"ADD_COMMERCE_ORDER",
+					"CHECKOUT_OPEN_COMMERCE_ORDERS",
+					"VIEW_OPEN_COMMERCE_ORDERS"
+				],
+				"resource": "com.liferay.commerce.order"
+			}
+		],
+		"name": "Punch Out",
+		"scope": 3,
+		"type": 2
+	},
+	{
+		"actions": [
+			{
+				"actionIds": [
+					"MANAGE_ORGANIZATIONS",
+					"MANAGE_USERS"
+				],
+				"resource": "com.liferay.account.model.AccountEntry"
+			},
+			{
+				"actionIds": [
+					"VIEW"
+				],
+				"resource": "com.liferay.account.model.AccountRole"
+			},
+			{
+				"actionIds": [
+					"ADD_COMMERCE_ORDER",
+					"CHECKOUT_OPEN_COMMERCE_ORDERS",
+					"MANAGE_QUOTES",
+					"VIEW_OPEN_COMMERCE_ORDERS"
+				],
+				"resource": "com.liferay.commerce.order"
+			},
+			{
+				"actionIds": [
+					"MANAGE_AVAILABLE_ACCOUNTS"
+				],
+				"resource": "com.liferay.portal.kernel.model.Organization"
+			}
+		],
+		"name": "Sales Agent",
+		"scope": 1,
+		"type": 1
+	}
+]
