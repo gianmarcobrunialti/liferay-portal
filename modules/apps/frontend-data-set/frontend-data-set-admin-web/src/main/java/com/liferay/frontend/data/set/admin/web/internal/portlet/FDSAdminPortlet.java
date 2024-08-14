@@ -998,8 +998,7 @@ public class FDSAdminPortlet extends MVCPortlet {
 	private CETManager _cetManager;
 
 	@Reference
-	private FDSAPIURLResolverRegistry
-		_fdsAPIURLResolverRegistry;
+	private FDSAPIURLResolverRegistry _fdsAPIURLResolverRegistry;
 
 	@Reference
 	private Language _language;
