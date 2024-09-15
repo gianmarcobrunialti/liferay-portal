@@ -52,10 +52,16 @@ import com.liferay.headless.commerce.admin.channel.dto.v1_0.Channel;
 import com.liferay.headless.commerce.admin.channel.resource.v1_0.ChannelResource;
 import com.liferay.headless.commerce.admin.order.dto.v1_0.OrderType;
 import com.liferay.headless.commerce.admin.order.resource.v1_0.OrderTypeResource;
+import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.model.ObjectEntry;
+import com.liferay.object.rest.manager.v1_0.ObjectEntryManagerRegistry;
+import com.liferay.object.service.ObjectDefinitionLocalService;
+import com.liferay.object.service.ObjectEntryService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -68,6 +74,7 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.service.permission.ModelPermissionsFactory;
 import com.liferay.portal.kernel.settings.FallbackKeysSettingsUtil;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
@@ -89,6 +96,7 @@ import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.site.initializer.extender.CommerceSiteInitializer;
 import com.liferay.site.initializer.extender.SiteInitializerUtil;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 import java.net.URL;
@@ -96,6 +104,7 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.servlet.ServletContext;
@@ -107,6 +116,7 @@ import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Rafael Praxedes
+ * @author Gianmarco Brunialti Masera
  */
 @Component(service = CommerceSiteInitializer.class)
 public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
@@ -169,6 +179,248 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 			bundle, channel.getId(), serviceContext, servletContext,
 			stringUtilReplaceValues);
 		_addOrUpdateCommerceOrderTypes(serviceContext, servletContext);
+	}
+
+	@Override
+	public void addFDSEntries(
+			Bundle bundle, ServiceContext serviceContext,
+			ServletContext servletContext,
+			Map<String, String> stringUtilReplaceValues)
+		throws Exception {
+
+		Enumeration<URL> enumeration = bundle.findEntries(
+			"/site-initializer/data-sets", StringPool.STAR, true);
+
+		if (enumeration == null) {
+			return;
+		}
+
+		while (enumeration.hasMoreElements()) {
+			URL url = enumeration.nextElement();
+
+			String fileName = url.getFile();
+
+			if (fileName.endsWith("/")) {
+				continue;
+			}
+
+			if (StringUtil.endsWith(fileName, "data-set.json")) {
+				String json = URLUtil.toString(url);
+
+				if (json == null) {
+					continue;
+				}
+
+				try {
+					JSONObject fdsEntryJSONObject =
+						_jsonFactory.createJSONObject(json);
+
+					_addFDSEntry(fdsEntryJSONObject, serviceContext);
+				} catch(Exception exception) {
+					_log.error(exception);
+				}
+			}
+		}
+	}
+
+	private void _addFDSEntry(JSONObject jsonObject,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		ObjectDefinition fdsEntryObjectDefinition =
+			_objectDefinitionLocalService
+				.getObjectDefinitionByExternalReferenceCode(
+					"FDSEntry", serviceContext.getCompanyId());
+
+		JSONObject fdsEntryJSONObject = jsonObject.getJSONObject("dataSet");
+
+		String externalReferenceCode = fdsEntryJSONObject.getString(
+			"externalReferenceCode");
+
+		ObjectEntry fdsObjectEntry = _objectEntryService.addObjectEntry(
+			0, fdsEntryObjectDefinition.getObjectDefinitionId(),
+			HashMapBuilder.<String, Serializable>put(
+				"label_i18n",
+				HashMapBuilder.put(
+					serviceContext.getLanguageId(),
+					String.valueOf(fdsEntryJSONObject.get("label"))
+				).build()
+			).put(
+				"label", String.valueOf(fdsEntryJSONObject.get("label"))
+			).put(
+				"name", String.valueOf(fdsEntryJSONObject.get("label"))
+			).put(
+				"externalReferenceCode", externalReferenceCode
+			).put(
+				"restApplication", String.valueOf(
+					fdsEntryJSONObject.get("restApplication"))
+			).put(
+				"restEndpoint", String.valueOf(
+					fdsEntryJSONObject.get("restEndpoint"))
+			).put(
+				"restSchema", String.valueOf(
+					fdsEntryJSONObject.get("restSchema"))
+			).build(),
+			serviceContext
+		);
+
+		JSONArray fdsViewsJSONArray = jsonObject.getJSONArray("views");
+
+		for (int i = 0; i < fdsViewsJSONArray.length(); i++) {
+			_addFDSView(fdsViewsJSONArray.getJSONObject(i),
+				fdsObjectEntry.getObjectEntryId(), serviceContext);
+		}
+
+
+	}
+
+	private void _addFDSView(JSONObject fdsViewJSONObject,
+		long fdsEntryObjectEntryId, ServiceContext serviceContext)
+		throws PortalException {
+
+		ObjectDefinition fdsViewObjectDefinition =
+			_objectDefinitionLocalService
+				.getObjectDefinitionByExternalReferenceCode(
+					"FDSView", serviceContext.getCompanyId());
+
+		ObjectEntry fdsViewObjectEntry = _objectEntryService.addObjectEntry(
+			0, fdsViewObjectDefinition.getObjectDefinitionId(),
+			HashMapBuilder.<String, Serializable>put(
+				"defaultItemsPerPage",
+				String.valueOf(fdsViewJSONObject.get("defaultItemsPerPage"))
+			).put(
+				"description",
+				String.valueOf(fdsViewJSONObject.get("description"))
+			).put(
+				"label", String.valueOf(fdsViewJSONObject.get("label"))
+			).put(
+				"label_i18n",
+				HashMapBuilder.put(
+					serviceContext.getLanguageId(),
+					String.valueOf(fdsViewJSONObject.get("label"))
+				).build()
+			).put(
+				"listOfItemsPerPage", String.valueOf(
+					fdsViewJSONObject.get("listOfItemsPerPage"))
+			).put(
+				"r_fdsEntryFDSViewRelationship_c_fdsEntryId",
+				fdsEntryObjectEntryId
+			).put(
+				"symbol", String.valueOf(fdsViewJSONObject.get("symbol"))
+			).build(),
+			serviceContext
+		);
+
+		JSONObject fdsVisualizationModesJSONObject =
+			fdsViewJSONObject.getJSONObject("visualizationModes");
+
+		if (fdsVisualizationModesJSONObject.has("table")) {
+			JSONArray fdsFieldsJSONArray =
+				fdsVisualizationModesJSONObject.getJSONArray("table");
+
+			_addFDSTableFields(fdsFieldsJSONArray,
+				fdsViewObjectEntry.getObjectEntryId(), serviceContext);
+
+
+			// FIXME only "table" visualization mode is covered
+
+			// TODO
+			// Add FDSSort -> rel "r_fdsViewFDSSortRelationship_c_fdsViewId"
+			// Add FDSDateFilter -> rel "r_fdsViewFDSDateFilterRelationship_c_fdsViewId"
+		}
+
+		_addFDSItemActions(fdsViewJSONObject,
+			fdsViewObjectEntry.getObjectEntryId(), serviceContext);
+	}
+
+	private void _addFDSItemActions(
+		JSONObject fdsViewJSONObject, long fdsViewObjectEntryId,
+		ServiceContext serviceContext) throws PortalException {
+
+		ObjectDefinition fdsViewItemActionObjectDefinition =
+			_objectDefinitionLocalService
+				.getObjectDefinitionByExternalReferenceCode("FDSAction",
+					serviceContext.getCompanyId());
+
+		JSONArray fdsItemActionsJSONArray = fdsViewJSONObject.getJSONArray(
+			"actions");
+
+		if (fdsItemActionsJSONArray == null) {
+			return;
+		}
+
+		for (int i = 0; i < fdsItemActionsJSONArray.length(); i++) {
+			JSONObject fdsItemActionJSONObject =
+				fdsItemActionsJSONArray.getJSONObject(i);
+
+			_objectEntryService.addObjectEntry(
+				0, fdsViewItemActionObjectDefinition.getObjectDefinitionId(),
+				HashMapBuilder.<String, Serializable>put(
+					"confirmationMessage_i18n",
+					Optional.of(fdsItemActionJSONObject.getJSONObject(
+						"confirmationMessage_i18n")).orElse(
+							_jsonFactory.createJSONObject())
+				).put(
+					"icon", String.valueOf(fdsItemActionJSONObject.get("icon"))
+				).put(
+					"label_i18n", fdsItemActionJSONObject.getJSONObject("label_i18n")
+				).put(
+					"method", fdsItemActionJSONObject.getString("method", "")
+				).put(
+					"modalSize", fdsItemActionJSONObject.getString("modalSize", "")
+				).put(
+					"permissionKey", fdsItemActionJSONObject.getString("permissionKey", "")
+				).put(
+					"title_i18n",
+					Optional.of(fdsItemActionJSONObject.getJSONObject(
+						"title_i18n")).orElse(_jsonFactory.createJSONObject())
+				).put(
+					"type", String.valueOf(fdsItemActionJSONObject.get("type"))
+				).put(
+					"r_fdsViewFDSItemActionRelationship_c_fdsViewId",
+					String.valueOf(fdsViewObjectEntryId)
+				).put(
+					"url", String.valueOf(fdsItemActionJSONObject.get("url"))
+				).build(),
+				serviceContext
+			);
+		}
+	}
+
+	private void _addFDSTableFields(
+		JSONArray fdsFieldsJSONArray, long objectEntryId,
+		ServiceContext serviceContext)
+	throws PortalException {
+
+		ObjectDefinition fdsFieldObjectDefinition =
+			_objectDefinitionLocalService
+				.getObjectDefinitionByExternalReferenceCode(
+					"FDSField", serviceContext.getCompanyId());
+
+		for (int i = 0; i < fdsFieldsJSONArray.length(); i++) {
+			JSONObject fdsFieldJSONObject = fdsFieldsJSONArray.getJSONObject(i);
+
+			_objectEntryService.addObjectEntry(
+				0, fdsFieldObjectDefinition.getObjectDefinitionId(),
+				HashMapBuilder.<String, Serializable>put(
+					"label_i18n",
+					HashMapBuilder.put(
+						serviceContext.getLanguageId(),
+						String.valueOf(fdsFieldJSONObject.get("name"))
+					).build()
+				).put(
+					"name", String.valueOf(fdsFieldJSONObject.get("name"))
+				).put(
+					"r_fdsViewFDSFieldRelationship_c_fdsViewId", objectEntryId
+				).put(
+					"renderer", "default"
+				).put(
+					"sortable", fdsFieldJSONObject.getBoolean("sortable")
+				).put(
+					"type", String.valueOf(fdsFieldJSONObject.get("type"))
+				).build(),
+				serviceContext);
+		}
 	}
 
 	@Override
@@ -1083,6 +1335,15 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 	private LayoutLocalService _layoutLocalService;
 
 	@Reference
+	private ObjectDefinitionLocalService _objectDefinitionLocalService;
+
+	@Reference
+	private ObjectEntryManagerRegistry _objectEntryManagerRegistry;
+
+	@Reference
+	private ObjectEntryService _objectEntryService;
+
+	@Reference
 	private OrderTypeResource.Factory _orderTypeResourceFactory;
 
 	@Reference
@@ -1097,5 +1358,8 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 
 	@Reference
 	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }
