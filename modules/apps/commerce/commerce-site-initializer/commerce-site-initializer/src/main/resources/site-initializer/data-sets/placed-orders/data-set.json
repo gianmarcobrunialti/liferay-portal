@@ -1,0 +1,38 @@
+{
+	"dataSet": {
+		"externalReferenceCode": "commerce-placed-orders-data-set",
+		"label": "Placed Orders",
+		"restApplication": "/headless-commerce-delivery-cart/v1.0",
+		"restEndpoint": "/v1.0/channels/{channelId}/carts",
+		"restSchema": "Cart"
+	},
+	"views": [
+		{
+			"defaultItemsPerPage": 20,
+			"description": "test",
+			"label": "view1",
+			"listOfItemsPerPage": "4, 8, 20, 40, 60",
+			"r_fdsEntryFDSViewRelationship_c_fdsEntryId": "44107",
+			"symbol": "catalog",
+			"visualizationModes": {
+				"table": [
+					{
+						"name": "account",
+						"sortable": true,
+						"type": "integer"
+					},
+					{
+						"name": "channelId",
+						"sortable": true,
+						"type": "integer"
+					},
+					{
+						"name": "name",
+						"sortable": false,
+						"type": "string"
+					}
+				]
+			}
+		}
+	]
+}
