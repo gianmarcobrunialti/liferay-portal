@@ -1,5 +1,30 @@
 {
 	"pageElement": {
+		"pageElements": [
+			{
+				"definition": {
+					"fragmentSettings": {
+						"unallowedFragments": []
+					}
+				},
+				"type": "DropZone"
+			},
+			{
+				"definition": {
+					"fragment": {
+						"key": "com.liferay.frontend.data.set.admin.web.internal.fragment.renderer.FDSAdminFragmentRenderer"
+					},
+					"fragmentConfig": {
+						"itemSelector": {
+							"externalReferenceCode": "7e5ec411-8cf3-991f-55b5-27d8c72b1f44"
+						}
+					},
+					"fragmentFields": [],
+					"indexed": true
+				},
+				"type": "Fragment"
+			}
+		],
 		"type": "Root"
 	},
 	"settings": {
