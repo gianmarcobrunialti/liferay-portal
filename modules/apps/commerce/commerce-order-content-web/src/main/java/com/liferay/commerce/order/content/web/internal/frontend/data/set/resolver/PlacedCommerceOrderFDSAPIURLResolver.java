@@ -13,26 +13,24 @@ import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.frontend.data.set.resolver.FDSAPIURLResolver;
 import com.liferay.portal.kernel.exception.PortalException;
-
-import javax.servlet.http.HttpServletRequest;
-
 import com.liferay.portal.kernel.util.Validator;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Gianmarco Brunialti Masera
  */
 @Component(
-	property = "fds.rest.application.key=/headless-commerce-delivery-cart/v1.0/Cart",
+	property = "fds.rest.application.key=/headless-commerce-delivery-order/v1.0/PlacedOrder",
 	service = FDSAPIURLResolver.class
 )
-public class PendingCommerceOrderFDSAPIURLResolver
+public class PlacedCommerceOrderFDSAPIURLResolver
 	implements FDSAPIURLResolver {
-
 	@Override
 	public String getSchema() {
-		return "Cart";
+		return "PlacedOrder";
 	}
 
 	@Override
@@ -74,7 +72,7 @@ public class PendingCommerceOrderFDSAPIURLResolver
 
 			if (Validator.isNotNull(commerceOrder)) {
 				baseURL = baseURL.replaceAll(
-					"\\{cartId\\}", String.valueOf(
+					"\\{placedOrderId\\}", String.valueOf(
 						commerceOrder.getCommerceOrderId())
 				).replaceAll(
 					"\\{externalReferenceCode\\}",
@@ -88,5 +86,4 @@ public class PendingCommerceOrderFDSAPIURLResolver
 
 	@Reference
 	private CommerceChannelLocalService _commerceChannelLocalService;
-
 }
