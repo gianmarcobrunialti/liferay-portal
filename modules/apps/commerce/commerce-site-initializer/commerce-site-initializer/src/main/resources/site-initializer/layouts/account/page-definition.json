@@ -16,7 +16,10 @@
 					},
 					"fragmentConfig": {
 						"itemSelector": {
-							"externalReferenceCode": "7e5ec411-8cf3-991f-55b5-27d8c72b1f44"
+							"classPK": "[$FDS_VIEW_ERC:commerce-pending-orders-data-set-view$]",
+							"itemType": "_com_liferay_layout_content_page_editor_web_internal_portlet_ContentPageEditorPortlet_selectInfoItem",
+							"className": "com.liferay.object.model.ObjectDefinition#[$OBJECT_DEFINITION_ID:FDSView$]",
+							"externalReferenceCode": "commerce-pending-orders-data-set-view"
 						}
 					},
 					"fragmentFields": [],
