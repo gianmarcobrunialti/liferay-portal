@@ -1,15 +1,15 @@
 {
 	"dataSet": {
-		"externalReferenceCode": "commerce-pending-orders-data-set",
-		"label": "Pending Orders",
+		"externalReferenceCode": "commerce-pending-order-items-data-set",
+		"label": "Pending Order Items",
 		"restApplication": "/headless-commerce-delivery-cart/v1.0",
-		"restEndpoint": "/v1.0/channels/{channelId}/carts",
-		"restSchema": "Cart"
+		"restEndpoint": "/v1.0/{cartId}/cart-items",
+		"restSchema": "CartItem"
 	},
 	"views": [
 		{
-			"externalReferenceCode": "commerce-pending-orders-data-set-view",
-			"label": "Pending Orders View",
+			"externalReferenceCode": "commerce-pending-order-items-data-set-view",
+			"label": "Pending Order Items View",
 			"visualizationModes": {
 				"table": [
 					{

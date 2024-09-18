@@ -1,15 +1,15 @@
 {
 	"dataSet": {
-		"externalReferenceCode": "commerce-placed-orders-data-set",
-		"label": "Placed Orders",
+		"externalReferenceCode": "commerce-placed-order-items-data-set",
+		"label": "Placed Order Items",
 		"restApplication": "/headless-commerce-delivery-order/v1.0",
-		"restEndpoint": "/v1.0/channels/{channelId}/placed-orders",
-		"restSchema": "Cart"
+		"restEndpoint": "/v1.0/channels/{placedOrderId}/placed-order-items",
+		"restSchema": "PlacedOrderItem"
 	},
 	"views": [
 		{
-			"externalReferenceCode": "commerce-placed-orders-data-set-view",
-			"label": "Placed Orders View",
+			"externalReferenceCode": "commerce-placed-order-items-data-set-view",
+			"label": "Placed Order Items View",
 			"visualizationModes": {
 				"table": [
 					{

@@ -4,7 +4,7 @@
 		"label": "Placed Orders",
 		"restApplication": "/headless-commerce-delivery-order/v1.0",
 		"restEndpoint": "/v1.0/channels/{channelId}/placed-orders",
-		"restSchema": "Cart"
+		"restSchema": "PlacedOrder"
 	},
 	"views": [
 		{
