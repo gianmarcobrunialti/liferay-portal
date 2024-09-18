@@ -215,7 +215,7 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 					JSONObject fdsEntryJSONObject =
 						_jsonFactory.createJSONObject(json);
 
-					_addFDSEntry(fdsEntryJSONObject, serviceContext);
+					_addFDSEntry(fdsEntryJSONObject, serviceContext, stringUtilReplaceValues);
 				} catch(Exception exception) {
 					_log.error(exception);
 				}
@@ -224,7 +224,8 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 	}
 
 	private void _addFDSEntry(JSONObject jsonObject,
-			ServiceContext serviceContext)
+			ServiceContext serviceContext,
+			Map<String, String> stringUtilReplaceValues)
 		throws PortalException {
 
 		ObjectDefinition fdsEntryObjectDefinition =
@@ -241,7 +242,7 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 			0, fdsEntryObjectDefinition.getObjectDefinitionId(),
 			HashMapBuilder.<String, Serializable>put(
 				"label_i18n",
-				HashMapBuilder.put(
+				HashMapBuilder.<String, Serializable>put(
 					serviceContext.getLanguageId(),
 					String.valueOf(fdsEntryJSONObject.get("label"))
 				).build()
@@ -267,14 +268,23 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 		JSONArray fdsViewsJSONArray = jsonObject.getJSONArray("views");
 
 		for (int i = 0; i < fdsViewsJSONArray.length(); i++) {
-			_addFDSView(fdsViewsJSONArray.getJSONObject(i),
+			ObjectEntry fdsViewObjectEntry = _addFDSView(
+				fdsViewsJSONArray.getJSONObject(i),
 				fdsObjectEntry.getObjectEntryId(), serviceContext);
+
+			String fdsViewObjectEntryERC = fdsViewObjectEntry.getExternalReferenceCode();
+
+			stringUtilReplaceValues.put(
+				StringBundler.concat(
+					"FDS_VIEW_ERC:", fdsViewObjectEntryERC),
+				String.valueOf(fdsViewObjectEntry.getObjectEntryId())
+			);
 		}
 
 
 	}
 
-	private void _addFDSView(JSONObject fdsViewJSONObject,
+	private ObjectEntry _addFDSView(JSONObject fdsViewJSONObject,
 		long fdsEntryObjectEntryId, ServiceContext serviceContext)
 		throws PortalException {
 
@@ -287,26 +297,29 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 			0, fdsViewObjectDefinition.getObjectDefinitionId(),
 			HashMapBuilder.<String, Serializable>put(
 				"defaultItemsPerPage",
-				String.valueOf(fdsViewJSONObject.get("defaultItemsPerPage"))
+				fdsViewJSONObject.getInt("defaultItemsPerPage", 20)
 			).put(
 				"description",
-				String.valueOf(fdsViewJSONObject.get("description"))
+				fdsViewJSONObject.getString("description", StringPool.BLANK)
+			).put(
+				"externalReferenceCode", fdsViewJSONObject.getString(
+					"externalReferenceCode")
 			).put(
 				"label", String.valueOf(fdsViewJSONObject.get("label"))
 			).put(
 				"label_i18n",
-				HashMapBuilder.put(
+				HashMapBuilder.<String, Serializable>put(
 					serviceContext.getLanguageId(),
 					String.valueOf(fdsViewJSONObject.get("label"))
 				).build()
 			).put(
-				"listOfItemsPerPage", String.valueOf(
-					fdsViewJSONObject.get("listOfItemsPerPage"))
+				"listOfItemsPerPage", fdsViewJSONObject.getString(
+					"listOfItemsPerPage", "4, 8, 20, 40, 60")
 			).put(
 				"r_fdsEntryFDSViewRelationship_c_fdsEntryId",
 				fdsEntryObjectEntryId
 			).put(
-				"symbol", String.valueOf(fdsViewJSONObject.get("symbol"))
+				"symbol", fdsViewJSONObject.getString("symbol", "catalog")
 			).build(),
 			serviceContext
 		);
@@ -331,6 +344,8 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 
 		_addFDSItemActions(fdsViewJSONObject,
 			fdsViewObjectEntry.getObjectEntryId(), serviceContext);
+
+		return fdsViewObjectEntry;
 	}
 
 	private void _addFDSItemActions(
@@ -356,14 +371,13 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 			_objectEntryService.addObjectEntry(
 				0, fdsViewItemActionObjectDefinition.getObjectDefinitionId(),
 				HashMapBuilder.<String, Serializable>put(
-					"confirmationMessage_i18n",
-					Optional.of(fdsItemActionJSONObject.getJSONObject(
-						"confirmationMessage_i18n")).orElse(
-							_jsonFactory.createJSONObject())
+					"confirmationMessage_i18n", (Serializable) _jsonFactory.looseDeserialize(
+						fdsItemActionJSONObject.getString("confirmationMessage_i18n"))
 				).put(
 					"icon", String.valueOf(fdsItemActionJSONObject.get("icon"))
 				).put(
-					"label_i18n", fdsItemActionJSONObject.getJSONObject("label_i18n")
+					"label_i18n", (Serializable) _jsonFactory.looseDeserialize(
+						fdsItemActionJSONObject.getString("label_i18n"))
 				).put(
 					"method", fdsItemActionJSONObject.getString("method", "")
 				).put(
@@ -371,9 +385,8 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 				).put(
 					"permissionKey", fdsItemActionJSONObject.getString("permissionKey", "")
 				).put(
-					"title_i18n",
-					Optional.of(fdsItemActionJSONObject.getJSONObject(
-						"title_i18n")).orElse(_jsonFactory.createJSONObject())
+					"title_i18n", (Serializable) _jsonFactory.looseDeserialize(
+						fdsItemActionJSONObject.getString("title_i18n"))
 				).put(
 					"type", String.valueOf(fdsItemActionJSONObject.get("type"))
 				).put(
@@ -403,19 +416,19 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 			_objectEntryService.addObjectEntry(
 				0, fdsFieldObjectDefinition.getObjectDefinitionId(),
 				HashMapBuilder.<String, Serializable>put(
-					"label_i18n",
-					HashMapBuilder.put(
-						serviceContext.getLanguageId(),
-						String.valueOf(fdsFieldJSONObject.get("name"))
-					).build()
+					"label", fdsFieldJSONObject.getString(
+						"label", String.valueOf(fdsFieldJSONObject.get("name")))
+				).put(
+					"label_i18n", (Serializable) _jsonFactory.looseDeserialize(
+						fdsFieldJSONObject.getString("label_i18n"))
 				).put(
 					"name", String.valueOf(fdsFieldJSONObject.get("name"))
 				).put(
 					"r_fdsViewFDSFieldRelationship_c_fdsViewId", objectEntryId
 				).put(
-					"renderer", "default"
+					"renderer", fdsFieldJSONObject.getString("renderer", "default")
 				).put(
-					"sortable", fdsFieldJSONObject.getBoolean("sortable")
+					"sortable", fdsFieldJSONObject.getBoolean("sortable", true)
 				).put(
 					"type", String.valueOf(fdsFieldJSONObject.get("type"))
 				).build(),
