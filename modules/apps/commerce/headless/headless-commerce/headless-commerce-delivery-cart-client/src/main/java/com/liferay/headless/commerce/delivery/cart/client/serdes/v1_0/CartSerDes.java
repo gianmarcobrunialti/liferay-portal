@@ -240,6 +240,20 @@ public class CartSerDes {
 			sb.append("\"");
 		}
 
+		if (cart.getFriendlyURLSeparator() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"friendlyURLSeparator\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(cart.getFriendlyURLSeparator()));
+
+			sb.append("\"");
+		}
+
 		if (cart.getId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -709,6 +723,15 @@ public class CartSerDes {
 				String.valueOf(cart.getExternalReferenceCode()));
 		}
 
+		if (cart.getFriendlyURLSeparator() == null) {
+			map.put("friendlyURLSeparator", null);
+		}
+		else {
+			map.put(
+				"friendlyURLSeparator",
+				String.valueOf(cart.getFriendlyURLSeparator()));
+		}
+
 		if (cart.getId() == null) {
 			map.put("id", null);
 		}
@@ -987,6 +1010,11 @@ public class CartSerDes {
 
 				return false;
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "friendlyURLSeparator")) {
+
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
 				return false;
 			}
@@ -1185,6 +1213,13 @@ public class CartSerDes {
 
 				if (jsonParserFieldValue != null) {
 					cart.setExternalReferenceCode((String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "friendlyURLSeparator")) {
+
+				if (jsonParserFieldValue != null) {
+					cart.setFriendlyURLSeparator((String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
