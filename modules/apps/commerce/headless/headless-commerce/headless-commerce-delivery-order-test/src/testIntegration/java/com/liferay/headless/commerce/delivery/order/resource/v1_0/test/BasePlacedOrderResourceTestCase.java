@@ -169,6 +169,7 @@ public abstract class BasePlacedOrderResourceTestCase {
 		placedOrder.setCouponCode(regex);
 		placedOrder.setCurrencyCode(regex);
 		placedOrder.setExternalReferenceCode(regex);
+		placedOrder.setFriendlyURLSeparator(regex);
 		placedOrder.setName(regex);
 		placedOrder.setOrderTypeExternalReferenceCode(regex);
 		placedOrder.setOrderUUID(regex);
@@ -192,6 +193,7 @@ public abstract class BasePlacedOrderResourceTestCase {
 		Assert.assertEquals(regex, placedOrder.getCouponCode());
 		Assert.assertEquals(regex, placedOrder.getCurrencyCode());
 		Assert.assertEquals(regex, placedOrder.getExternalReferenceCode());
+		Assert.assertEquals(regex, placedOrder.getFriendlyURLSeparator());
 		Assert.assertEquals(regex, placedOrder.getName());
 		Assert.assertEquals(
 			regex, placedOrder.getOrderTypeExternalReferenceCode());
@@ -1552,6 +1554,16 @@ public abstract class BasePlacedOrderResourceTestCase {
 			}
 
 			if (Objects.equals(
+					"friendlyURLSeparator", additionalAssertFieldName)) {
+
+				if (placedOrder.getFriendlyURLSeparator() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
 					"lastPriceUpdateDate", additionalAssertFieldName)) {
 
 				if (placedOrder.getLastPriceUpdateDate() == null) {
@@ -2015,6 +2027,19 @@ public abstract class BasePlacedOrderResourceTestCase {
 				if (!Objects.deepEquals(
 						placedOrder1.getExternalReferenceCode(),
 						placedOrder2.getExternalReferenceCode())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"friendlyURLSeparator", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						placedOrder1.getFriendlyURLSeparator(),
+						placedOrder2.getFriendlyURLSeparator())) {
 
 					return false;
 				}
@@ -2695,6 +2720,52 @@ public abstract class BasePlacedOrderResourceTestCase {
 
 		if (entityFieldName.equals("externalReferenceCode")) {
 			Object object = placedOrder.getExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("friendlyURLSeparator")) {
+			Object object = placedOrder.getFriendlyURLSeparator();
 
 			String value = String.valueOf(object);
 
@@ -3439,6 +3510,8 @@ public abstract class BasePlacedOrderResourceTestCase {
 				currencyCode = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				externalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
+				friendlyURLSeparator = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				id = RandomTestUtil.randomLong();
 				lastPriceUpdateDate = RandomTestUtil.nextDate();
