@@ -54,7 +54,6 @@ import com.liferay.headless.commerce.admin.order.dto.v1_0.OrderType;
 import com.liferay.headless.commerce.admin.order.resource.v1_0.OrderTypeResource;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
-import com.liferay.object.rest.manager.v1_0.ObjectEntryManagerRegistry;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryService;
 import com.liferay.petra.string.StringBundler;
@@ -104,7 +103,6 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import javax.servlet.ServletContext;
@@ -237,30 +235,28 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 
 		String externalReferenceCode = fdsEntryJSONObject.getString(
 			"externalReferenceCode");
+		String fdsEntryLabel = fdsEntryJSONObject.getString("label");
 
 		ObjectEntry fdsObjectEntry = _objectEntryService.addObjectEntry(
 			0, fdsEntryObjectDefinition.getObjectDefinitionId(),
 			HashMapBuilder.<String, Serializable>put(
 				"label_i18n",
 				HashMapBuilder.<String, Serializable>put(
-					serviceContext.getLanguageId(),
-					String.valueOf(fdsEntryJSONObject.get("label"))
+					serviceContext.getLanguageId(), fdsEntryLabel
 				).build()
 			).put(
-				"label", String.valueOf(fdsEntryJSONObject.get("label"))
+				"label", fdsEntryLabel
 			).put(
-				"name", String.valueOf(fdsEntryJSONObject.get("label"))
+				"name", fdsEntryLabel
 			).put(
 				"externalReferenceCode", externalReferenceCode
 			).put(
-				"restApplication", String.valueOf(
-					fdsEntryJSONObject.get("restApplication"))
+				"restApplication",
+					fdsEntryJSONObject.getString("restApplication")
 			).put(
-				"restEndpoint", String.valueOf(
-					fdsEntryJSONObject.get("restEndpoint"))
+				"restEndpoint", fdsEntryJSONObject.getString("restEndpoint")
 			).put(
-				"restSchema", String.valueOf(
-					fdsEntryJSONObject.get("restSchema"))
+				"restSchema", fdsEntryJSONObject.getString("restSchema")
 			).build(),
 			serviceContext
 		);
@@ -272,7 +268,8 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 				fdsViewsJSONArray.getJSONObject(i),
 				fdsObjectEntry.getObjectEntryId(), serviceContext);
 
-			String fdsViewObjectEntryERC = fdsViewObjectEntry.getExternalReferenceCode();
+			String fdsViewObjectEntryERC =
+				fdsViewObjectEntry.getExternalReferenceCode();
 
 			stringUtilReplaceValues.put(
 				StringBundler.concat(
@@ -280,8 +277,6 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 				String.valueOf(fdsViewObjectEntry.getObjectEntryId())
 			);
 		}
-
-
 	}
 
 	private ObjectEntry _addFDSView(JSONObject fdsViewJSONObject,
@@ -300,17 +295,17 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 				fdsViewJSONObject.getInt("defaultItemsPerPage", 20)
 			).put(
 				"description",
-				fdsViewJSONObject.getString("description", StringPool.BLANK)
+				fdsViewJSONObject.getString("description")
 			).put(
 				"externalReferenceCode", fdsViewJSONObject.getString(
 					"externalReferenceCode")
 			).put(
-				"label", String.valueOf(fdsViewJSONObject.get("label"))
+				"label", fdsViewJSONObject.getString("label")
 			).put(
 				"label_i18n",
 				HashMapBuilder.<String, Serializable>put(
 					serviceContext.getLanguageId(),
-					String.valueOf(fdsViewJSONObject.get("label"))
+					fdsViewJSONObject.getString("label")
 				).build()
 			).put(
 				"listOfItemsPerPage", fdsViewJSONObject.getString(
@@ -374,26 +369,26 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 					"confirmationMessage_i18n", (Serializable) _jsonFactory.looseDeserialize(
 						fdsItemActionJSONObject.getString("confirmationMessage_i18n"))
 				).put(
-					"icon", String.valueOf(fdsItemActionJSONObject.get("icon"))
+					"icon", fdsItemActionJSONObject.getString("icon")
 				).put(
 					"label_i18n", (Serializable) _jsonFactory.looseDeserialize(
 						fdsItemActionJSONObject.getString("label_i18n"))
 				).put(
-					"method", fdsItemActionJSONObject.getString("method", "")
+					"method", fdsItemActionJSONObject.getString("method")
 				).put(
-					"modalSize", fdsItemActionJSONObject.getString("modalSize", "")
+					"modalSize", fdsItemActionJSONObject.getString("modalSize")
 				).put(
-					"permissionKey", fdsItemActionJSONObject.getString("permissionKey", "")
+					"permissionKey", fdsItemActionJSONObject.getString("permissionKey")
 				).put(
 					"title_i18n", (Serializable) _jsonFactory.looseDeserialize(
 						fdsItemActionJSONObject.getString("title_i18n"))
 				).put(
-					"type", String.valueOf(fdsItemActionJSONObject.get("type"))
+					"type", fdsItemActionJSONObject.getString("type")
 				).put(
 					"r_fdsViewFDSItemActionRelationship_c_fdsViewId",
 					String.valueOf(fdsViewObjectEntryId)
 				).put(
-					"url", String.valueOf(fdsItemActionJSONObject.get("url"))
+					"url", fdsItemActionJSONObject.getString("url")
 				).build(),
 				serviceContext
 			);
@@ -417,12 +412,12 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 				0, fdsFieldObjectDefinition.getObjectDefinitionId(),
 				HashMapBuilder.<String, Serializable>put(
 					"label", fdsFieldJSONObject.getString(
-						"label", String.valueOf(fdsFieldJSONObject.get("name")))
+						"label", fdsFieldJSONObject.getString("name"))
 				).put(
 					"label_i18n", (Serializable) _jsonFactory.looseDeserialize(
 						fdsFieldJSONObject.getString("label_i18n"))
 				).put(
-					"name", String.valueOf(fdsFieldJSONObject.get("name"))
+					"name", fdsFieldJSONObject.getString("name")
 				).put(
 					"r_fdsViewFDSFieldRelationship_c_fdsViewId", objectEntryId
 				).put(
@@ -430,7 +425,7 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 				).put(
 					"sortable", fdsFieldJSONObject.getBoolean("sortable", true)
 				).put(
-					"type", String.valueOf(fdsFieldJSONObject.get("type"))
+					"type", fdsFieldJSONObject.getString("type")
 				).build(),
 				serviceContext);
 		}
@@ -1349,9 +1344,6 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 
 	@Reference
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;
-
-	@Reference
-	private ObjectEntryManagerRegistry _objectEntryManagerRegistry;
 
 	@Reference
 	private ObjectEntryService _objectEntryService;

@@ -16,6 +16,7 @@ import org.osgi.framework.Bundle;
 
 /**
  * @author Nilton Vieira
+ * @author Gianmarco Brunialti Masera
  */
 @ProviderType
 public interface CommerceSiteInitializer {

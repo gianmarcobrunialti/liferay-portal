@@ -5020,12 +5020,12 @@ public class BundleSiteInitializer implements SiteInitializer {
 		R addCPDefinitionsR = new R(
 			"addCPDefinitions",
 			() -> _addCPDefinitions(serviceContext, stringUtilReplaceValues));
-		R addFDSEntriesR = new R(
-			"addFDSEntries",
-			() -> _addFDSEntries(serviceContext, stringUtilReplaceValues));
 		R addExpandoValuesR = new R(
 			"addExpandoValues",
 			() -> _addExpandoValues(serviceContext, stringUtilReplaceValues));
+		R addFDSEntriesR = new R(
+			"addFDSEntries",
+			() -> _addFDSEntries(serviceContext, stringUtilReplaceValues));
 		R addFragmentEntriesR = new R(
 			"addFragmentEntries",
 			() -> _addFragmentEntries(serviceContext, stringUtilReplaceValues));
@@ -5210,14 +5210,14 @@ public class BundleSiteInitializer implements SiteInitializer {
 			addCPDefinitionsR,
 			_dependsOn(addOrUpdateLayoutsR, addOrUpdateObjectEntriesR)
 		).put(
-			addFDSEntriesR,
-			_dependsOn(addOrUpdateLayoutsR, addOrUpdateObjectEntriesR)
-		).put(
 			addExpandoValuesR,
 			_dependsOn(
 				addOrUpdateBlogPostingsR, addOrUpdateJournalArticlesR,
 				addOrUpdateKnowledgeBaseArticlesR, addOrUpdateLayoutsContentR,
 				addOrUpdateSegmentsEntriesR, addOrUpdateUserGroupsR)
+		).put(
+			addFDSEntriesR,
+			_dependsOn(addOrUpdateLayoutsR, addOrUpdateObjectEntriesR)
 		).put(
 			addFragmentEntriesR, _dependsOn(addOrUpdateDocumentsR)
 		).put(
