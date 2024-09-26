@@ -1,0 +1,44 @@
+{
+	"fieldSets": [
+		{
+			"fields": [
+				{
+					"defaultValue": "pending",
+					"label": "Status",
+					"name": "status",
+					"type": "select",
+					"typeOptions": {
+						"validValues": [
+							{
+								"label": "Pending orders",
+								"value": "pending"
+							},
+							{
+								"label": "Placed orders",
+								"value": "placed"
+							}
+						]
+					}
+				},
+				{
+					"defaultValue": "fluid",
+					"label": "Style",
+					"name": "displayStyle",
+					"type": "select",
+					"typeOptions": {
+						"validValues": [
+							{
+								"label": "Fluid",
+								"value": "fluid"
+							},
+							{
+								"label": "Stacked",
+								"value": "stacked"
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}
