@@ -1,0 +1,59 @@
+package com.liferay.commerce.order.content.web.internal.frontend.data.set.view.table;
+
+import com.liferay.commerce.order.content.web.internal.constants.CommerceOrderFragmentFDSNames;
+import com.liferay.frontend.data.set.view.FDSView;
+import com.liferay.frontend.data.set.view.table.BaseTableFDSView;
+import com.liferay.frontend.data.set.view.table.FDSTableSchema;
+import com.liferay.frontend.data.set.view.table.FDSTableSchemaBuilder;
+import com.liferay.frontend.data.set.view.table.FDSTableSchemaBuilderFactory;
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
+import java.util.Locale;
+
+@Component(
+	property = {
+		"frontend.data.set.name=" + CommerceOrderFragmentFDSNames.PENDING_ORDER_ITEMS,
+		"frontend.data.set.name=" + CommerceOrderFragmentFDSNames.PLACED_ORDER_ITEMS,
+	},
+	service = FDSView.class
+)
+public class CommerceOrderItemFragmentTableFDSView extends BaseTableFDSView {
+	@Override
+	public FDSTableSchema getFDSTableSchema(Locale locale) {
+		FDSTableSchemaBuilder fdsTableSchemaBuilder =
+			_fdsTableSchemaBuilderFactory.create();
+
+		return fdsTableSchemaBuilder.add(
+			"thumbnail", "image",
+			fdsTableSchemaField -> fdsTableSchemaField.setContentRenderer(
+				"image")
+		).add(
+			"sku", "sku",
+			fdsTableSchemaField -> fdsTableSchemaField.setContentRenderer(
+				"productURLDataRenderer")
+		).add(
+			"options", "options",
+			fdsTableSchemaField -> fdsTableSchemaField.setContentRenderer(
+				"productOptionsDataRenderer")
+		).add(
+			"name", "name"
+		).add(
+			"price.priceFormatted", "list-price"
+		).add(
+			"price.promoPriceFormatted", "promotion-price"
+		).add(
+			"price.discountFormatted", "discount"
+		).add(
+			"quantity", "quantity"
+		).add(
+			"skuUnitOfMeasure.name", "uom"
+		).add(
+			"price.finalPriceFormatted", "total"
+		).build();
+	}
+
+	@Reference
+	private FDSTableSchemaBuilderFactory _fdsTableSchemaBuilderFactory;
+}

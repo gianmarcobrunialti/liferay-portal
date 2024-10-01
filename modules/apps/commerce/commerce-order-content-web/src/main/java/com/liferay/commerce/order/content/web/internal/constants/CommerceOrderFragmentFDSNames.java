@@ -1,17 +1,23 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2024 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
 package com.liferay.commerce.order.content.web.internal.constants;
 
-import com.liferay.commerce.constants.CommercePortletKeys;
-
+/**
+ * @author Gianmarco Brunialti Masera
+ */
 public class CommerceOrderFragmentFDSNames {
 	public static final String PENDING_ORDER_ITEMS =
-		CommercePortletKeys.COMMERCE_OPEN_ORDER_CONTENT + "-fragmentPendingOrderItems";
+		"order-fragment-fds-pendingOrderItems";
 
 	public static final String PENDING_ORDERS =
-		CommercePortletKeys.COMMERCE_OPEN_ORDER_CONTENT + "-fragmentPendingOrders";
+		"order-fragment-fds-pendingOrders";
 
 	public static final String PLACED_ORDER_ITEMS =
-		CommercePortletKeys.COMMERCE_ORDER_CONTENT + "-fragmentPlacedOrderItems";
+		"order-fragment-fds-placedOrderItems";
 
 	public static final String PLACED_ORDERS =
-		CommercePortletKeys.COMMERCE_ORDER_CONTENT + "-fragmentPlacedOrders";
+		"order-fragment-fds-placedOrders";
 }

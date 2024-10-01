@@ -38,6 +38,8 @@ export {
 	TierPrice,
 	UnitOfMeasureSelector,
 } from './components/index';
+
+export * as MiniCartUtils from './components/mini_cart/util';
 export {default as CommerceServiceProvider} from './ServiceProvider/index';
 export {default as CommerceFrontendUtils} from './utilities/interface/index';
 

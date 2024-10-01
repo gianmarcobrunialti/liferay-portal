@@ -5,10 +5,14 @@
  */
 --%>
 
-<%@ include file="/fragment/renderer/data_set/init.jsp" %>
+<%@ include file="/fragment/renderer/order_items_data_set/init.jsp" %>
+
 
 <frontend-data-set:headless-display
+	additionalProps="<%= additionalProps %>"
 	apiURL="<%= apiURL %>"
-	id="<%= key %>"
+	fdsActionDropdownItems="<%= fdsActionDropdownItems %>"
+	id="<%= name %>"
+	propsTransformer="<%= propsTransformer %>"
 	style="<%= displayStyle %>"
 />
