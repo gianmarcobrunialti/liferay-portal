@@ -7,6 +7,7 @@ export {default as attachModalToHTMLElement} from './attachModalToHTMLElement';
 export {default as commerceOrderOrderTypeModal} from './commerceOrderOrderTypeModal';
 export {default as commerceReturnItemsPropsTransformer} from './commerceReturnItemsPropsTransformer';
 export {default as commerceReturnPropsTransformer} from './commerceReturnPropsTransformer';
+export {default as createCommerceCart} from './order_data_set/createCommerceCart';
 export {default as editCommerceOrder} from './editCommerceOrder';
 export {default as editCommerceReturn} from './editCommerceReturn';
 export {default as InfoBox} from './InfoBox';
@@ -19,3 +20,4 @@ export {default as returnableOrderItemsPropsTransformer} from './returnableOrder
 export {default as StepTracker} from './StepTracker';
 export {default as view} from './view';
 export {default as viewCommerceOrderDetailsCTAs} from './viewCommerceOrderDetailsCTAs';
+export {default as OrderDataSetPropsTransformer} from './order_data_set/propsTransformer';
