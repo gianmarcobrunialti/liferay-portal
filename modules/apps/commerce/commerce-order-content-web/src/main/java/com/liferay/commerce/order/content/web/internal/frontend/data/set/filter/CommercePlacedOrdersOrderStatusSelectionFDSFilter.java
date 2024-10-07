@@ -57,7 +57,7 @@ public class CommercePlacedOrdersOrderStatusSelectionFDSFilter
 		for (CommerceOrderStatus commerceOrderStatus :
 				_commerceOrderStatusRegistry.getCommerceOrderStatuses()) {
 
-			if (!_commerceOrderOpenStatuses.contains(
+			if (_commerceOrderOpenStatuses.contains(
 					commerceOrderStatus.getKey())) {
 
 				continue;

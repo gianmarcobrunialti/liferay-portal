@@ -1,4 +1,4 @@
-<%--
+<%@ page import="com.liferay.portal.kernel.util.ParamUtil" %><%--
 /**
  * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
@@ -25,6 +25,7 @@
 		<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
 		<aui:input name="commerceOrderId" type="hidden" value="<%= String.valueOf(commerceOrderContentDisplayContext.getCommerceOrderId()) %>" />
 		<aui:input name="commerceOrderImporterTypeKey" type="hidden" value="<%= CSVCommerceOrderImporterTypeImpl.KEY %>" />
+		<aui:input name="orderDetailURL" type="hidden" value="<%= ParamUtil.getString(request, "orderDetailURL") %>" />
 
 		<liferay-ui:error embed="<%= false %>" exception="<%= CommerceOrderImporterTypeException.class %>">
 

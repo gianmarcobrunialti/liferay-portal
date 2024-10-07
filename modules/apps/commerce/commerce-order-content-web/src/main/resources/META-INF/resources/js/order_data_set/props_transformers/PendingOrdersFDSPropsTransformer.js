@@ -111,6 +111,16 @@ const PendingOrdersFDSPropsTransformer = (props) => ({
 			});
 		}
 	},
+	onBulkActionItemClick({
+		action: {
+			data: { id: actionId }
+		},
+		selectedData: {keyValues}}) {
+		if (actionId === 'delete') {
+			console.log({ keyValues });
+			DeliveryCartAPI.deleteCarts(keyValues);
+		}
+	}
 });
 
 export default PendingOrdersFDSPropsTransformer;

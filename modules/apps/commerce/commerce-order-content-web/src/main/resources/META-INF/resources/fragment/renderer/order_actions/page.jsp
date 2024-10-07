@@ -1,4 +1,4 @@
-<%--
+<%@ page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%--
 /**
  * SPDX-FileCopyrightText: (c) 2024 Liferay, Inc. https://liferay.com
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
@@ -19,6 +19,19 @@
 				"orderId", commerceOrderId
 			).put(
 				"reorderURL", reorderURL
+			).build()
+		%>'
+	/>
+</div>
+
+<div>
+	<react:component
+		module="{DropdownMenuComponent} from commerce-frontend-js"
+		props='<%=
+			HashMapBuilder.<String, Object>put(
+				"items", dropdownItems
+			).put(
+				"spritemap", themeDisplay.getPathThemeSpritemap()
 			).build()
 		%>'
 	/>

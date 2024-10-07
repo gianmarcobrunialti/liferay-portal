@@ -130,6 +130,7 @@ function MiniCart({
 					return latestCartState;
 				});
 
+				Liferay.fire('cart-updated', {order: updatedCart});
 				onAddToCart(latestActionURLs, latestCartState);
 			}
 			catch (error) {
@@ -161,6 +162,7 @@ function MiniCart({
 
 	useEffect(() => {
 		Liferay.on(CURRENT_ORDER_UPDATED, updateCartModel);
+
 
 		return () => {
 			Liferay.detach(CURRENT_ORDER_UPDATED, updateCartModel);

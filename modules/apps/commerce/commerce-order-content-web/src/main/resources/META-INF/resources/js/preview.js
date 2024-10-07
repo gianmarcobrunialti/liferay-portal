@@ -19,6 +19,8 @@ export default function ({namespace}) {
 
 			openerWindow.document.body.appendChild(form);
 			openerWindow.submitForm(form);
+
+			// TODO append param to decide whether we're coming from old minium or new order pages
 		});
 	}
 }

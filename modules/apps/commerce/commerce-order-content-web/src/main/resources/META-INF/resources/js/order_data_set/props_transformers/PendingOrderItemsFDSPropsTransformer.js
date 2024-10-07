@@ -4,52 +4,65 @@
  */
 
 import {MiniCartUtils, commerceEvents} from 'commerce-frontend-js';
-import ProductOptionsDataRenderer from '../data_renderers/ProductOptionsDataRenderer';
+import ProductOptionsDataRenderer
+	from '../data_renderers/ProductOptionsDataRenderer';
 import ProductURLDataRenderer from '../data_renderers/ProductURLDataRenderer';
 
-const PendingOrderItemsFDSPropsTransformer = (props) => ({
-	...props,
-	customDataRenderers: {
-		productOptionsDataRenderer: (componentProps) =>
-			ProductOptionsDataRenderer({
-				...componentProps,
-				additionalProps: props.additionalProps
-			}),
-		productURLDataRenderer: (componentProps) =>
-			ProductURLDataRenderer({
-				...componentProps,
-				additionalProps: props.additionalProps
-			}),
-	},
-	onActionDropdownItemClick: ({
-		action: {
-			data: { id: actionId }
+const PendingOrderItemsFDSPropsTransformer = (props) => {
+	Liferay.on('cart-updated', () => {
+		Liferay.fire('fds-update-display', {id: props.id});
+	});
+
+	return {
+		...props,
+		customDataRenderers: {
+			productOptionsDataRenderer: (componentProps) =>
+				ProductOptionsDataRenderer({
+					...componentProps,
+					additionalProps: props.additionalProps
+				}),
+			productURLDataRenderer: (componentProps) =>
+				ProductURLDataRenderer({
+					...componentProps,
+					additionalProps: props.additionalProps
+				}),
 		},
-		itemData: {
-			id: orderItemId,
-			options,
-			productURLs,
-		},
-	}) => {
-		if (actionId === 'view') {
-			window.location.href = MiniCartUtils.generateProductPageURL(
-				props.additionalProps.siteDefaultURL,
+		onActionDropdownItemClick: ({
+			action: {
+				data: {id: actionId}
+			},
+			itemData: {
+				id: orderItemId,
+				options,
 				productURLs,
-				props.additionalProps.productURLSeparator
-			);
-		}
+			},
+		}) => {
+			if (actionId === 'view') {
+				window.location.href = MiniCartUtils.generateProductPageURL(
+					props.additionalProps.siteDefaultURL,
+					productURLs,
+					props.additionalProps.productURLSeparator
+				);
+			}
 
-		if (actionId === 'edit') {
-			const eventName = MiniCartUtils.hasOptions(options)
-				? commerceEvents.OPEN_MINICART_FOR_EDITING
-				: commerceEvents.OPEN_MINI_CART;
+			if (actionId === 'edit') {
+				const eventName = MiniCartUtils.hasOptions(options)
+					? commerceEvents.OPEN_MINICART_FOR_EDITING
+					: commerceEvents.OPEN_MINI_CART;
 
-			Liferay.fire(eventName, {
-				dataSetId: props.id,
-				orderItemId,
-			});
-		}
-	},
-});
+				Liferay.fire(eventName, {
+					dataSetId: props.id,
+					orderItemId,
+				});
+			}
+
+			if (actionId === 'delete') {
+				Liferay.fire('current-order-updated', {
+					order: { id: props.additionalProps.commerceOrderId }
+				});
+			}
+		},
+	}
+};
 
 export default PendingOrderItemsFDSPropsTransformer;

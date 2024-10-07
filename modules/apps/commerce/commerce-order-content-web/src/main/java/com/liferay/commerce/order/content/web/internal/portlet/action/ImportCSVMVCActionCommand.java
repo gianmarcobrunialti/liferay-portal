@@ -20,6 +20,7 @@ import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
+import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
@@ -45,6 +46,8 @@ import java.util.Map;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
+import javax.portlet.PortletRequest;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -212,9 +215,10 @@ public class ImportCSVMVCActionCommand extends BaseMVCActionCommand {
 		throws Exception {
 
 		return PortletURLBuilder.create(
-			PortletProviderUtil.getPortletURL(
-				actionRequest, CommerceOrder.class.getName(),
-				PortletProvider.Action.EDIT)
+			PortletURLFactoryUtil.create(
+				actionRequest,
+				CommercePortletKeys.COMMERCE_OPEN_ORDER_CONTENT,
+				PortletRequest.RENDER_PHASE)
 		).setMVCRenderCommandName(
 			"/commerce_open_order_content/view_commerce_order_importer_type"
 		).setBackURL(
@@ -227,6 +231,8 @@ public class ImportCSVMVCActionCommand extends BaseMVCActionCommand {
 			ParamUtil.getString(actionRequest, "commerceOrderImporterTypeKey")
 		).setParameter(
 			"fileEntryId", fileEntryId
+		).setParameter(
+			"orderDetailURL", ParamUtil.getString(actionRequest, "orderDetailURL")
 		).setWindowState(
 			LiferayWindowState.POP_UP
 		).buildString();

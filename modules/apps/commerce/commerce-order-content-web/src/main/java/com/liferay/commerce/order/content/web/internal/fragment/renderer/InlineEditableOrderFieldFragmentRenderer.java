@@ -6,61 +6,52 @@
 package com.liferay.commerce.order.content.web.internal.fragment.renderer;
 
 import com.liferay.commerce.model.CommerceOrder;
-import com.liferay.commerce.order.content.web.internal.constants.CommerceOrderFragmentFDSNames;
 import com.liferay.commerce.order.content.web.internal.util.CommerceOrderInfoItemUtil;
-import com.liferay.commerce.product.url.CPFriendlyURL;
 import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.renderer.FragmentRenderer;
 import com.liferay.fragment.renderer.FragmentRendererContext;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
-import com.liferay.frontend.data.set.model.FDSActionDropdownItem;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
-
-import java.io.IOException;
-import java.io.PrintWriter;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.ResourceBundle;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 /**
  * @author Gianmarco Brunialti Masera
  */
 @Component(service = FragmentRenderer.class)
-public class OrderItemsDataSetFragmentRenderer implements FragmentRenderer {
-
+public class InlineEditableOrderFieldFragmentRenderer implements FragmentRenderer {
 	@Override
 	public String getCollectionKey() {
 		return "commerce-order";
@@ -78,9 +69,8 @@ public class OrderItemsDataSetFragmentRenderer implements FragmentRenderer {
 				StringUtil.read(
 					getClass(),
 					"/com/liferay/commerce/order/content/web/internal" +
-						"/fragment/renderer/order_items_data_set/dependencies" +
-							"/configuration.json"));
-
+					"/fragment/renderer/inline_editable_order_field/dependencies" +
+					"/configuration.json"));
 			return _fragmentEntryConfigurationParser.translateConfiguration(
 				jsonObject, resourceBundle);
 		}
@@ -94,13 +84,8 @@ public class OrderItemsDataSetFragmentRenderer implements FragmentRenderer {
 	}
 
 	@Override
-	public String getIcon() {
-		return "catalog";
-	}
-
-	@Override
 	public String getLabel(Locale locale) {
-		return _language.get(locale, "order-items-data-set");
+		return _language.get(locale, "inline-editable-order-field");
 	}
 
 	@Override
@@ -110,10 +95,12 @@ public class OrderItemsDataSetFragmentRenderer implements FragmentRenderer {
 
 	@Override
 	public void render(
-			FragmentRendererContext fragmentRendererContext,
-			HttpServletRequest httpServletRequest,
-			HttpServletResponse httpServletResponse)
-		throws IOException {
+		FragmentRendererContext fragmentRendererContext,
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse) throws IOException {
+
+		FragmentEntryLink fragmentEntryLink =
+			fragmentRendererContext.getFragmentEntryLink();
 
 		CommerceOrder commerceOrder =
 			CommerceOrderInfoItemUtil.getCommerceOrder(
@@ -122,7 +109,8 @@ public class OrderItemsDataSetFragmentRenderer implements FragmentRenderer {
 		if (commerceOrder == null) {
 			if (_isEditMode(httpServletRequest)) {
 				_printPortletMessageInfo(
-					httpServletRequest, httpServletResponse);
+					httpServletRequest, httpServletResponse,
+					"the-order-editable-field-will-appear-here");
 			}
 
 			return;
@@ -131,62 +119,53 @@ public class OrderItemsDataSetFragmentRenderer implements FragmentRenderer {
 		try {
 			RequestDispatcher requestDispatcher =
 				_servletContext.getRequestDispatcher(
-					"/fragment/renderer/order_items_data_set/page.jsp");
-
-			String fdsName = commerceOrder.isOpen() ?
-				CommerceOrderFragmentFDSNames.PENDING_ORDER_ITEMS :
-					CommerceOrderFragmentFDSNames.PLACED_ORDER_ITEMS;
+					"/fragment/renderer/inline_editable_order_field/page.jsp");
 
 			httpServletRequest.setAttribute(
-				"liferay-commerce:order-data-set:apiURL",
-				_getAPIURL(commerceOrder.getCommerceOrderId(), fdsName));
+				"liferay-commerce:inline-editable-order-field:commerceOrderId",
+				commerceOrder.getCommerceOrderId());
 			httpServletRequest.setAttribute(
-				"liferay-commerce:order-data-set:name", fdsName);
+				"liferay-commerce:inline-editable-order-field:isOpenOrder",
+				commerceOrder.isOpen());
 
-			FragmentEntryLink fragmentEntryLink =
-				fragmentRendererContext.getFragmentEntryLink();
+			String field = _getConfigurationValue(
+				fragmentRendererContext, fragmentEntryLink, "field");
+			
+			httpServletRequest.setAttribute(
+				"liferay-commerce:inline-editable-order-field:field", field);
+			httpServletRequest.setAttribute(
+				"liferay-commerce:inline-editable-order-field:fieldHelpMessage",
+				_language.get(
+					fragmentRendererContext.getLocale(),
+					_getConfigurationValue(
+						fragmentRendererContext, fragmentEntryLink, "fieldHelpMessage")));
+			httpServletRequest.setAttribute(
+				"liferay-commerce:inline-editable-order-field:fieldValue",
+				_getFieldValue(commerceOrder, field));
 
-			String displayStyle = _getConfigurationValue(
-				fragmentRendererContext, fragmentEntryLink, "displayStyle");
-
+			PermissionChecker permissionChecker =
+				PermissionThreadLocal.getPermissionChecker();
+			
 			httpServletRequest.setAttribute(
-				"liferay-commerce:order-data-set:additionalProps",
-				_getFDSAdditionalProps(
-					commerceOrder.getCommerceOrderId(), httpServletRequest));
+				"liferay-commerce:inline-editable-order-field:hasPermission",
+				_commerceOrderModelResourcePermission.contains(
+					permissionChecker, commerceOrder, ActionKeys.UPDATE));
+			
 			httpServletRequest.setAttribute(
-				"liferay-commerce:order-data-set:displayStyle", displayStyle);
+				"liferay-commerce:inline-editable-order-field:label",
+				_language.get(
+					fragmentRendererContext.getLocale(),
+					_getConfigurationValue(
+						fragmentRendererContext, fragmentEntryLink, "label")));
 			httpServletRequest.setAttribute(
-				"liferay-commerce:order-data-set:fdsActionDropdownItems",
-				_getFDSActionDropdownItems(fdsName, httpServletRequest));
-			httpServletRequest.setAttribute(
-				"liferay-commerce:order-data-set:propsTransformer",
-				"{OrderDataSetPropsTransformer} from " +
-					"commerce-order-content-web");
+				"liferay-commerce:inline-editable-order-field:namespace",
+				StringUtil.randomId() + StringPool.UNDERLINE);
 
 			requestDispatcher.include(httpServletRequest, httpServletResponse);
 		}
 		catch (Exception exception) {
-			_log.error(exception);
-
 			throw new RuntimeException(exception);
 		}
-	}
-
-	private String _getAPIURL(long commerceOrderId, String fdsName) {
-		if (fdsName.equals(CommerceOrderFragmentFDSNames.PENDING_ORDER_ITEMS)) {
-			return StringBundler.concat(
-				"/o/headless-commerce-delivery-cart/v1.0/carts/",
-				commerceOrderId, "/items");
-		}
-		else if (fdsName.equals(
-					CommerceOrderFragmentFDSNames.PLACED_ORDER_ITEMS)) {
-
-			return StringBundler.concat(
-				"/o/headless-commerce-delivery-order/v1.0/placed-orders/",
-				commerceOrderId, "/placed-order-items");
-		}
-
-		return StringPool.BLANK;
 	}
 
 	private String _getConfigurationValue(
@@ -200,64 +179,20 @@ public class OrderItemsDataSetFragmentRenderer implements FragmentRenderer {
 				fragmentRendererContext.getLocale(), name));
 	}
 
-	private List<FDSActionDropdownItem> _getFDSActionDropdownItems(
-		String fdsName, HttpServletRequest httpServletRequest) {
-
-		if (fdsName.equals(CommerceOrderFragmentFDSNames.PENDING_ORDER_ITEMS)) {
-			return Arrays.asList(
-				new FDSActionDropdownItem(
-					StringPool.BLANK, "view", "view",
-					_language.get(httpServletRequest, "view"), null, null,
-					"link"),
-				new FDSActionDropdownItem(
-					StringPool.BLANK, "pencil", "edit",
-					_language.get(httpServletRequest, "edit"), null, null,
-					"link"),
-				new FDSActionDropdownItem(
-					"/o/headless-commerce-delivery-cart/v1.0/cart-items/{id}",
-					"trash", "delete",
-					_language.get(httpServletRequest, "remove"), "delete", null,
-					"async"));
+	private String _getFieldValue(CommerceOrder commerceOrder, String field) {
+		if (field.equals("externalReferenceCode")) {
+			return commerceOrder.getExternalReferenceCode();
 		}
-		else if (fdsName.equals(
-					CommerceOrderFragmentFDSNames.PLACED_ORDER_ITEMS)) {
-
-			return Arrays.asList(
-				new FDSActionDropdownItem(
-					StringPool.BLANK, "view", "view",
-					_language.get(httpServletRequest, "view"), null, null,
-					"link"));
+		else if (field.equals("name")) {
+			return commerceOrder.getName();
+		}
+		else if (field.equals("purchaseOrderNumber")) {
+			return commerceOrder.getPurchaseOrderNumber();
 		}
 
-		return Collections.emptyList();
+		return StringPool.BLANK;
 	}
 
-	private Map<String, Object> _getFDSAdditionalProps(
-		long commerceOrderId, HttpServletRequest httpServletRequest) {
-
-		return HashMapBuilder.<String, Object>put(
-			"commerceOrderId", commerceOrderId
-		).put(
-			"productURLSeparator",
-			_cpFriendlyURL.getProductURLSeparator(
-				_portal.getCompanyId(httpServletRequest))
-		).put(
-			"siteDefaultURL", _getSiteDefaultURL(httpServletRequest)
-		).build();
-	}
-
-	private String _getSiteDefaultURL(HttpServletRequest httpServletRequest) {
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
-
-		Layout layout = themeDisplay.getLayout();
-
-		Group group = layout.getGroup();
-
-		return HtmlUtil.escape(
-			group.getDisplayURL(themeDisplay, layout.isPrivateLayout()));
-	}
 
 	private boolean _isEditMode(HttpServletRequest httpServletRequest) {
 		HttpServletRequest originalHttpServletRequest =
@@ -275,7 +210,7 @@ public class OrderItemsDataSetFragmentRenderer implements FragmentRenderer {
 
 	private void _printPortletMessageInfo(
 		HttpServletRequest httpServletRequest,
-		HttpServletResponse httpServletResponse) {
+		HttpServletResponse httpServletResponse, String message) {
 
 		try {
 			PrintWriter printWriter = httpServletResponse.getWriter();
@@ -288,9 +223,7 @@ public class OrderItemsDataSetFragmentRenderer implements FragmentRenderer {
 				(ThemeDisplay)httpServletRequest.getAttribute(
 					WebKeys.THEME_DISPLAY);
 
-			sb.append(
-				themeDisplay.translate(
-					"the-order-items-data-set-component-will-be-shown-here"));
+			sb.append(themeDisplay.translate(message));
 
 			sb.append("</div>");
 
@@ -304,13 +237,17 @@ public class OrderItemsDataSetFragmentRenderer implements FragmentRenderer {
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
-		OrderItemsDataSetFragmentRenderer.class);
+		InlineEditableOrderFieldFragmentRenderer.class);
+
+	@Reference(
+		target = "(model.class.name=com.liferay.commerce.model.CommerceOrder)"
+	)
+	private ModelResourcePermission<CommerceOrder>
+		_commerceOrderModelResourcePermission;
 
 	@Reference
 	private CommerceOrderService _commerceOrderService;
 
-	@Reference
-	private CPFriendlyURL _cpFriendlyURL;
 
 	@Reference
 	private FragmentEntryConfigurationParser _fragmentEntryConfigurationParser;
@@ -328,5 +265,4 @@ public class OrderItemsDataSetFragmentRenderer implements FragmentRenderer {
 		target = "(osgi.web.symbolicname=com.liferay.commerce.order.content.web)"
 	)
 	private ServletContext _servletContext;
-
 }

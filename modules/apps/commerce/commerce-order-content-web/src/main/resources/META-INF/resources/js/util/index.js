@@ -4,6 +4,7 @@
  */
 
 import {isObject} from 'frontend-js-web';
+import {CommerceServiceProvider} from 'commerce-frontend-js';
 import React from 'react';
 
 const EDITABLE_FIELDS = [
@@ -57,4 +58,14 @@ export function isEditable(field, isOpen) {
 	}
 
 	return true;
+}
+
+export async function getOrder(isOpenOrder, order = null, orderId){
+	if (order) {
+		return Promise.resolve(order);
+	}
+
+	return isOpenOrder
+		? CommerceServiceProvider.DeliveryCartAPI('v1').getCartById(orderId)
+		: CommerceServiceProvider.DeliveryOrderAPI('v1').getPlacedOrderById(orderId);
 }

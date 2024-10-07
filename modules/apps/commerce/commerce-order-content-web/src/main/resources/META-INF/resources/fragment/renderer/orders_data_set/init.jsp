@@ -14,6 +14,7 @@ taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %>
 <%@ page import="com.liferay.commerce.order.content.web.internal.constants.CommerceOrderFragmentFDSNames" %><%@
 page import="com.liferay.frontend.data.set.model.FDSActionDropdownItem" %><%@
 page import="com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu" %><%@
+page import="com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem" %><%@
 page import="com.liferay.portal.kernel.json.JSONArray" %><%@
 page import="com.liferay.portal.kernel.util.HashMapBuilder" %>
 
@@ -27,6 +28,7 @@ Map<String, Object> additionalProps = (Map<String, Object>)request.getAttribute(
 String apiURL = (String)request.getAttribute("liferay-commerce:order-data-set:apiURL");
 String displayStyle = (String)request.getAttribute("liferay-commerce:order-data-set:displayStyle");
 List<FDSActionDropdownItem> fdsActionDropdownItems = (List<FDSActionDropdownItem>)request.getAttribute("liferay-commerce:order-data-set:fdsActionDropdownItems");
+List<DropdownItem> bulkActionDropdownItems = (List<DropdownItem>)request.getAttribute("liferay-commerce:order-data-set:fdsBulkActionDropdownItems");
 CreationMenu fdsCreationMenu = (CreationMenu)request.getAttribute("liferay-commerce:order-data-set:fdsCreationMenu");
 String name = (String)request.getAttribute("liferay-commerce:order-data-set:name");
 JSONArray orderTypesJSONArray = (JSONArray)request.getAttribute("liferay-commerce:order-data-set:orderTypes");

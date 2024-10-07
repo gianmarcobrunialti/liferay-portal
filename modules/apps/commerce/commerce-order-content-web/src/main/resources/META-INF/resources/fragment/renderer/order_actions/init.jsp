@@ -8,8 +8,11 @@
 <%@ taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %><%@
 taglib uri="http://liferay.com/tld/react" prefix="react" %><%@
 taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %>
+<%@ taglib prefix="clay" uri="http://liferay.com/tld/clay" %>
 
-<%@ page import="com.liferay.portal.kernel.util.HashMapBuilder" %>
+<%@ page import="com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem" %><%@
+ page import="java.util.List" %>
+<%@ page import="com.liferay.portal.kernel.util.ListUtil" %>
 
 <liferay-frontend:defineObjects />
 
@@ -18,6 +21,7 @@ taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %>
 <%
 String checkoutURL = (String)request.getAttribute("liferay-commerce:order-actions:checkoutURL");
 long commerceOrderId = (long)request.getAttribute("liferay-commerce:order-actions:commerceOrderId");
+List<DropdownItem> dropdownItems = (List<DropdownItem>)request.getAttribute("liferay-commerce:order-actions:dropdownItems");
 boolean open = (boolean)request.getAttribute("liferay-commerce:order-actions:open");
 String reorderURL = (String)request.getAttribute("liferay-commerce:order-actions:reorderURL");
 %>

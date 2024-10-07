@@ -30,6 +30,7 @@ import java.util.List;
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
 
+import com.liferay.portal.kernel.util.Validator;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -77,6 +78,12 @@ public class EditCommerceOrderItemMVCActionCommand
 			}
 			else if (cmd.equals(Constants.RESET)) {
 				_deleteCommerceOrderItems(actionRequest);
+
+				String orderDetailURL = ParamUtil.getString(actionRequest, "orderDetailURL");
+
+				if (Validator.isNotNull(orderDetailURL)) {
+					sendRedirect(actionRequest, actionResponse, orderDetailURL);
+				}
 			}
 		}
 		catch (CommerceOrderValidatorException
