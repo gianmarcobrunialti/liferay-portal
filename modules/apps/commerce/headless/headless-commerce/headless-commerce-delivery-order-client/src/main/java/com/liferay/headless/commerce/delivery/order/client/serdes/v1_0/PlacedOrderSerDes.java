@@ -189,6 +189,20 @@ public class PlacedOrderSerDes {
 			sb.append("\"");
 		}
 
+		if (placedOrder.getFriendlyURLSeparator() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"friendlyURLSeparator\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(placedOrder.getFriendlyURLSeparator()));
+
+			sb.append("\"");
+		}
+
 		if (placedOrder.getId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -649,6 +663,15 @@ public class PlacedOrderSerDes {
 				String.valueOf(placedOrder.getExternalReferenceCode()));
 		}
 
+		if (placedOrder.getFriendlyURLSeparator() == null) {
+			map.put("friendlyURLSeparator", null);
+		}
+		else {
+			map.put(
+				"friendlyURLSeparator",
+				String.valueOf(placedOrder.getFriendlyURLSeparator()));
+		}
+
 		if (placedOrder.getId() == null) {
 			map.put("id", null);
 		}
@@ -938,6 +961,11 @@ public class PlacedOrderSerDes {
 
 				return false;
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "friendlyURLSeparator")) {
+
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
 				return false;
 			}
@@ -1109,6 +1137,14 @@ public class PlacedOrderSerDes {
 
 				if (jsonParserFieldValue != null) {
 					placedOrder.setExternalReferenceCode(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "friendlyURLSeparator")) {
+
+				if (jsonParserFieldValue != null) {
+					placedOrder.setFriendlyURLSeparator(
 						(String)jsonParserFieldValue);
 				}
 			}

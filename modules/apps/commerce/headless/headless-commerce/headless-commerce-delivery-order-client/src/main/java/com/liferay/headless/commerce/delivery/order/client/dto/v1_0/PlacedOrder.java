@@ -237,6 +237,27 @@ public class PlacedOrder implements Cloneable, Serializable {
 
 	protected String externalReferenceCode;
 
+	public String getFriendlyURLSeparator() {
+		return friendlyURLSeparator;
+	}
+
+	public void setFriendlyURLSeparator(String friendlyURLSeparator) {
+		this.friendlyURLSeparator = friendlyURLSeparator;
+	}
+
+	public void setFriendlyURLSeparator(
+		UnsafeSupplier<String, Exception> friendlyURLSeparatorUnsafeSupplier) {
+
+		try {
+			friendlyURLSeparator = friendlyURLSeparatorUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String friendlyURLSeparator;
+
 	public Long getId() {
 		return id;
 	}
