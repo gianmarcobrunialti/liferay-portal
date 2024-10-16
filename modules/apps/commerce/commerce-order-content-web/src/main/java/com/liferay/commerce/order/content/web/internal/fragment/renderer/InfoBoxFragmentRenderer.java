@@ -171,9 +171,9 @@ public class InfoBoxFragmentRenderer implements FragmentRenderer {
 
 		if (commerceOrder == null) {
 			if (_isEditMode(httpServletRequest)) {
-				httpServletRequest.setAttribute(
-					"liferay-commerce:info-box:fieldValue",
-					_getFieldLabel(fragmentEntryLink, field));
+				_printPortletMessageInfo(
+					httpServletRequest, httpServletResponse,
+					"the-info-box-component-will-be-shown-here");
 			}
 
 			return;
