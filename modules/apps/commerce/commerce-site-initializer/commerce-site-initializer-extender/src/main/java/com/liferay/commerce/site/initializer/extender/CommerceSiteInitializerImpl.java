@@ -439,7 +439,7 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 					CommerceInventoryWarehouse.
 						COMMERCE_INVENTORY_WAREHOUSE_ID_ACCESSOR),
 				bundleWiring.getClassLoader(),
-				StringUtil.replace(resourcePath, ".json", "/"),
+				StringUtil.replace(resourcePath, "catalog.products.json", "product_images/"),
 				serviceContext.getScopeGroupId(), serviceContext.getUserId());
 
 		if (ListUtil.isEmpty(cpDefinitions)) {
@@ -686,7 +686,8 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 		).build();
 
 		for (String resourcePath : resourcePaths) {
-			if (resourcePath.endsWith(".options.json") ||
+			if (resourcePath.endsWith(".option.categories.json") ||
+				resourcePath.endsWith(".options.json") ||
 				resourcePath.endsWith(".products.json") ||
 				resourcePath.endsWith(".products.specifications.json") ||
 				resourcePath.endsWith(
@@ -927,7 +928,7 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 		throws Exception {
 
 		String resourcePath =
-			"/site-initializer/commerce-option-categories.json";
+			"/site-initializer/commerce-catalogs/catalog.option.categories.json";
 
 		String json = SiteInitializerUtil.read(resourcePath, servletContext);
 

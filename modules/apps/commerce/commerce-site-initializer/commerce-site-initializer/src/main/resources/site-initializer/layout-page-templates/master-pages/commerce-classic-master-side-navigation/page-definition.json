@@ -534,10 +534,6 @@
 	},
 	"settings": {
 		"colorSchemeName": "01",
-		"styleBook": {
-			"key": "commerce-classic",
-			"name": "Commerce Classic"
-		},
 		"themeName": "Classic",
 		"themeSettings": {
 			"lfr-theme:regular:show-footer": "false",

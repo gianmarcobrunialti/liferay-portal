@@ -1,0 +1,93 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+
+	<link href="/vite.svg" rel="icon" type="image/svg+xml" />
+
+	<meta content="width=device-width, initial-scale=1.0" name="viewport" />
+
+	<title>Vite + React</title>
+
+	<link href="https://clayui.com/css/atlas.css" id="clayCSSFile" rel="stylesheet" />
+
+	<script type="importmap">
+	  {
+		"imports": {
+		  "react": "https://unpkg.com/browse/react@16.12.0/",
+		  "react-dom": "https://unpkg.com/browse/react-dom@16.12.0/",
+		  "@clayui/core": "https://unpkg.com/browse/@clayui/core@^3.106.1/",
+		  "@clayui/form": "https://unpkg.com/browse/@clayui/form@^3.106.1/"
+		  "@clayui/icon": "https://unpkg.com/browse/@clayui/icon@^3.106.1/"
+		}
+	  }
+	</script>
+</head>
+
+<body>
+	<div id="myModule"></div>
+
+	<script type="module">
+		import React from 'react';
+		import ReactDOM from 'react-dom';
+		import ClayPickerInputGroup from "/src/MiniumPrimaryNavigation.jsx";
+
+		ReactDOM.render(
+			React.createElement(
+				ClayPickerInputGroup,
+				{
+					entries: JSON.parse([
+								{
+									"active": false,
+									"href": "http://localhost:8080/web/liferay-commerce-minium-4/catalog",
+									"label": "Catalog",
+									"layoutId": "5"
+								},
+								{
+									"active": false,
+									"href": "http://localhost:8080/web/liferay-commerce-minium-4/orders",
+									"items": [
+										{
+											"active": false,
+											"href": "http://localhost:8080/web/liferay-commerce-minium-4/pending-orders",
+											"label": "Pending Orders",
+											"layoutId": "13"
+										},
+										{
+											"active": false,
+											"href": "http://localhost:8080/web/liferay-commerce-minium-4/placed-orders",
+											"label": "Placed Orders",
+											"layoutId": "17"
+										}
+									],
+									"label": "Orders",
+									"layoutId": "11"
+								},
+								{
+									"active": false,
+									"href": "http://localhost:8080/web/liferay-commerce-minium-4/returns",
+									"label": "Returns",
+									"layoutId": "19"
+								},
+								{
+									"active": false,
+									"href": "http://localhost:8080/web/liferay-commerce-minium-4/account-management",
+									"label": "Account Management",
+									"layoutId": "21"
+								},
+								{
+									"active": false,
+									"href": "http://localhost:8080/web/liferay-commerce-minium-4/lists",
+									"label": "Lists",
+									"layoutId": "23"
+								}
+							]
+					)
+				},
+			),
+			document.getElementById('myModule')
+		);
+	</script>
+</body>
+</html>

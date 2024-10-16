@@ -129,8 +129,20 @@
 		"type": "Root"
 	},
 	"settings": {
+		"colorSchemeName": "01",
 		"masterPage": {
 			"key": "commerce-classic-master"
+		},
+		"styleBook": {
+			"key": "commerce-classic",
+			"name": "Commerce Classic"
+		},
+		"themeName": "Classic",
+		"themeSettings": {
+			"lfr-theme:regular:show-footer": "false",
+			"lfr-theme:regular:show-header": "false",
+			"lfr-theme:regular:show-header-search": "false",
+			"lfr-theme:regular:wrap-widget-page-content": "false"
 		}
 	},
 	"version": 1.1

@@ -6,7 +6,7 @@
 					"cssClasses": [
 						"commerce-main"
 					],
-					"customCSS": ":root  {\n--commerce-header-user-height: 35px;\n}\n\n.commerce-main {\n\tbackground-color: var(--gray-100);\n\tdisplay: flex;\n\tflex-direction: column;\n\tjustify-content: space-between;\n\tmin-height: calc(100vh - var(--control-menu-height, 0px));\n\toverflow-x: hidden;\n\tposition: relative;\n}\n\n.signed-out .commerce-main {\n\tmin-height: 100vh;\n}",
+					"customCSS": ":root  {\n--commerce-header-user-height: 2.6rem;\n}\n\n.commerce-main {\n\tbackground-color: var(--gray-100);\n\tdisplay: flex;\n\tflex-direction: column;\n\tjustify-content: space-between;\n\tmin-height: calc(100vh - var(--control-menu-height, 0px));\n\toverflow-x: clip;\n\tposition: relative;\n}\n\n.signed-out .commerce-main {\n\tmin-height: 100vh;\n}",
 					"indexed": true,
 					"layout": {
 					}
@@ -14,6 +14,7 @@
 				"pageElements": [
 					{
 						"definition": {
+							"customCSS": ".[$FRAGMENT_CLASS$] {\nposition: sticky;\n  top: var(--control-menu-container-height);\n  z-index: 900;\n}",
 							"htmlProperties": {
 								"htmlTag": "Header"
 							},
@@ -194,13 +195,11 @@
 																	"id": "landscapeMobile"
 																},
 																{
-																	"columnViewportDefinition": {
-																	},
+																	"columnViewportDefinition": {},
 																	"id": "portraitMobile"
 																},
 																{
-																	"columnViewportDefinition": {
-																	},
+																	"columnViewportDefinition": {},
 																	"id": "tablet"
 																}
 															],
@@ -210,21 +209,18 @@
 															{
 																"definition": {
 																	"indexed": true,
-																	"layout": {
-																	}
+																	"layout": {}
 																},
 																"pageElements": [
 																	{
 																		"definition": {
-																			"customCSS": ".[$FRAGMENT_CLASS$] #commerce-components-group .cart-root .mini-cart.is-open .mini-cart-wrapper {\n\ttransform: translate3d(calc(100vw / 2 - 624px), 0, 0);\n}\n\n@media (min-width: 1920px) {\n\t.[$FRAGMENT_CLASS$] #commerce-components-group .mini-cart:not(.is-open) .mini-cart-wrapper {\n\t\ttransform: translate3d(50vw, 0, 0);\n\t}\n\n\t.rtl .[$FRAGMENT_CLASS$] #commerce-components-group .mini-cart:not(.is-open) .mini-cart-wrapper {\n\t\ttransform: translate3d(calc(-1 * 50vw), 0, 0);\n\t}\n}",
+																			"customCSS": ".[$FRAGMENT_CLASS$] {}\n\n@media (min-width: 1920px) {\n\t.[$FRAGMENT_CLASS$] #commerce-components-group .mini-cart:not(.is-open) .mini-cart-wrapper {\n\t\ttransform: translate3d(50vw, 0, 0);\n\t}\n\n\t.rtl .[$FRAGMENT_CLASS$] #commerce-components-group .mini-cart:not(.is-open) .mini-cart-wrapper {\n\t\ttransform: translate3d(calc(-1 * 50vw), 0, 0);\n\t}\n}",
 																			"fragment": {
 																				"key": "commerce-components-group",
 																				"siteKey": "[$GROUP_KEY$]"
 																			},
-																			"fragmentConfig": {
-																			},
-																			"fragmentFields": [
-																			],
+																			"fragmentConfig": {},
+																			"fragmentFields": [],
 																			"indexed": true
 																		},
 																		"type": "Fragment"
@@ -248,8 +244,7 @@
 								"definition": {
 									"customCSS": ".[$FRAGMENT_CLASS$] {\n\tbackground-color: var(--white);\n\tborder-bottom: 1px solid var(--gray-300);\n}",
 									"indexed": true,
-									"layout": {
-									}
+									"layout": {}
 								},
 								"pageElements": [
 									{
@@ -268,12 +263,11 @@
 													},
 													"fragmentConfig": {
 														"displayStyle": "horizontal",
-														"hoveredItemColor": "",
 														"selectedItemColor": "",
-														"sublevels": "-1"
+														"sublevels": "-1",
+														"hoveredItemColor": ""
 													},
-													"fragmentFields": [
-													],
+													"fragmentFields": [],
 													"indexed": true
 												},
 												"type": "Fragment"
@@ -291,22 +285,20 @@
 						"definition": {
 							"cssClasses": [
 								"commerce-main-body",
-								"flex-fill",
-								"pb-5"
+								"pb-5",
+								"flex-fill"
 							],
 							"htmlProperties": {
 								"htmlTag": "Main"
 							},
 							"indexed": true,
-							"layout": {
-							}
+							"layout": {}
 						},
 						"pageElements": [
 							{
 								"definition": {
 									"fragmentSettings": {
-										"unallowedFragments": [
-										]
+										"unallowedFragments": []
 									}
 								},
 								"type": "DropZone"
@@ -320,8 +312,7 @@
 								"key": "footer",
 								"siteKey": "[$GROUP_KEY$]"
 							},
-							"fragmentConfig": {
-							},
+							"fragmentConfig": {},
 							"fragmentFields": [
 								{
 									"id": "legalLink",
@@ -357,12 +348,10 @@
 												}
 											},
 											"url": {
-												"value_i18n": {
-												}
+												"value_i18n": {}
 											}
 										},
-										"fragmentLink": {
-										}
+										"fragmentLink": {}
 									}
 								},
 								{
@@ -380,8 +369,7 @@
 								{
 									"id": "copyrightLink",
 									"value": {
-										"fragmentLink": {
-										}
+										"fragmentLink": {}
 									}
 								},
 								{
@@ -389,12 +377,10 @@
 									"value": {
 										"fragmentImage": {
 											"url": {
-												"value_i18n": {
-												}
+												"value_i18n": {}
 											}
 										},
-										"fragmentLink": {
-										}
+										"fragmentLink": {}
 									}
 								},
 								{
@@ -438,12 +424,10 @@
 									"value": {
 										"fragmentImage": {
 											"url": {
-												"value_i18n": {
-												}
+												"value_i18n": {}
 											}
 										},
-										"fragmentLink": {
-										}
+										"fragmentLink": {}
 									}
 								},
 								{
@@ -451,12 +435,10 @@
 									"value": {
 										"fragmentImage": {
 											"url": {
-												"value_i18n": {
-												}
+												"value_i18n": {}
 											}
 										},
-										"fragmentLink": {
-										}
+										"fragmentLink": {}
 									}
 								},
 								{
@@ -464,12 +446,10 @@
 									"value": {
 										"fragmentImage": {
 											"url": {
-												"value_i18n": {
-												}
+												"value_i18n": {}
 											}
 										},
-										"fragmentLink": {
-										}
+										"fragmentLink": {}
 									}
 								},
 								{
@@ -501,12 +481,10 @@
 									"value": {
 										"fragmentImage": {
 											"url": {
-												"value_i18n": {
-												}
+												"value_i18n": {}
 											}
 										},
-										"fragmentLink": {
-										}
+										"fragmentLink": {}
 									}
 								}
 							],
@@ -528,9 +506,9 @@
 		},
 		"themeName": "Classic",
 		"themeSettings": {
-			"lfr-theme:regular:show-footer": "false",
-			"lfr-theme:regular:show-header": "false",
 			"lfr-theme:regular:show-header-search": "false",
+			"lfr-theme:regular:show-header": "false",
+			"lfr-theme:regular:show-footer": "false",
 			"lfr-theme:regular:wrap-widget-page-content": "false"
 		}
 	},
