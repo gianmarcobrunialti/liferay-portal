@@ -27,31 +27,34 @@ const PendingOrdersFDSPropsTransformer = (props) => ({
 					),
 					cartId
 				)}\n${Liferay.Language.get('this-operation-cannot-be-undone')}`,
-				onConfirm: () =>
-					DeliveryCartAPI.deleteCartById(cartId)
-						.then(() => {
-							loadData();
+				onConfirm: (isConfirmed = false) => {
+					if (isConfirmed) {
+						DeliveryCartAPI.deleteCartById(cartId)
+							.then(() => {
+								loadData();
 
-							openToast({
-								message: Liferay.Language.get(
-									'your-request-completed-successfully'
-								),
-								type: 'success',
-							});
+								openToast({
+									message: Liferay.Language.get(
+										'your-request-completed-successfully'
+									),
+									type: 'success',
+								});
 
-							Liferay.fire(commerceEvents.CART_RESET, {
-								accountId,
-								id: cartId,
-							});
-						})
-						.catch(() => {
-							openToast({
-								message: Liferay.Language.get(
-									'an-unexpected-error-occurred'
-								),
-								type: 'danger',
-							});
-						}),
+								Liferay.fire(commerceEvents.CART_RESET, {
+									accountId,
+									id: cartId,
+								});
+							})
+							.catch(() => {
+								openToast({
+									message: Liferay.Language.get(
+										'an-unexpected-error-occurred'
+									),
+									type: 'danger',
+								});
+							})
+					}
+				},
 				title: sub(Liferay.Language.get('delete-order-x'), cartId),
 			});
 		}

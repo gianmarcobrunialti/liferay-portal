@@ -14,12 +14,11 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
 	base: '/o/vite-project',
 	build: {
-		assetsDir: 'static',
 		lib: {
 			entry: resolve(__dirname, 'src/index.js'),
 			formats: ['es'],
 		},
-		outDir: 'build',
+		outDir: 'build/static',
 
 		rollupOptions: {
 			external: [/@clayui\/*/, 'react', 'react-dom'],
