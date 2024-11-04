@@ -101,16 +101,10 @@ const InputQuantitySelector = forwardRef(
 		const [visibleErrors, setVisibleErrors] = useState(() =>
 			getErrors(
 				quantity,
-				unitOfMeasure ? min : Math.ceil(min),
-				unitOfMeasure ? max : Math.ceil(max),
-				unitOfMeasure
-					? getMultiple(
-							unitOfMeasure.incrementalOrderQuantity,
-							step,
-							unitOfMeasure.precision
-						)
-					: Math.ceil(step),
-				0,
+				inputProperties.min,
+				inputProperties.max,
+				inputProperties.step,
+				unitOfMeasure?.precision ? unitOfMeasure.precision : 0,
 				allowEmptyValue
 			)
 		);
@@ -296,23 +290,20 @@ const InputQuantitySelector = forwardRef(
 					value={String(inputProperties.quantity || '')}
 				/>
 
-				{showPopover &&
-					(inputProperties.step > 0 ||
-						min > 0 ||
-						visibleErrors.includes('max')) && (
-						<RulesPopover
-							alignment={alignment}
-							errors={visibleErrors}
-							inputRef={inputRef}
-							max={max || ''}
-							min={min}
-							multiple={inputProperties.step}
-							precision={
-								inputProperties.currentUnitOfMeasure
-									?.precision || 0
-							}
-						/>
-					)}
+				{showPopover && (
+					<RulesPopover
+						alignment={alignment}
+						errors={visibleErrors}
+						inputRef={inputRef}
+						max={inputProperties.max}
+						min={inputProperties.min}
+						multiple={inputProperties.step}
+						precision={
+							inputProperties.currentUnitOfMeasure
+								?.precision || 0
+						}
+					/>
+				)}
 			</ClayForm.Group>
 		);
 	}
