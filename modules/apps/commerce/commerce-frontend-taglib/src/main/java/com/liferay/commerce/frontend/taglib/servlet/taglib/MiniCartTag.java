@@ -6,6 +6,7 @@
 package com.liferay.commerce.frontend.taglib.servlet.taglib;
 
 import com.liferay.account.model.AccountEntry;
+import com.liferay.commerce.configuration.CommerceOrderCheckoutConfiguration;
 import com.liferay.commerce.configuration.CommerceOrderFieldsConfiguration;
 import com.liferay.commerce.configuration.CommercePriceConfiguration;
 import com.liferay.commerce.constants.CommerceConstants;
@@ -62,23 +63,8 @@ public class MiniCartTag extends IncludeTag {
 				CommerceWebKeys.COMMERCE_CONTEXT);
 
 		try {
-			AccountEntry accountEntry = null;
-
-			if (commerceContext != null) {
-				accountEntry = commerceContext.getAccountEntry();
-			}
-
-			if (accountEntry != null) {
-				_accountEntryId = accountEntry.getAccountEntryId();
-			}
-
-			_commerceChannelId = 0;
-
-			if (commerceContext != null) {
-				_commerceChannelId = commerceContext.getCommerceChannelId();
-			}
-
-			if (_commerceChannelId == 0) {
+			if (commerceContext == null) {
+				_commerceChannelId = 0;
 				_commerceChannelGroupId = 0;
 				_checkoutURL = StringPool.BLANK;
 				_itemsQuantity = 0;
@@ -88,22 +74,18 @@ public class MiniCartTag extends IncludeTag {
 				return super.doStartTag();
 			}
 
-			_checkoutURL = StringPool.BLANK;
-
-			PortletURL portletURL = PortletProviderUtil.getPortletURL(
-				httpServletRequest, CommercePortletKeys.COMMERCE_CHECKOUT,
-				PortletProvider.Action.VIEW);
-
-			if (portletURL != null) {
-				_checkoutURL = PortletURLBuilder.create(
-					portletURL
-				).setMVCRenderCommandName(
-					"/commerce_checkout/checkout_redirect"
-				).buildString();
-			}
-
+			_commerceChannelId = commerceContext.getCommerceChannelId();
 			_commerceChannelGroupId =
 				commerceContext.getCommerceChannelGroupId();
+
+			AccountEntry accountEntry = commerceContext.getAccountEntry();
+
+			if (accountEntry != null) {
+				_accountEntryId = accountEntry.getAccountEntryId();
+
+				_guestOrderEnabled =
+					_isGuestOrderEnabled(accountEntry, _commerceChannelGroupId);
+			}
 
 			CommerceCurrency commerceCurrency =
 				commerceContext.getCommerceCurrency();
@@ -117,20 +99,32 @@ public class MiniCartTag extends IncludeTag {
 					commerceOrder, httpServletRequest);
 				_orderId = commerceOrder.getCommerceOrderId();
 			}
-			else {
-				_orderId = 0;
-			}
 
 			_orderDetailURL =
 				_commerceOrderHttpHelper.getCommerceCartPortletURL(
 					httpServletRequest, commerceOrder);
 
 			_requestQuoteEnabled = _isRequestQuoteEnabled();
+
+			PortletURL commerceCheckoutPortletURL = PortletProviderUtil.getPortletURL(
+				httpServletRequest, CommercePortletKeys.COMMERCE_CHECKOUT,
+				PortletProvider.Action.VIEW);
+
+			if (commerceCheckoutPortletURL != null) {
+				_checkoutURL = PortletURLBuilder.create(
+					commerceCheckoutPortletURL
+				).setMVCRenderCommandName(
+					"/commerce_checkout/checkout_redirect"
+				).buildString();
+			}
 		}
 		catch (PortalException portalException) {
 			_log.error(portalException);
 
+			_commerceChannelId = 0;
+			_commerceChannelGroupId = 0;
 			_checkoutURL = StringPool.BLANK;
+			_guestOrderEnabled = false;
 			_itemsQuantity = 0;
 			_orderDetailURL = StringPool.BLANK;
 			_orderId = 0;
@@ -147,6 +141,22 @@ public class MiniCartTag extends IncludeTag {
 		_siteDefaultURL = _getSiteDefaultURL(themeDisplay);
 
 		return super.doStartTag();
+	}
+
+	private boolean _isGuestOrderEnabled(
+			AccountEntry accountEntry, long commerceChannelGroupId)
+		throws PortalException {
+
+		CommerceOrderCheckoutConfiguration
+			commerceOrderCheckoutConfiguration =
+			_configurationProvider.getConfiguration(
+				CommerceOrderCheckoutConfiguration.class,
+				new GroupServiceSettingsLocator(
+					commerceChannelGroupId,
+					CommerceConstants.SERVICE_NAME_COMMERCE_ORDER));
+
+		return accountEntry.isGuestAccount() &&
+			   commerceOrderCheckoutConfiguration.guestCheckoutEnabled();
 	}
 
 	public String getCssClasses() {
@@ -215,6 +225,7 @@ public class MiniCartTag extends IncludeTag {
 		_configurationProvider = null;
 		_cssClasses = StringPool.BLANK;
 		_displayTotalItemsQuantity = false;
+		_guestOrderEnabled = false;
 		_itemsQuantity = 0;
 		_labels = new HashMap<>();
 		_orderDetailURL = null;
@@ -255,6 +266,9 @@ public class MiniCartTag extends IncludeTag {
 		httpServletRequest.setAttribute(
 			"liferay-commerce:cart:displayTotalItemsQuantity",
 			_displayTotalItemsQuantity);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:cart:guestOrderEnabled",
+			_guestOrderEnabled);
 		httpServletRequest.setAttribute(
 			"liferay-commerce:cart:itemsQuantity", _itemsQuantity);
 		httpServletRequest.setAttribute(
@@ -333,20 +347,21 @@ public class MiniCartTag extends IncludeTag {
 	private static final Log _log = LogFactoryUtil.getLog(MiniCartTag.class);
 
 	private long _accountEntryId;
-	private String _checkoutURL;
-	private long _commerceChannelGroupId;
-	private long _commerceChannelId;
-	private String _commerceCurrencyCode;
+	private String _checkoutURL = StringPool.BLANK;
+	private long _commerceChannelGroupId = 0;
+	private long _commerceChannelId = 0;
+	private String _commerceCurrencyCode = StringPool.BLANK;
 	private CommerceOrderHttpHelper _commerceOrderHttpHelper;
 	private ConfigurationProvider _configurationProvider;
 	private String _cssClasses = StringPool.BLANK;
-	private boolean _displayTotalItemsQuantity;
-	private int _itemsQuantity;
+	private boolean _displayTotalItemsQuantity = false;
+	private boolean _guestOrderEnabled = false;
+	private int _itemsQuantity = 0;
 	private Map<String, String> _labels = new HashMap<>();
-	private String _orderDetailURL;
-	private long _orderId;
+	private String _orderDetailURL = StringPool.BLANK;
+	private long _orderId = 0;
 	private String _productURLSeparator = StringPool.BLANK;
-	private boolean _requestQuoteEnabled;
+	private boolean _requestQuoteEnabled = false;
 	private String _siteDefaultURL = StringPool.BLANK;
 	private boolean _toggleable = true;
 	private Map<String, String> _views = new HashMap<>();

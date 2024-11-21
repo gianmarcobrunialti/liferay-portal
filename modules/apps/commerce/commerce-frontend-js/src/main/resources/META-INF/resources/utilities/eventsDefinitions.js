@@ -36,6 +36,7 @@ export const PRODUCT_OPTIONS_CHANGED = 'product-options-changed';
 export const PRODUCT_REMOVED_FROM_CART = 'product-removed-from-cart';
 export const SELECTED_RETURNABLE_ITEMS = 'selected-returnable-items';
 export const SIDE_PANEL_CLOSED = 'side-panel-closed';
+export const PERFORM_SIGN_IN = 'perform-sign-in';
 export const TOGGLE_ITEM_IN_PRODUCT_COMPARISON = 'toggle-item-in-compare';
 
 const FDS_UPDATE_DISPLAY = FDS_EVENT.UPDATE_DISPLAY;
