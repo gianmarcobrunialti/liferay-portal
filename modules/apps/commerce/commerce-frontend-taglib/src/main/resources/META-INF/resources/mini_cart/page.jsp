@@ -31,6 +31,8 @@
 				).put(
 					"displayTotalItemsQuantity", displayTotalItemsQuantity
 				).put(
+					"guestOrderEnabled", guestOrderEnabled
+				).put(
 					"groupId", commerceChannelGroupId
 				).put(
 					"id", commerceChannelId
