@@ -1,0 +1,18 @@
+
+{
+  "dependencies": {},
+  "devDependencies": {
+    "@babel/cli": "^7.7.5",
+    "@babel/core": "^7.7.5",
+    "@babel/preset-env": "^7.7.6",
+    "@babel/preset-react": "^7.7.4",
+    "liferay-npm-bridge-generator": "2.26.0",
+    "liferay-npm-bundler": "2.24.3"
+  },
+  "main": "js/index.js",
+  "name": "commerce-frontend-taglib-custom",
+  "scripts": {
+    "build": "node-scripts build"
+  },
+  "version": "1.0.0"
+  }

@@ -1,3 +1,4 @@
+<%@ taglib prefix="liferay-commerce-ui-custom" uri="http://liferay.com/tld/liferay-commerce-ui-custom" %>
 <%--
 /**
  * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
@@ -6,6 +7,8 @@
 --%>
 
 <%@ include file="/mini_cart/init.jsp" %>
+
+<liferay-commerce-ui-custom:mini-cart />
 
 <c:choose>
 	<c:when test="<%= commerceChannelId == 0 %>">

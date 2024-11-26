@@ -25,5 +25,4 @@ dependencies {
 	compileOnly project(":apps:portal-configuration:portal-configuration-module-configuration-api")
 	compileOnly project(":core:petra:petra-lang")
 	compileOnly project(":core:petra:petra-string")
-	compileOnly project(":apps:commerce:commerce-frontend-taglib-custom")
 }

@@ -24,6 +24,7 @@ import com.liferay.info.item.renderer.InfoItemRendererRegistry;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
+import com.liferay.portal.url.builder.AbsolutePortalURLBuilderFactory;
 
 import javax.servlet.ServletContext;
 
@@ -55,6 +56,12 @@ public class ServletContextUtil {
 		getCommerceOrderPortletResourcePermission() {
 
 		return _commerceOrderPortletResourcePermissionSnapshot.get();
+	}
+
+	public static AbsolutePortalURLBuilderFactory
+	getAbsolutePortalURLBuilderFactory() {
+
+		return _absolutePortalURLBuilderFactorySnapshot.get();
 	}
 
 	public static CommerceOrderTypeLocalService
@@ -114,6 +121,10 @@ public class ServletContextUtil {
 	public static ServletContext getServletContext() {
 		return _servletContextSnapshot.get();
 	}
+
+	private static final Snapshot<AbsolutePortalURLBuilderFactory>
+		_absolutePortalURLBuilderFactorySnapshot = new Snapshot<>(
+			ServletContextUtil.class, AbsolutePortalURLBuilderFactory.class);
 
 	private static final Snapshot<CommerceChannelLocalService>
 		_commerceChannelLocalServiceSnapshot = new Snapshot<>(

@@ -34,6 +34,8 @@ import com.liferay.portal.kernel.settings.SystemSettingsLocator;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.url.builder.AbsolutePortalURLBuilder;
+import com.liferay.portal.url.builder.AbsolutePortalURLBuilderFactory;
 import com.liferay.taglib.util.IncludeTag;
 
 import java.math.BigDecimal;
@@ -189,6 +191,13 @@ public class MiniCartTag extends IncludeTag {
 
 		setServletContext(ServletContextUtil.getServletContext());
 
+		AbsolutePortalURLBuilderFactory absolutePortalURLBuilderFactory =
+			ServletContextUtil.getAbsolutePortalURLBuilderFactory();
+		HttpServletRequest httpServletRequest =
+			(HttpServletRequest)pageContext.getRequest();
+
+		_absolutePortalURLBuilder = absolutePortalURLBuilderFactory.
+			getAbsolutePortalURLBuilder(httpServletRequest);
 		_configurationProvider = ServletContextUtil.getConfigurationProvider();
 		_commerceOrderHttpHelper =
 			ServletContextUtil.getCommerceOrderHttpHelper();
@@ -332,6 +341,8 @@ public class MiniCartTag extends IncludeTag {
 
 	private static final Log _log = LogFactoryUtil.getLog(MiniCartTag.class);
 
+
+	private AbsolutePortalURLBuilder _absolutePortalURLBuilder;
 	private long _accountEntryId;
 	private String _checkoutURL;
 	private long _commerceChannelGroupId;
