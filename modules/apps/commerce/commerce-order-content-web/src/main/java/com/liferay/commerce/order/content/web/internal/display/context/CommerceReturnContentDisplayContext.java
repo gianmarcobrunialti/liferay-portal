@@ -168,9 +168,10 @@ public class CommerceReturnContentDisplayContext {
 			AccountEntry accountEntry = _commerceContext.getAccountEntry();
 
 			return accountEntry.getAccountEntryId();
-		}
-		catch (PortalException portalException) {
-			_log.error(portalException);
+		} catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return 0;
@@ -180,8 +181,10 @@ public class CommerceReturnContentDisplayContext {
 		try {
 			return _commerceContext.getCommerceChannelId();
 		}
-		catch (PortalException portalException) {
-			_log.error(portalException);
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return 0;

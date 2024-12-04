@@ -21,6 +21,9 @@ import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.portal.kernel.comment.DiscussionPermission;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -94,10 +97,13 @@ public class CommerceReturnContentPortlet extends MVCPortlet {
 				super.render(renderRequest, renderResponse);
 			}
 			catch (Exception exception) {
-				throw new PortletException(exception);
+				_log.error(exception);
 			}
 		}
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		CommerceReturnContentPortlet.class);
 
 	@Reference
 	private AccountEntryLocalService _accountEntryLocalService;
