@@ -5,6 +5,7 @@
 
 package com.liferay.commerce.frontend.taglib.servlet.taglib;
 
+import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.commerce.configuration.CommerceOrderCheckoutConfiguration;
 import com.liferay.commerce.configuration.CommerceOrderFieldsConfiguration;
@@ -22,6 +23,7 @@ import com.liferay.commerce.product.url.CPFriendlyURL;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -138,6 +140,11 @@ public class MiniCartTag extends IncludeTag {
 
 		_productURLSeparator = cpFriendlyURL.getProductURLSeparator(
 			themeDisplay.getCompanyId());
+
+		if (_guestOrderEnabled) {
+			_signInURL = themeDisplay.getURLSignIn();
+		}
+
 		_siteDefaultURL = _getSiteDefaultURL(themeDisplay);
 
 		return super.doStartTag();
@@ -147,16 +154,20 @@ public class MiniCartTag extends IncludeTag {
 			AccountEntry accountEntry, long commerceChannelGroupId)
 		throws PortalException {
 
-		CommerceOrderCheckoutConfiguration
-			commerceOrderCheckoutConfiguration =
-			_configurationProvider.getConfiguration(
-				CommerceOrderCheckoutConfiguration.class,
-				new GroupServiceSettingsLocator(
-					commerceChannelGroupId,
-					CommerceConstants.SERVICE_NAME_COMMERCE_ORDER));
+		if (FeatureFlagManagerUtil.isEnabled("LPD-35678")) {
+			CommerceOrderCheckoutConfiguration
+				commerceOrderCheckoutConfiguration =
+				_configurationProvider.getConfiguration(
+					CommerceOrderCheckoutConfiguration.class,
+					new GroupServiceSettingsLocator(
+						commerceChannelGroupId,
+						CommerceConstants.SERVICE_NAME_COMMERCE_ORDER));
 
-		return accountEntry.isGuestAccount() &&
-			   commerceOrderCheckoutConfiguration.guestCheckoutEnabled();
+			return accountEntry.isGuestAccount() &&
+				   commerceOrderCheckoutConfiguration.guestCheckoutEnabled();
+		}
+
+		return false;
 	}
 
 	public String getCssClasses() {
@@ -216,7 +227,7 @@ public class MiniCartTag extends IncludeTag {
 	protected void cleanUp() {
 		super.cleanUp();
 
-		_accountEntryId = 0;
+		_accountEntryId = AccountConstants.ACCOUNT_ENTRY_ID_ANY;
 		_checkoutURL = null;
 		_commerceChannelGroupId = 0;
 		_commerceChannelId = 0;
@@ -233,6 +244,7 @@ public class MiniCartTag extends IncludeTag {
 		_productURLSeparator = StringPool.BLANK;
 		_requestQuoteEnabled = false;
 		_siteDefaultURL = StringPool.BLANK;
+		_signInURL = StringPool.BLANK;
 		_toggleable = true;
 		_views = new HashMap<>();
 	}
@@ -283,6 +295,8 @@ public class MiniCartTag extends IncludeTag {
 			"liferay-commerce:cart:requestQuoteEnabled", _requestQuoteEnabled);
 		httpServletRequest.setAttribute(
 			"liferay-commerce:cart:siteDefaultURL", _siteDefaultURL);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:cart:signInURL", _signInURL);
 		httpServletRequest.setAttribute(
 			"liferay-commerce:cart:toggleable", _toggleable);
 	}
@@ -346,7 +360,7 @@ public class MiniCartTag extends IncludeTag {
 
 	private static final Log _log = LogFactoryUtil.getLog(MiniCartTag.class);
 
-	private long _accountEntryId;
+	private long _accountEntryId = AccountConstants.ACCOUNT_ENTRY_ID_ANY;
 	private String _checkoutURL = StringPool.BLANK;
 	private long _commerceChannelGroupId = 0;
 	private long _commerceChannelId = 0;
@@ -362,6 +376,7 @@ public class MiniCartTag extends IncludeTag {
 	private long _orderId = 0;
 	private String _productURLSeparator = StringPool.BLANK;
 	private boolean _requestQuoteEnabled = false;
+	private String _signInURL = StringPool.BLANK;
 	private String _siteDefaultURL = StringPool.BLANK;
 	private boolean _toggleable = true;
 	private Map<String, String> _views = new HashMap<>();

@@ -22,10 +22,14 @@ public class CommerceCheckoutWebKeys {
 
 	public static final String COMMERCE_ORDER = "COMMERCE_ORDER";
 
+	public static final String SELECT_ACCOUNT_ON_LOGIN =
+		"SELECT_ACCOUNT_ON_LOGIN";
+
 	public static final String SHIPPING_ADDRESS_PARAM_NAME =
 		"shippingAddressId";
 
 	public static final String SHOW_ERROR_NO_BILLING_ADDRESS =
 		"SHOW_ERROR_NO_BILLING_ADDRESS";
 
+	public static final String SUFFIX_IMMEDIATE_CHECKOUT = "#immediate-checkout";
 }

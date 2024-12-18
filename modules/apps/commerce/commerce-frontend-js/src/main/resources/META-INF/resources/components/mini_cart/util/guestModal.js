@@ -1,0 +1,246 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+import {
+	COOKIE_TYPES,
+	addParams,
+	fetch,
+	getCookie,
+} from 'frontend-js-web';
+import {SIGN_IN_TO_CHECKOUT} from "./constants";
+import {
+	ACCOUNT_INFORMATION_COOKIE_IDENTIFIER,
+	GUEST_COMMERCE_ORDER_COOKIE_IDENTIFIER,
+	SUFFIX_IMMEDIATE_CHECKOUT
+} from "../../add_to_cart/constants";
+import CommerceCookie from "../../../utilities/cookies";
+import ForgotPasswordModalView
+	from "../GuestSignInModalViews/ForgotPasswordModalView";
+import SignInModalView from "../GuestSignInModalViews/SignInModalView";
+import SignUpModalView from "../GuestSignInModalViews/SignUpModalView";
+import {
+	ACCOUNT_ENTRY_TYPE_BUSINESS, ACCOUNT_ENTRY_TYPE_PERSON,
+	SITE_TYPE_B2B, SITE_TYPE_B2C
+} from "../../../utilities/constants";
+
+export const FORGOT_PASSWORD = 'forgot_password';
+export const SIGN_IN = 'sign_in';
+export const SIGN_UP = 'create_account';
+
+export const INITIAL_VIEWS_MAP = {
+	[FORGOT_PASSWORD]: {
+		component: ForgotPasswordModalView,
+		content: '',
+		size: 'md',
+		title: 'forgot-password',
+		url: '',
+	},
+	[SIGN_IN]: {
+		component: SignInModalView,
+		content: '',
+		size: 'md',
+		title: SIGN_IN_TO_CHECKOUT,
+		url: '',
+	},
+	[SIGN_UP]: {
+		component: SignUpModalView,
+		content: '',
+		size: 'md',
+		title: 'create-account',
+		url: '',
+	}
+};
+
+function toPopUp(url) {
+	url = url
+		.replace('maximized', 'pop_up')
+		.replace('exclusive', 'pop_up');
+
+	return addParams('windowState=pop_up', url);
+}
+
+export function getAccountTypes() {
+	const {commerceSiteType} = Liferay.CommerceContext;
+
+	if (commerceSiteType === SITE_TYPE_B2B) {
+		return [ACCOUNT_ENTRY_TYPE_BUSINESS];
+	} else if (commerceSiteType === SITE_TYPE_B2C) {
+		return [ACCOUNT_ENTRY_TYPE_PERSON];
+	}
+
+	return [ACCOUNT_ENTRY_TYPE_BUSINESS, ACCOUNT_ENTRY_TYPE_PERSON];
+}
+
+function setupFromSignIn(signInViewHTML, signInURL) {
+	const signInContainer = window.document.createElement('div');
+
+	signInContainer.innerHTML = signInViewHTML;
+
+	const navigationElement = signInContainer.querySelector(
+		'.navigation');
+
+	const anchorElements = Array.from(
+		navigationElement.querySelectorAll('.navigation li a'));
+
+	let forgotPasswordAnchor = null;
+
+	const views = anchorElements.reduce(
+		(views, element) => {
+			if (element.href.includes(FORGOT_PASSWORD)) {
+				forgotPasswordAnchor = element;
+				views[FORGOT_PASSWORD].url = toPopUp(element.href);
+
+				element.href = '#';
+			}
+			else if (element.href.includes(SIGN_UP)) {
+				views[SIGN_UP].url = toPopUp(element.href);
+
+				element.href = '#';
+			}
+
+			return views;
+		}, {
+			[FORGOT_PASSWORD]: INITIAL_VIEWS_MAP[FORGOT_PASSWORD],
+			[SIGN_UP]: INITIAL_VIEWS_MAP[SIGN_UP],
+		}
+	);
+
+	if (forgotPasswordAnchor) {
+		forgotPasswordAnchor.classList.add('mb-3', 'small');
+		forgotPasswordAnchor.firstElementChild.dataset.linkId = FORGOT_PASSWORD;
+
+		const passwordInputElement = signInContainer
+			.querySelector('input[type="password"]');
+
+		passwordInputElement.classList.add('mb-1');
+
+		passwordInputElement
+			.parentElement
+			.appendChild(forgotPasswordAnchor);
+
+		navigationElement.remove();
+	}
+
+	const signInButton = signInContainer
+		.querySelector('button[type="submit"]');
+
+	signInButton.classList.add('btn-block');
+
+	const formContent = signInContainer
+		.querySelector('#Content .panel-body');
+
+	formContent.classList.remove('panel-body');
+
+	return {
+		...views,
+		[SIGN_IN]: {
+			...INITIAL_VIEWS_MAP[SIGN_IN],
+			content: signInContainer.innerHTML,
+			url: signInURL,
+		},
+	};
+}
+
+export async function fetchHTML(url) {
+	try {
+		const response = await fetch(url);
+
+		return response.text();
+	}
+	catch (error) {
+		if (process.env.NODE_ENV === 'development') {
+			console.error(error);
+		}
+
+		return '';
+	}
+}
+
+export function resizeIframeHeight(iframeElement, sourceElement) {
+	iframeElement.style.height = `${sourceElement.scrollHeight}px`;
+}
+
+function setupSignUp(iframeElement) {
+	const iframeBody = iframeElement?.contentDocument.body;
+
+	const navigationElement =
+		iframeBody.querySelector('.navigation');
+
+	navigationElement.remove();
+
+	const sheetElement = iframeBody.querySelector('form .sheet');
+
+	sheetElement.classList.remove('sheet', 'sheet-lg');
+
+	const portletBody = iframeBody.querySelector('.portlet-body');
+
+	portletBody.classList.add('px-1', 'overflow-hidden');
+
+	const buttonHolder =
+		iframeBody.querySelector('.button-holder');
+
+	buttonHolder.classList.add('hide');
+
+	const formElement = iframeBody.querySelector('form');
+
+	resizeIframeHeight(iframeElement, formElement);
+
+	return {
+		form: formElement,
+		submitButton: buttonHolder.querySelector('button'),
+	};
+}
+
+export function getIframeDOMHooks(iframeElement, modalView) {
+	if (modalView === SIGN_UP) {
+		return setupSignUp(iframeElement);
+	}
+}
+
+export function storeAccountInformation({accountName, accountType}) {
+	const {commerceChannelGroupId: groupId} = Liferay.CommerceContext;
+
+	const cookieKey = `${
+		ACCOUNT_INFORMATION_COOKIE_IDENTIFIER
+	}${groupId}`;
+
+	const cookie = new CommerceCookie(
+		ACCOUNT_INFORMATION_COOKIE_IDENTIFIER
+	);
+
+	cookie.setValue(
+		groupId,
+		`accountName=${accountName}#accountType=${accountType}`
+	);
+}
+
+export function storeImmediateCheckout() {
+	const {commerceChannelGroupId: groupId} = Liferay.CommerceContext;
+
+	const cookieKey = `${
+		GUEST_COMMERCE_ORDER_COOKIE_IDENTIFIER
+	}${groupId}`
+
+	const cookieValue = getCookie(cookieKey,
+		COOKIE_TYPES.NECESSARY);
+
+	const cookie = new CommerceCookie(
+		GUEST_COMMERCE_ORDER_COOKIE_IDENTIFIER
+	);
+
+	cookie.setValue(groupId, `${
+		cookieValue
+	}${
+		SUFFIX_IMMEDIATE_CHECKOUT
+	}`);
+}
+
+export async function setupViewsMap(signInURL) {
+	signInURL = toPopUp(signInURL);
+
+	const signInViewHTML = await fetchHTML(signInURL);
+
+	return setupFromSignIn(signInViewHTML, signInURL);
+}

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {openToast, sub} from 'frontend-js-web';
+import {addParams, fetch, openToast, sub} from 'frontend-js-web';
 
 import {
 	DEFAULT_ORDER_DETAILS_PORTLET_ID,
@@ -14,7 +14,24 @@ import {
 	ORDER_UUID_PARAMETER,
 	PRODUCT_MULTIPLE_OF_QUANTITY_NOT_VALID_ERROR,
 	PRODUCT_QUANTITY_NOT_VALID_ERROR,
+	WORKFLOW_STATUS_APPROVED,
 } from './constants';
+
+export function canSubmit({
+	accountId,
+	cartItems = [],
+	id: orderId,
+	workflowStatusInfo: {
+		code: workflowStatus = WORKFLOW_STATUS_APPROVED
+	} = {}
+}) {
+	const isAccountAndOrderSelected = !!orderId && parseInt(accountId, 10) > 0;
+	const areItemsPurchasable = !hasErrors(cartItems) && workflowStatus === WORKFLOW_STATUS_APPROVED;
+
+	return isAccountAndOrderSelected && areItemsPurchasable;
+}
+
+
 
 export function getCorrectedQuantity(
 	productConfiguration,

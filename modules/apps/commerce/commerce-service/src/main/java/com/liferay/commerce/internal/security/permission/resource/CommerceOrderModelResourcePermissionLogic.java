@@ -69,6 +69,15 @@ public class CommerceOrderModelResourcePermissionLogic
 		AccountEntry accountEntry = commerceOrder.getAccountEntry();
 
 		if ((accountEntry.getAccountEntryId() ==
+			 AccountConstants.ACCOUNT_ENTRY_ID_GUEST) &&
+			permissionChecker.isSignedIn() && _hasOwnerPermission(
+				permissionChecker, commerceOrder) &&
+			actionId.equals(ActionKeys.VIEW)) {
+
+			return true;
+		}
+
+		if ((accountEntry.getAccountEntryId() ==
 				AccountConstants.ACCOUNT_ENTRY_ID_GUEST) &&
 			permissionChecker.isSignedIn()) {
 

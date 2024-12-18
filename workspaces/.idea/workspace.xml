@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="ff7f1079-450a-4983-9e47-23cefb48dbeb" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-js/src/main/resources/META-INF/resources/components/account_selector/views/AccountSelectionModal.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../modules/apps/commerce/commerce-api/src/main/java/com/liferay/commerce/constants/CommerceCheckoutWebKeys.java" beforeDir="false" afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-api/src/main/java/com/liferay/commerce/constants/CommerceCheckoutWebKeys.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-impl/src/main/java/com/liferay/commerce/frontend/internal/account/CommerceAccountResource.java" beforeDir="false" afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-impl/src/main/java/com/liferay/commerce/frontend/internal/account/CommerceAccountResource.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-js/src/main/resources/META-INF/resources/ServiceProvider/commerce-delivery-catalog/v1.0/Account.js" beforeDir="false" afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-js/src/main/resources/META-INF/resources/ServiceProvider/commerce-delivery-catalog/v1.0/Account.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-js/src/main/resources/META-INF/resources/components/account_selector/AccountSelector.js" beforeDir="false" afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-js/src/main/resources/META-INF/resources/components/account_selector/AccountSelector.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-js/src/main/resources/META-INF/resources/components/account_selector/Trigger.js" beforeDir="false" afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-js/src/main/resources/META-INF/resources/components/account_selector/Trigger.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-js/src/main/resources/META-INF/resources/components/account_selector/util/constants.js" beforeDir="false" afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-js/src/main/resources/META-INF/resources/components/account_selector/util/constants.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-js/src/main/resources/META-INF/resources/components/account_selector/util/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-js/src/main/resources/META-INF/resources/components/account_selector/util/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-js/src/main/resources/META-INF/resources/components/account_selector/views/AccountCreationModal.js" beforeDir="false" afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-js/src/main/resources/META-INF/resources/components/account_selector/views/AccountCreationModal.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-js/src/main/resources/META-INF/resources/components/account_selector/views/AccountCreationModalBody.js" beforeDir="false" afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-js/src/main/resources/META-INF/resources/components/account_selector/views/AccountCreationModalBody.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-js/src/main/resources/META-INF/resources/components/account_selector/views/AccountsListView.js" beforeDir="false" afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-js/src/main/resources/META-INF/resources/components/account_selector/views/AccountsListView.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-js/src/main/resources/META-INF/resources/components/autocomplete/Autocomplete.js" beforeDir="false" afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-js/src/main/resources/META-INF/resources/components/autocomplete/Autocomplete.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-js/src/main/resources/META-INF/resources/components/mini_cart/MiniCart.js" beforeDir="false" afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-js/src/main/resources/META-INF/resources/components/mini_cart/MiniCart.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-js/src/main/resources/META-INF/resources/components/mini_cart/MiniCartContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-js/src/main/resources/META-INF/resources/components/mini_cart/MiniCartContext.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-js/src/main/resources/META-INF/resources/components/mini_cart/OrderButton.js" beforeDir="false" afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-js/src/main/resources/META-INF/resources/components/mini_cart/OrderButton.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-js/src/main/resources/META-INF/resources/components/mini_cart/util/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-js/src/main/resources/META-INF/resources/components/mini_cart/util/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-taglib/src/main/java/com/liferay/commerce/frontend/taglib/internal/servlet/ServletContextUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-taglib/src/main/java/com/liferay/commerce/frontend/taglib/internal/servlet/ServletContextUtil.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-taglib/src/main/java/com/liferay/commerce/frontend/taglib/servlet/taglib/AccountSelectorTag.java" beforeDir="false" afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-taglib/src/main/java/com/liferay/commerce/frontend/taglib/servlet/taglib/AccountSelectorTag.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-taglib/src/main/java/com/liferay/commerce/frontend/taglib/servlet/taglib/MiniCartTag.java" beforeDir="false" afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-taglib/src/main/java/com/liferay/commerce/frontend/taglib/servlet/taglib/MiniCartTag.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-taglib/src/main/resources/META-INF/resources/account_selector/init.jsp" beforeDir="false" afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-taglib/src/main/resources/META-INF/resources/account_selector/init.jsp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-taglib/src/main/resources/META-INF/resources/account_selector/page.jsp" beforeDir="false" afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-taglib/src/main/resources/META-INF/resources/account_selector/page.jsp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-taglib/src/main/resources/META-INF/resources/js/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-frontend-taglib/src/main/resources/META-INF/resources/js/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../modules/apps/commerce/commerce-order-content-web/src/main/java/com/liferay/commerce/order/content/web/internal/display/context/CommerceReturnContentDisplayContext.java" beforeDir="false" afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-order-content-web/src/main/java/com/liferay/commerce/order/content/web/internal/display/context/CommerceReturnContentDisplayContext.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../modules/apps/commerce/commerce-order-content-web/src/main/java/com/liferay/commerce/order/content/web/internal/fragment/renderer/InfoBoxFragmentRenderer.java" beforeDir="false" afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-order-content-web/src/main/java/com/liferay/commerce/order/content/web/internal/fragment/renderer/InfoBoxFragmentRenderer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../modules/apps/commerce/commerce-order-content-web/src/main/java/com/liferay/commerce/order/content/web/internal/fragment/renderer/OrderActionsFragmentRenderer.java" beforeDir="false" afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-order-content-web/src/main/java/com/liferay/commerce/order/content/web/internal/fragment/renderer/OrderActionsFragmentRenderer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../modules/apps/commerce/commerce-order-content-web/src/main/resources/META-INF/resources/fragment/renderer/order_actions/init.jsp" beforeDir="false" afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-order-content-web/src/main/resources/META-INF/resources/fragment/renderer/order_actions/init.jsp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../modules/apps/commerce/commerce-order-content-web/src/main/resources/META-INF/resources/fragment/renderer/order_actions/page.jsp" beforeDir="false" afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-order-content-web/src/main/resources/META-INF/resources/fragment/renderer/order_actions/page.jsp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../modules/apps/commerce/commerce-order-content-web/src/main/resources/META-INF/resources/js/OrderActions.js" beforeDir="false" afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-order-content-web/src/main/resources/META-INF/resources/js/OrderActions.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../modules/apps/commerce/commerce-service/src/main/java/com/liferay/commerce/internal/events/LoginPostAction.java" beforeDir="false" afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-service/src/main/java/com/liferay/commerce/internal/events/LoginPostAction.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../modules/apps/commerce/commerce-service/src/main/java/com/liferay/commerce/internal/order/CommerceOrderHttpHelperImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-service/src/main/java/com/liferay/commerce/internal/order/CommerceOrderHttpHelperImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../modules/apps/commerce/commerce-service/src/main/java/com/liferay/commerce/internal/util/CommerceAccountHelperImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-service/src/main/java/com/liferay/commerce/internal/util/CommerceAccountHelperImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../modules/apps/commerce/commerce-site-initializer/commerce-site-initializer/src/main/resources/site-initializer/fragments/group/commerce/fragments/header-user/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-site-initializer/commerce-site-initializer/src/main/resources/site-initializer/fragments/group/commerce/fragments/header-user/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../modules/apps/commerce/commerce-site-initializer/commerce-site-initializer/src/main/resources/site-initializer/layout-page-templates/display-page-templates/order/page-definition.json" beforeDir="false" afterPath="$PROJECT_DIR$/../modules/apps/commerce/commerce-site-initializer/commerce-site-initializer/src/main/resources/site-initializer/layout-page-templates/display-page-templates/order/page-definition.json" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "customColor": "",
+  "associatedIndex": 3
+}]]></component>
+  <component name="ProjectId" id="2ppu9rwwUCBfQ9Va9vOvZdUsVla" />
+  <component name="ProjectViewState">
+    <option name="showLibraryContents" value="true" />
+    <option name="showMembers" value="true" />
+    <option name="showVisibilityIcons" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "git-widget-placeholder": "B2B__GUEST__CHECKOUT",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="ff7f1079-450a-4983-9e47-23cefb48dbeb" name="Changes" comment="" />
+      <created>1733475196508</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1733475196508</updated>
+      <workItem from="1733475200807" duration="130000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>

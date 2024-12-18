@@ -34,7 +34,11 @@ import {
 	VIEW_DETAILS,
 	YOUR_ORDER,
 } from './util/constants';
-import {regenerateOrderDetailURL, summaryDataMapper} from './util/index';
+import {
+	isSignInToCheckout,
+	regenerateOrderDetailURL,
+	summaryDataMapper
+} from './util/index';
 import {DEFAULT_LABELS} from './util/labels';
 import {resolveCartViews} from './util/views';
 
@@ -147,6 +151,7 @@ function MiniCart({
 					order: updatedCart,
 					updatedFromCart,
 				});
+
 				onAddToCart(latestActionURLs, latestCartState);
 			}
 			catch (error) {
@@ -273,6 +278,7 @@ MiniCart.propTypes = {
 		checkoutURL: PropTypes.string,
 		orderDetailURL: PropTypes.string,
 		productURLSeparator: PropTypes.string,
+		signInURL: PropTypes.string,
 		siteDefaultURL: PropTypes.string,
 	}).isRequired,
 	cartViews: PropTypes.shape({

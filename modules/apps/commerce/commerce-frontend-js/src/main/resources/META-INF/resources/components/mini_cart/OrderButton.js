@@ -4,9 +4,8 @@
  */
 
 import ClayButton from '@clayui/button';
-import React, {useContext} from 'react';
+import React, {useContext, useState} from 'react';
 
-import {PERFORM_SIGN_IN} from '../../utilities/eventsDefinitions';
 import {liferayNavigate} from '../../utilities/index';
 import MiniCartContext from './MiniCartContext';
 import {
@@ -14,26 +13,21 @@ import {
 	REVIEW_ORDER,
 	SIGN_IN_TO_CHECKOUT,
 	SUBMIT_ORDER,
-	WORKFLOW_STATUS_APPROVED,
 } from './util/constants';
-import {hasErrors} from './util/index';
+import {canSubmit} from './util/index';
+import {storeImmediateCheckout} from "./util/guestModal";
+import GuestModal from "./GuestModal";
 
 function OrderButton({disabled = false}) {
 	const {
-		actionURLs,
+		actionURLs: {checkoutURL, orderDetailURL, signInURL},
 		cartState,
+		closeCart,
 		guestOrderEnabled,
-		labels
+		labels,
 	} = useContext(MiniCartContext);
 
-	const {checkoutURL, orderDetailURL} = actionURLs;
-	const {cartItems = [], workflowStatusInfo = {}} = cartState;
-
-	const {code: workflowStatus = WORKFLOW_STATUS_APPROVED} =
-		workflowStatusInfo;
-
-	const canSubmit =
-		!hasErrors(cartItems) && workflowStatus === WORKFLOW_STATUS_APPROVED;
+	const [guestSignInVisible, setGuestSignInVisible] = useState(false);
 
 	return (
 		<div className="mini-cart-submit">
@@ -41,35 +35,47 @@ function OrderButton({disabled = false}) {
 				<>
 					<ClayButton
 						block
+						disabled={disabled}
 						displayType="primary"
 						onClick={() => {
-							Liferay.fire(PERFORM_SIGN_IN)
+							closeCart();
+
+							storeImmediateCheckout();
+							// Liferay.fire(PERFORM_SIGN_IN);
+							setGuestSignInVisible(true);
 						}}
 					>
 						{labels[SIGN_IN_TO_CHECKOUT]}
 					</ClayButton>
 
-					{canSubmit && (
-						<ClayButton
-							block
-							displayType="secondary"
-							onClick={() => {
-								liferayNavigate(checkoutURL);
-							}}
-						>
-							{labels[PROCEED_AS_GUEST]}
-						</ClayButton>
-					)}
+					<ClayButton
+						block
+						disabled={disabled}
+						displayType="secondary"
+						onClick={() => {
+							liferayNavigate(checkoutURL);
+						}}
+					>
+						{labels[PROCEED_AS_GUEST]}
+					</ClayButton>
+
+					{guestSignInVisible ? (
+						<GuestModal
+							isVisible={guestSignInVisible}
+							setIsVisible={setGuestSignInVisible}
+							signInURL={signInURL}
+						/>
+					) : null}
 				</>
 			) : (
 				<ClayButton
 					block
 					disabled={disabled}
 					onClick={() => {
-						liferayNavigate(canSubmit ? checkoutURL : orderDetailURL);
+						liferayNavigate(canSubmit(cartState) ? checkoutURL : orderDetailURL);
 					}}
 				>
-					{canSubmit ? labels[SUBMIT_ORDER] : labels[REVIEW_ORDER]}
+					{canSubmit(cartState) ? labels[SUBMIT_ORDER] : labels[REVIEW_ORDER]}
 				</ClayButton>
 			)}
 		</div>

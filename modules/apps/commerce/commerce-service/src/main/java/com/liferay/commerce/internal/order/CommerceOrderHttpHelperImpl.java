@@ -79,6 +79,7 @@ import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.ResourceBundle;
 
 import javax.portlet.ActionRequest;
@@ -447,11 +448,31 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 		throws PortalException {
 
 		CommerceContext commerceContext =
-			(CommerceContext)httpServletRequest.getAttribute(
-				CommerceWebKeys.COMMERCE_CONTEXT);
+			_getCommerceContext(httpServletRequest);
 
 		if (commerceContext == null) {
 			return null;
+		}
+
+		HttpServletRequest originalServletRequest =
+			_portal.getOriginalServletRequest(httpServletRequest);
+
+		HttpSession httpSession = originalServletRequest.getSession();
+
+		CommerceOrder commerceOrder = null;
+
+		if (FeatureFlagManagerUtil.isEnabled("LPD-35678")) {
+			commerceOrder = (CommerceOrder)httpSession.getAttribute(
+				CommerceCheckoutWebKeys.SELECT_ACCOUNT_ON_LOGIN);
+
+			if (commerceOrder != null) {
+//				httpSession.removeAttribute(
+//					CommerceCheckoutWebKeys.SELECT_ACCOUNT_ON_LOGIN);
+
+//				setCurrentCommerceOrder(httpServletRequest, commerceOrder);
+
+				return commerceOrder;
+			}
 		}
 
 		AccountEntry accountEntry = commerceContext.getAccountEntry();
@@ -460,20 +481,14 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 			return null;
 		}
 
-		CommerceOrder commerceOrder =
-			(CommerceOrder)httpServletRequest.getAttribute(
-				CommerceCheckoutWebKeys.COMMERCE_ORDER);
+		commerceOrder = (CommerceOrder)httpServletRequest.getAttribute(
+			CommerceCheckoutWebKeys.COMMERCE_ORDER);
 
 		if (commerceOrder == null) {
-			HttpServletRequest originalHttpServletRequest =
-				_portal.getOriginalServletRequest(httpServletRequest);
-
-			HttpSession httpSession = originalHttpServletRequest.getSession();
-
 			long groupId = commerceContext.getCommerceChannelGroupId();
 
 			String uuid = (String)httpSession.getAttribute(
-				CommerceOrder.class.getName() + StringPool.POUND + groupId);
+				getCookieName(groupId));
 
 			commerceOrder =
 				_commerceOrderLocalService.fetchCommerceOrderByUuidAndGroupId(
@@ -490,11 +505,6 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 				httpServletRequest, themeDisplay.getResponse(),
 				CommerceOrder.class.getName() + StringPool.POUND +
 					commerceOrder.getGroupId());
-
-			HttpServletRequest originalHttpServletRequest =
-				_portal.getOriginalServletRequest(httpServletRequest);
-
-			HttpSession httpSession = originalHttpServletRequest.getSession();
 
 			httpSession.removeAttribute(
 				CommerceOrder.class.getName() + StringPool.POUND +
@@ -532,6 +542,21 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 		}
 
 		return commerceOrder;
+	}
+
+	private void _updateSessionData(
+			HttpSession httpSession, Map<String, Object> sessionData) {
+
+		sessionData.remove("commerceOrder");
+
+		if (sessionData.isEmpty()) {
+			httpSession.removeAttribute(
+				CommerceCheckoutWebKeys.SELECT_ACCOUNT_ON_LOGIN);
+		} else {
+			httpSession.setAttribute(
+				CommerceCheckoutWebKeys.SELECT_ACCOUNT_ON_LOGIN,
+				sessionData);
+		}
 	}
 
 	@Override

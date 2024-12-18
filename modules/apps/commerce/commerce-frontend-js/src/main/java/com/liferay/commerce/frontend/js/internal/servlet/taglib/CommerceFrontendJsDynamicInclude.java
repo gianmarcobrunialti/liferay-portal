@@ -112,6 +112,8 @@ public class CommerceFrontendJsDynamicInclude extends BaseDynamicInclude {
 			).put(
 				"commerceChannelId", commerceContext.getCommerceChannelId()
 			).put(
+				"commerceChannelGroupId", commerceContext.getCommerceChannelGroupId()
+			).put(
 				"commerceSiteType", commerceContext.getCommerceSiteType()
 			).put(
 				"currency",

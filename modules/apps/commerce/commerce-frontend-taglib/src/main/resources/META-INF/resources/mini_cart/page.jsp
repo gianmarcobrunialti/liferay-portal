@@ -53,6 +53,8 @@
 				).put(
 					"siteDefaultURL", siteDefaultURL
 				).put(
+					"signInURL", signInURL
+				).put(
 					"toggleable", toggleable
 				).build()
 			%>'
