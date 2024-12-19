@@ -147,6 +147,7 @@ function MiniCart({
 					order: updatedCart,
 					updatedFromCart,
 				});
+
 				onAddToCart(latestActionURLs, latestCartState);
 			}
 			catch (error) {
@@ -273,6 +274,7 @@ MiniCart.propTypes = {
 		checkoutURL: PropTypes.string,
 		orderDetailURL: PropTypes.string,
 		productURLSeparator: PropTypes.string,
+		signInURL: PropTypes.string,
 		siteDefaultURL: PropTypes.string,
 	}).isRequired,
 	cartViews: PropTypes.shape({

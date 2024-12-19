@@ -14,7 +14,21 @@ import {
 	ORDER_UUID_PARAMETER,
 	PRODUCT_MULTIPLE_OF_QUANTITY_NOT_VALID_ERROR,
 	PRODUCT_QUANTITY_NOT_VALID_ERROR,
+	WORKFLOW_STATUS_APPROVED,
 } from './constants';
+
+export function canSubmit({
+	accountId,
+	cartItems = [],
+	id: orderId,
+	workflowStatusInfo: {code: workflowStatus = WORKFLOW_STATUS_APPROVED} = {},
+}) {
+	const isAccountAndOrderSelected = !!orderId && parseInt(accountId, 10) > 0;
+	const areItemsPurchasable =
+		!hasErrors(cartItems) && workflowStatus === WORKFLOW_STATUS_APPROVED;
+
+	return isAccountAndOrderSelected && areItemsPurchasable;
+}
 
 export function getCorrectedQuantity(
 	productConfiguration,

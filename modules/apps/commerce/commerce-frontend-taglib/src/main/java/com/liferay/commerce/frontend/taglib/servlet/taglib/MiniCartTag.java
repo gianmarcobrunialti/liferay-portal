@@ -5,6 +5,7 @@
 
 package com.liferay.commerce.frontend.taglib.servlet.taglib;
 
+import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.commerce.configuration.CommerceOrderCheckoutConfiguration;
 import com.liferay.commerce.configuration.CommerceOrderFieldsConfiguration;
@@ -22,6 +23,7 @@ import com.liferay.commerce.product.url.CPFriendlyURL;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -83,8 +85,8 @@ public class MiniCartTag extends IncludeTag {
 			if (accountEntry != null) {
 				_accountEntryId = accountEntry.getAccountEntryId();
 
-				_guestOrderEnabled =
-					_isGuestOrderEnabled(accountEntry, _commerceChannelGroupId);
+				_guestOrderEnabled = _isGuestOrderEnabled(
+					accountEntry, _commerceChannelGroupId);
 			}
 
 			CommerceCurrency commerceCurrency =
@@ -106,9 +108,10 @@ public class MiniCartTag extends IncludeTag {
 
 			_requestQuoteEnabled = _isRequestQuoteEnabled();
 
-			PortletURL commerceCheckoutPortletURL = PortletProviderUtil.getPortletURL(
-				httpServletRequest, CommercePortletKeys.COMMERCE_CHECKOUT,
-				PortletProvider.Action.VIEW);
+			PortletURL commerceCheckoutPortletURL =
+				PortletProviderUtil.getPortletURL(
+					httpServletRequest, CommercePortletKeys.COMMERCE_CHECKOUT,
+					PortletProvider.Action.VIEW);
 
 			if (commerceCheckoutPortletURL != null) {
 				_checkoutURL = PortletURLBuilder.create(
@@ -138,25 +141,14 @@ public class MiniCartTag extends IncludeTag {
 
 		_productURLSeparator = cpFriendlyURL.getProductURLSeparator(
 			themeDisplay.getCompanyId());
+
+		if (_guestOrderEnabled) {
+			_signInURL = themeDisplay.getURLSignIn();
+		}
+
 		_siteDefaultURL = _getSiteDefaultURL(themeDisplay);
 
 		return super.doStartTag();
-	}
-
-	private boolean _isGuestOrderEnabled(
-			AccountEntry accountEntry, long commerceChannelGroupId)
-		throws PortalException {
-
-		CommerceOrderCheckoutConfiguration
-			commerceOrderCheckoutConfiguration =
-			_configurationProvider.getConfiguration(
-				CommerceOrderCheckoutConfiguration.class,
-				new GroupServiceSettingsLocator(
-					commerceChannelGroupId,
-					CommerceConstants.SERVICE_NAME_COMMERCE_ORDER));
-
-		return accountEntry.isGuestAccount() &&
-			   commerceOrderCheckoutConfiguration.guestCheckoutEnabled();
 	}
 
 	public String getCssClasses() {
@@ -216,11 +208,11 @@ public class MiniCartTag extends IncludeTag {
 	protected void cleanUp() {
 		super.cleanUp();
 
-		_accountEntryId = 0;
-		_checkoutURL = null;
+		_accountEntryId = AccountConstants.ACCOUNT_ENTRY_ID_ANY;
+		_checkoutURL = StringPool.BLANK;
 		_commerceChannelGroupId = 0;
 		_commerceChannelId = 0;
-		_commerceCurrencyCode = null;
+		_commerceCurrencyCode = StringPool.BLANK;
 		_commerceOrderHttpHelper = null;
 		_configurationProvider = null;
 		_cssClasses = StringPool.BLANK;
@@ -228,10 +220,11 @@ public class MiniCartTag extends IncludeTag {
 		_guestOrderEnabled = false;
 		_itemsQuantity = 0;
 		_labels = new HashMap<>();
-		_orderDetailURL = null;
+		_orderDetailURL = StringPool.BLANK;
 		_orderId = 0;
 		_productURLSeparator = StringPool.BLANK;
 		_requestQuoteEnabled = false;
+		_signInURL = StringPool.BLANK;
 		_siteDefaultURL = StringPool.BLANK;
 		_toggleable = true;
 		_views = new HashMap<>();
@@ -267,8 +260,7 @@ public class MiniCartTag extends IncludeTag {
 			"liferay-commerce:cart:displayTotalItemsQuantity",
 			_displayTotalItemsQuantity);
 		httpServletRequest.setAttribute(
-			"liferay-commerce:cart:guestOrderEnabled",
-			_guestOrderEnabled);
+			"liferay-commerce:cart:guestOrderEnabled", _guestOrderEnabled);
 		httpServletRequest.setAttribute(
 			"liferay-commerce:cart:itemsQuantity", _itemsQuantity);
 		httpServletRequest.setAttribute(
@@ -281,6 +273,8 @@ public class MiniCartTag extends IncludeTag {
 			"liferay-commerce:cart:productURLSeparator", _productURLSeparator);
 		httpServletRequest.setAttribute(
 			"liferay-commerce:cart:requestQuoteEnabled", _requestQuoteEnabled);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:cart:signInURL", _signInURL);
 		httpServletRequest.setAttribute(
 			"liferay-commerce:cart:siteDefaultURL", _siteDefaultURL);
 		httpServletRequest.setAttribute(
@@ -331,6 +325,31 @@ public class MiniCartTag extends IncludeTag {
 		}
 	}
 
+	private boolean _isGuestOrderEnabled(
+			AccountEntry accountEntry, long commerceChannelGroupId)
+		throws PortalException {
+
+		if (FeatureFlagManagerUtil.isEnabled("LPD-35678")) {
+			CommerceOrderCheckoutConfiguration
+				commerceOrderCheckoutConfiguration =
+					_configurationProvider.getConfiguration(
+						CommerceOrderCheckoutConfiguration.class,
+						new GroupServiceSettingsLocator(
+							commerceChannelGroupId,
+							CommerceConstants.SERVICE_NAME_COMMERCE_ORDER));
+
+			if (accountEntry.isGuestAccount() &&
+				commerceOrderCheckoutConfiguration.guestCheckoutEnabled()) {
+
+				return true;
+			}
+
+			return false;
+		}
+
+		return false;
+	}
+
 	private boolean _isRequestQuoteEnabled() throws PortalException {
 		CommerceOrderFieldsConfiguration commerceOrderFieldsConfiguration =
 			_configurationProvider.getConfiguration(
@@ -346,22 +365,23 @@ public class MiniCartTag extends IncludeTag {
 
 	private static final Log _log = LogFactoryUtil.getLog(MiniCartTag.class);
 
-	private long _accountEntryId;
+	private long _accountEntryId = AccountConstants.ACCOUNT_ENTRY_ID_ANY;
 	private String _checkoutURL = StringPool.BLANK;
-	private long _commerceChannelGroupId = 0;
-	private long _commerceChannelId = 0;
+	private long _commerceChannelGroupId;
+	private long _commerceChannelId;
 	private String _commerceCurrencyCode = StringPool.BLANK;
 	private CommerceOrderHttpHelper _commerceOrderHttpHelper;
 	private ConfigurationProvider _configurationProvider;
 	private String _cssClasses = StringPool.BLANK;
-	private boolean _displayTotalItemsQuantity = false;
-	private boolean _guestOrderEnabled = false;
-	private int _itemsQuantity = 0;
+	private boolean _displayTotalItemsQuantity;
+	private boolean _guestOrderEnabled;
+	private int _itemsQuantity;
 	private Map<String, String> _labels = new HashMap<>();
 	private String _orderDetailURL = StringPool.BLANK;
-	private long _orderId = 0;
+	private long _orderId;
 	private String _productURLSeparator = StringPool.BLANK;
-	private boolean _requestQuoteEnabled = false;
+	private boolean _requestQuoteEnabled;
+	private String _signInURL = StringPool.BLANK;
 	private String _siteDefaultURL = StringPool.BLANK;
 	private boolean _toggleable = true;
 	private Map<String, String> _views = new HashMap<>();
