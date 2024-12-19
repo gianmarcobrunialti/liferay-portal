@@ -26,10 +26,12 @@ export {default as searchResults} from './search_results/SearchResults';
 export function accountSelectorTag({
 	accountEntryAllowedTypes,
 	accountSelectorId,
+	checkoutURL,
 	commerceChannelId,
 	createNewOrderURL,
 	currentCommerceAccount,
 	currentCommerceOrder,
+	hasPermission,
 	refreshPageOnAccountSelected,
 	selectOrderURL,
 	setCurrentAccountURL,
@@ -40,10 +42,12 @@ export function accountSelectorTag({
 			typeof accountEntryAllowedTypes === 'string'
 				? JSON.parse(accountEntryAllowedTypes)
 				: accountEntryAllowedTypes,
+		checkoutURL,
 		commerceChannelId,
 		createNewOrderURL,
 		currentCommerceAccount,
 		currentCommerceOrder,
+		hasPermission,
 		namespace: accountSelectorId,
 		refreshPageOnAccountSelected,
 		selectOrderURL,
@@ -216,6 +220,7 @@ export function cart({
 	productURLSeparator,
 	requestQuoteEnabled,
 	siteDefaultURL,
+	signInURL,
 	toggleable,
 }) {
 	MiniCart(miniCartId, miniCartId, {
@@ -225,6 +230,7 @@ export function cart({
 			orderDetailURL,
 			productURLSeparator,
 			siteDefaultURL,
+			signInURL,
 		},
 		cartViews,
 		channel: {

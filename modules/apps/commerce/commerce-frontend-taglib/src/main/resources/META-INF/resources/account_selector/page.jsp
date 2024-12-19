@@ -23,6 +23,8 @@
 				).put(
 					"accountSelectorId", accountSelectorId
 				).put(
+					"checkoutURL", checkoutURL
+				).put(
 					"commerceChannelId", commerceChannelId
 				).put(
 					"createNewOrderURL", createNewOrderURL
@@ -30,6 +32,8 @@
 					"currentCommerceAccount", currentCommerceAccount
 				).put(
 					"currentCommerceOrder", currentCommerceOrder
+				).put(
+					"hasPermission", hasPermission
 				).put(
 					"refreshPageOnAccountSelected", true
 				).put(

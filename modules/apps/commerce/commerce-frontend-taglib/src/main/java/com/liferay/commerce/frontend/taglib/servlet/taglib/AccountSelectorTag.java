@@ -5,7 +5,9 @@
 
 package com.liferay.commerce.frontend.taglib.servlet.taglib;
 
+import com.liferay.account.constants.AccountActionKeys;
 import com.liferay.account.model.AccountEntry;
+import com.liferay.commerce.constants.CommerceCheckoutWebKeys;
 import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.constants.CommerceWebKeys;
 import com.liferay.commerce.context.CommerceContext;
@@ -23,11 +25,17 @@ import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
+import com.liferay.portal.kernel.portlet.PortletProvider;
+import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -39,11 +47,13 @@ import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.PageContext;
 
 /**
  * @author Fabio Diego Mastrorilli
+ * @author Gianmarco Brunialti Masera
  */
 public class AccountSelectorTag extends IncludeTag {
 
@@ -75,6 +85,7 @@ public class AccountSelectorTag extends IncludeTag {
 			_accountEntryAllowedTypes =
 				commerceContext.getAccountEntryAllowedTypes();
 			_addCommerceOrderURL = _getAddCommerceOrderURL(httpServletRequest);
+			_checkoutURL = _getCheckoutURL(httpServletRequest);
 			_commerceOrder = commerceContext.getCommerceOrder();
 			_editOrderURL = _getEditOrderURL(httpServletRequest);
 			_setCurrentAccountURL =
@@ -135,6 +146,9 @@ public class AccountSelectorTag extends IncludeTag {
 				_commerceChannelId = commerceContext.getCommerceChannelId();
 			}
 
+			_userModelResourcePermission =
+				ServletContextUtil.getUserModelResourcePermission();
+
 			_commerceOrderTypeLocalService =
 				ServletContextUtil.getCommerceOrderTypeLocalService();
 
@@ -156,6 +170,7 @@ public class AccountSelectorTag extends IncludeTag {
 		_accountEntry = null;
 		_accountEntryAllowedTypes = null;
 		_addCommerceOrderURL = null;
+		_checkoutURL = StringPool.BLANK;
 		_commerceChannelId = 0;
 		_commerceOrder = null;
 		_commerceOrderTypeLocalService = null;
@@ -164,6 +179,7 @@ public class AccountSelectorTag extends IncludeTag {
 		_setCurrentAccountURL = null;
 		_spritemap = null;
 		_themeDisplay = null;
+		_userModelResourcePermission = null;
 	}
 
 	@Override
@@ -225,10 +241,15 @@ public class AccountSelectorTag extends IncludeTag {
 		}
 
 		httpServletRequest.setAttribute(
+			"liferay-commerce:account-selector:checkoutURL", _checkoutURL);
+		httpServletRequest.setAttribute(
 			"liferay-commerce:account-selector:createNewOrderURL",
 			_addCommerceOrderURL);
 		httpServletRequest.setAttribute(
 			"liferay-commerce:account-selector:cssClasses", _cssClasses);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:account-selector:hasPermission",
+			_hasPermission());
 		httpServletRequest.setAttribute(
 			"liferay-commerce:account-selector:selectOrderURL", _editOrderURL);
 		httpServletRequest.setAttribute(
@@ -286,6 +307,42 @@ public class AccountSelectorTag extends IncludeTag {
 		return StringPool.BLANK;
 	}
 
+	private String _getCheckoutURL(HttpServletRequest httpServletRequest)
+		throws PortalException {
+
+		if (FeatureFlagManagerUtil.isEnabled("LPD-35678")) {
+			HttpServletRequest originalHttpServletRequest =
+				PortalUtil.getOriginalServletRequest(httpServletRequest);
+
+			HttpSession httpSession = originalHttpServletRequest.getSession();
+
+			boolean immediateCheckout = GetterUtil.getBoolean(
+				httpSession.getAttribute(
+					CommerceCheckoutWebKeys.SUFFIX_IMMEDIATE_CHECKOUT));
+
+			if (immediateCheckout) {
+				httpSession.removeAttribute(
+					CommerceCheckoutWebKeys.SUFFIX_IMMEDIATE_CHECKOUT);
+
+				PortletURL commerceCheckoutPortletURL =
+					PortletProviderUtil.getPortletURL(
+						httpServletRequest,
+						CommercePortletKeys.COMMERCE_CHECKOUT,
+						PortletProvider.Action.VIEW);
+
+				if (commerceCheckoutPortletURL != null) {
+					return PortletURLBuilder.create(
+						commerceCheckoutPortletURL
+					).setMVCRenderCommandName(
+						"/commerce_checkout/checkout_redirect"
+					).buildString();
+				}
+			}
+		}
+
+		return StringPool.BLANK;
+	}
+
 	private String _getEditOrderURL(HttpServletRequest httpServletRequest)
 		throws PortalException {
 
@@ -328,6 +385,22 @@ public class AccountSelectorTag extends IncludeTag {
 			httpServletRequest, portletId, PortletRequest.ACTION_PHASE);
 	}
 
+	private boolean _hasPermission() {
+		PermissionChecker permissionChecker =
+			_themeDisplay.getPermissionChecker();
+		User user = _themeDisplay.getUser();
+
+		try {
+			return _userModelResourcePermission.contains(
+				permissionChecker, user, AccountActionKeys.MANAGE_ACCOUNTS);
+		}
+		catch (PortalException portalException) {
+			_log.error(portalException);
+
+			return false;
+		}
+	}
+
 	private static final String _PAGE = "/account_selector/page.jsp";
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -336,6 +409,7 @@ public class AccountSelectorTag extends IncludeTag {
 	private AccountEntry _accountEntry;
 	private String[] _accountEntryAllowedTypes;
 	private String _addCommerceOrderURL;
+	private String _checkoutURL = StringPool.BLANK;
 	private long _commerceChannelId;
 	private CommerceOrder _commerceOrder;
 	private CommerceOrderTypeLocalService _commerceOrderTypeLocalService;
@@ -344,5 +418,6 @@ public class AccountSelectorTag extends IncludeTag {
 	private String _setCurrentAccountURL;
 	private String _spritemap;
 	private ThemeDisplay _themeDisplay;
+	private ModelResourcePermission<User> _userModelResourcePermission;
 
 }
