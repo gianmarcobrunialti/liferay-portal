@@ -446,12 +446,27 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 			HttpServletRequest httpServletRequest)
 		throws PortalException {
 
-		CommerceContext commerceContext =
-			(CommerceContext)httpServletRequest.getAttribute(
-				CommerceWebKeys.COMMERCE_CONTEXT);
+		CommerceContext commerceContext = _getCommerceContext(
+			httpServletRequest);
 
 		if (commerceContext == null) {
 			return null;
+		}
+
+		HttpServletRequest originalHttpServletRequest =
+			_portal.getOriginalServletRequest(httpServletRequest);
+
+		HttpSession httpSession = originalHttpServletRequest.getSession();
+
+		CommerceOrder commerceOrder;
+
+		if (FeatureFlagManagerUtil.isEnabled("LPD-35678")) {
+			commerceOrder = (CommerceOrder)httpSession.getAttribute(
+				CommerceCheckoutWebKeys.SELECT_ACCOUNT_ON_LOGIN);
+
+			if (commerceOrder != null) {
+				return commerceOrder;
+			}
 		}
 
 		AccountEntry accountEntry = commerceContext.getAccountEntry();
@@ -460,20 +475,14 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 			return null;
 		}
 
-		CommerceOrder commerceOrder =
-			(CommerceOrder)httpServletRequest.getAttribute(
-				CommerceCheckoutWebKeys.COMMERCE_ORDER);
+		commerceOrder = (CommerceOrder)httpServletRequest.getAttribute(
+			CommerceCheckoutWebKeys.COMMERCE_ORDER);
 
 		if (commerceOrder == null) {
-			HttpServletRequest originalHttpServletRequest =
-				_portal.getOriginalServletRequest(httpServletRequest);
-
-			HttpSession httpSession = originalHttpServletRequest.getSession();
-
 			long groupId = commerceContext.getCommerceChannelGroupId();
 
 			String uuid = (String)httpSession.getAttribute(
-				CommerceOrder.class.getName() + StringPool.POUND + groupId);
+				getCookieName(groupId));
 
 			commerceOrder =
 				_commerceOrderLocalService.fetchCommerceOrderByUuidAndGroupId(
@@ -490,11 +499,6 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 				httpServletRequest, themeDisplay.getResponse(),
 				CommerceOrder.class.getName() + StringPool.POUND +
 					commerceOrder.getGroupId());
-
-			HttpServletRequest originalHttpServletRequest =
-				_portal.getOriginalServletRequest(httpServletRequest);
-
-			HttpSession httpSession = originalHttpServletRequest.getSession();
 
 			httpSession.removeAttribute(
 				CommerceOrder.class.getName() + StringPool.POUND +
