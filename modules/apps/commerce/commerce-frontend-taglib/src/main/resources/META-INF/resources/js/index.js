@@ -229,8 +229,8 @@ export function cart({
 			checkoutURL,
 			orderDetailURL,
 			productURLSeparator,
-			siteDefaultURL,
 			signInURL,
+			siteDefaultURL,
 		},
 		cartViews,
 		channel: {
