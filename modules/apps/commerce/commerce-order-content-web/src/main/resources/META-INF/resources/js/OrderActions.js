@@ -76,12 +76,7 @@ function OrderActions({
 					});
 				});
 		},
-		[
-			orderId,
-			open,
-			quickCheckoutEnabled,
-			viewReturnableOrderItemsURL,
-		]
+		[orderId, open, quickCheckoutEnabled, viewReturnableOrderItemsURL]
 	);
 
 	useEffect(() => {
