@@ -95,7 +95,11 @@ function AccountSelectionModal({
 										/>
 
 										<ClayRadio
-											className={hasCreatePermission ? null : 'hide'}
+											className={
+												hasCreatePermission
+													? null
+													: 'hide'
+											}
 											label={Liferay.Language.get(
 												'create-a-new-account'
 											)}
