@@ -93,7 +93,8 @@ function SignUpModalView({
 					setActiveView(SIGN_IN);
 
 					return;
-				} else {
+				}
+				else {
 					iframeLoadedOnceRef.current = false;
 
 					iframeRef.current.contentWindow.location.reload();
