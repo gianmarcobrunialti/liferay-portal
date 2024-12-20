@@ -127,6 +127,7 @@ function SignUpModalView({
 			setActiveView,
 			setAlert,
 			setIsLoading,
+			userEmail,
 		]
 	);
 
@@ -146,7 +147,7 @@ function SignUpModalView({
 		if (iframeSubmitRef.current && accountName && accountType) {
 			iframeSubmitRef.current.click();
 		}
-	}, [errors]);
+	}, [accountName, accountType, errors]);
 
 	useEffect(() => {
 		if (availableAccountTypes.length === 1) {
@@ -243,7 +244,6 @@ function SignUpModalView({
 									id="available-account-types"
 									name="available-account-types"
 									onChange={(event) => {
-										console.log(event.target.value);
 										setAccountType(event.target.value);
 									}}
 								>

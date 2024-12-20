@@ -20,7 +20,6 @@ import {
 import ForgotPasswordModalView from '../GuestSignInModalViews/ForgotPasswordModalView';
 import SignInModalView from '../GuestSignInModalViews/SignInModalView';
 import SignUpModalView from '../GuestSignInModalViews/SignUpModalView';
-import {SIGN_IN_TO_CHECKOUT} from './constants';
 
 export const FORGOT_PASSWORD = 'forgot_password';
 export const SIGN_IN = 'sign_in';
