@@ -504,13 +504,11 @@ public class LoginPostAction extends Action {
 
 			_populateModelFromCookie(cookieValue);
 
-			if (commerceSiteType ==
-					CommerceChannelConstants.SITE_TYPE_B2B) {
-
+			if (commerceSiteType == CommerceChannelConstants.SITE_TYPE_B2B) {
 				_accountType = AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS;
 			}
 			else if (commerceSiteType ==
-					 CommerceChannelConstants.SITE_TYPE_B2C) {
+						CommerceChannelConstants.SITE_TYPE_B2C) {
 
 				_accountType = AccountConstants.ACCOUNT_ENTRY_TYPE_PERSON;
 			}
