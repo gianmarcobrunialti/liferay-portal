@@ -38,16 +38,15 @@ function OrderActions({
 					let actions = availableTransitions;
 
 					if (quickCheckoutEnabled) {
-						const quickCheckoutTransition = availableTransitions.find(
-							(item) => item.name === 'quick-checkout'
-						);
+						const quickCheckoutTransition =
+							availableTransitions.find(
+								(item) => item.name === 'quick-checkout'
+							);
 
 						if (open && !quickCheckoutTransition) {
 							actions.push({
 								disabled: true,
-								label: Liferay.Language.get(
-									'quick-checkout'
-								),
+								label: Liferay.Language.get('quick-checkout'),
 								name: 'quick-checkout',
 							});
 						}
