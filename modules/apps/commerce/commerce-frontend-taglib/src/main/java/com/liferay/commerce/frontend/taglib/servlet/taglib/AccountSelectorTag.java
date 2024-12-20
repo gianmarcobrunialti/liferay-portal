@@ -386,19 +386,23 @@ public class AccountSelectorTag extends IncludeTag {
 	}
 
 	private boolean _hasPermission() {
-		PermissionChecker permissionChecker =
-			_themeDisplay.getPermissionChecker();
-		User user = _themeDisplay.getUser();
+		if (_themeDisplay != null) {
+			PermissionChecker permissionChecker =
+				_themeDisplay.getPermissionChecker();
+			User user = _themeDisplay.getUser();
 
-		try {
-			return _userModelResourcePermission.contains(
-				permissionChecker, user, AccountActionKeys.MANAGE_ACCOUNTS);
-		}
-		catch (PortalException portalException) {
-			_log.error(portalException);
+			try {
+				return _userModelResourcePermission.contains(
+					permissionChecker, user, AccountActionKeys.MANAGE_ACCOUNTS);
+			}
+			catch (PortalException portalException) {
+				_log.error(portalException);
 
-			return false;
+				return false;
+			}
 		}
+
+		return false;
 	}
 
 	private static final String _PAGE = "/account_selector/page.jsp";

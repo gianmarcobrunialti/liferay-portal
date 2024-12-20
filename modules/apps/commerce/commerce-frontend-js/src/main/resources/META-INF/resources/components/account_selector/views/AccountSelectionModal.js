@@ -25,8 +25,7 @@ function AccountSelectionModal({
 	hasCreatePermission,
 	hasManagePermission,
 }) {
-	const {observer} = useModal();
-	const [isVisible, setIsVisible] = useState(true);
+	const {observer, onOpenChange, open} = useModal({defaultOpen: true});
 	const [accountFields, setAccountFields] = useState({
 		description: '',
 		externalReferenceCode: '',
@@ -68,7 +67,7 @@ function AccountSelectionModal({
 
 	return (
 		<>
-			{isVisible ? (
+			{open ? (
 				<ClayModal
 					center
 					disableAutoClose={true}
@@ -95,14 +94,13 @@ function AccountSelectionModal({
 											value={false}
 										/>
 
-										{hasCreatePermission && (
-											<ClayRadio
-												label={Liferay.Language.get(
-													'create-a-new-account'
-												)}
-												value={true}
-											/>
-										)}
+										<ClayRadio
+											className={hasCreatePermission ? null : 'hide'}
+											label={Liferay.Language.get(
+												'create-a-new-account'
+											)}
+											value={true}
+										/>
 									</ClayRadioGroup>
 								)}
 
@@ -161,7 +159,7 @@ function AccountSelectionModal({
 								<ClayButton.Group spaced>
 									<ClayButton
 										displayType="secondary"
-										onClick={() => setIsVisible(false)}
+										onClick={() => onOpenChange(false)}
 									>
 										{Liferay.Language.get('cancel')}
 									</ClayButton>
