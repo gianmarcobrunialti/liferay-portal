@@ -18,6 +18,7 @@ import com.liferay.commerce.configuration.CommerceAccountGroupServiceConfigurati
 import com.liferay.commerce.configuration.CommerceAccountServiceConfiguration;
 import com.liferay.commerce.constants.CommerceCheckoutWebKeys;
 import com.liferay.commerce.constants.CommerceConstants;
+import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.product.constants.CommerceChannelAccountEntryRelConstants;
 import com.liferay.commerce.product.constants.CommerceChannelConstants;
 import com.liferay.commerce.product.model.CommerceChannel;
@@ -297,11 +298,10 @@ public class CommerceAccountHelperImpl implements CommerceAccountHelper {
 
 			HttpSession httpSession = originalHttpServletRequest.getSession();
 
-			boolean selectAccountOnLogin = GetterUtil.getBoolean(
-				httpSession.getAttribute(
-					CommerceCheckoutWebKeys.SELECT_ACCOUNT_ON_LOGIN));
+			CommerceOrder commerceOrder = (CommerceOrder)httpSession.getAttribute(
+				CommerceCheckoutWebKeys.SELECT_ACCOUNT_ON_LOGIN);
 
-			if (selectAccountOnLogin) {
+			if (commerceOrder != null) {
 				setCurrentCommerceAccount(
 					httpServletRequest, commerceChannelGroupId,
 					AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT);
