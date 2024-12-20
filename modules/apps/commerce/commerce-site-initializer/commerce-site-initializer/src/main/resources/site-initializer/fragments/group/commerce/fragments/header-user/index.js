@@ -9,7 +9,10 @@ const setGuestOrderEnabled = ({guestOrderEnabled}) => {
 	if (signInButton && guestOrderEnabled) {
 		const clonedSignInButton = signInButton.cloneNode(true);
 
-		signInButton.parentElement.replaceChild(clonedSignInButton, signInButton);
+		signInButton.parentElement.replaceChild(
+			clonedSignInButton,
+			signInButton
+		);
 		const performGuestSignIn = (event) => {
 			event.preventDefault();
 
@@ -25,4 +28,3 @@ const setGuestOrderEnabled = ({guestOrderEnabled}) => {
 };
 
 window.Liferay.on('guest-order-enabled', setGuestOrderEnabled);
-
