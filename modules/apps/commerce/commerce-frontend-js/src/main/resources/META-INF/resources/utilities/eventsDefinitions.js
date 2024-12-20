@@ -24,6 +24,7 @@ export const CURRENT_ORDER_UPDATED = 'current-order-updated';
 export const CURRENT_PRODUCT_STATUS_CHANGED = 'current-product-status-changed';
 export const CURRENT_PRODUCT_UPDATED = 'current-product-updated';
 export const IFRAME_LOADED = 'iframe-loaded';
+export const GUEST_ORDER_ENABLED = 'guest-order-enabled';
 export const IS_LOADING_MODAL = 'is-loading-modal';
 export const ITEM_REMOVED_FROM_COMPARE = 'item-removed-from-compare';
 export const OPEN_MINI_CART = 'open-cart';

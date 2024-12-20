@@ -13,7 +13,7 @@ import {
 	CART_UPDATED,
 	CURRENT_ACCOUNT_UPDATED,
 	CURRENT_ORDER_DELETED,
-	CURRENT_ORDER_UPDATED,
+	CURRENT_ORDER_UPDATED, GUEST_ORDER_ENABLED,
 } from '../../utilities/eventsDefinitions';
 import {showErrorNotification} from '../../utilities/notifications';
 import MiniCartContext from './MiniCartContext';
@@ -202,6 +202,10 @@ function MiniCart({
 			Liferay.detach(CURRENT_ORDER_DELETED, resetCartState);
 		};
 	}, [resetCartState]);
+
+	useEffect(() => {
+		Liferay.fire(GUEST_ORDER_ENABLED, {guestOrderEnabled});
+	}, [guestOrderEnabled]);
 
 	return (
 		<MiniCartContext.Provider

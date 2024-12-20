@@ -142,7 +142,7 @@ public class MiniCartTag extends IncludeTag {
 		_productURLSeparator = cpFriendlyURL.getProductURLSeparator(
 			themeDisplay.getCompanyId());
 
-		if (_guestOrderEnabled) {
+		if (_guestOrderEnabled && !themeDisplay.isSignedIn()) {
 			_signInURL = themeDisplay.getURLSignIn();
 		}
 

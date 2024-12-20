@@ -31,21 +31,21 @@ export const INITIAL_VIEWS_MAP = {
 		component: ForgotPasswordModalView,
 		content: '',
 		size: 'md',
-		title: 'forgot-password',
+		title: Liferay.Language.get('forgot-password'),
 		url: '',
 	},
 	[SIGN_IN]: {
 		component: SignInModalView,
 		content: '',
 		size: 'md',
-		title: SIGN_IN_TO_CHECKOUT,
+		title: Liferay.Language.get('sign-in-to-checkout'),
 		url: '',
 	},
 	[SIGN_UP]: {
 		component: SignUpModalView,
 		content: '',
 		size: 'md',
-		title: 'create-account',
+		title: Liferay.Language.get('sign-up'),
 		url: '',
 	},
 };
@@ -59,14 +59,24 @@ function toPopUp(url) {
 export function getAccountTypes() {
 	const {commerceSiteType} = Liferay.CommerceContext;
 
+	const ACCOUNT_TYPE_BUSINESS = {
+		label: Liferay.Language.get('business'),
+		value: ACCOUNT_ENTRY_TYPE_BUSINESS,
+	};
+
+	const ACCOUNT_TYPE_PERSON = {
+		label: Liferay.Language.get('person'),
+		value: ACCOUNT_ENTRY_TYPE_PERSON,
+	};
+
 	if (commerceSiteType === SITE_TYPE_B2B) {
-		return [ACCOUNT_ENTRY_TYPE_BUSINESS];
+		return [ACCOUNT_TYPE_BUSINESS];
 	}
 	else if (commerceSiteType === SITE_TYPE_B2C) {
-		return [ACCOUNT_ENTRY_TYPE_PERSON];
+		return [ACCOUNT_TYPE_PERSON];
 	}
 
-	return [ACCOUNT_ENTRY_TYPE_BUSINESS, ACCOUNT_ENTRY_TYPE_PERSON];
+	return [ACCOUNT_TYPE_BUSINESS, ACCOUNT_TYPE_PERSON];
 }
 
 function setupFromSignIn(signInViewHTML, signInURL) {
@@ -188,6 +198,16 @@ function setupSignUp(iframeElement) {
 	const portletBody = iframeBody.querySelector('.portlet-body');
 
 	const sheetElement = formElement.querySelector('form .sheet');
+	const sheetSectionElement = formElement.querySelector('.sheet-section');
+
+	const optionalFieldElements = sheetSectionElement
+		.querySelectorAll('.control-label:not(:has(.reference-mark))');
+
+	Array.from(optionalFieldElements).forEach((element) => {
+		if (!element.parentElement.className.includes('input-Date-wrapper')) {
+			element.parentElement.remove();
+		}
+	});
 
 	navigationElement.remove();
 	sheetElement.classList.remove('sheet', 'sheet-lg');
@@ -211,14 +231,20 @@ export function getIframeDOMHooks(iframeElement, modalView) {
 	}
 }
 
-export function storeAccountInformation({accountName, accountType}) {
+export function storeAccountInformation({accountName, accountType, userEmail}) {
 	const {commerceChannelGroupId: groupId} = Liferay.CommerceContext;
 
 	const cookie = new CommerceCookie(ACCOUNT_INFORMATION_COOKIE_IDENTIFIER);
 
 	cookie.setValue(
 		groupId,
-		`accountName=${accountName}#accountType=${accountType}`
+		`accountName=${
+			accountName
+		}#accountType=${
+			accountType
+		}#userEmail=${
+			userEmail
+		}`
 	);
 }
 

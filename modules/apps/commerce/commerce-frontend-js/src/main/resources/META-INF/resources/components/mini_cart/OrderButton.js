@@ -4,7 +4,7 @@
  */
 
 import ClayButton from '@clayui/button';
-import React, {useContext, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 
 import {liferayNavigate} from '../../utilities/index';
 import GuestModal from './GuestModal';
@@ -17,6 +17,7 @@ import {
 } from './util/constants';
 import {storeImmediateCheckout} from './util/guestModal';
 import {canSubmit} from './util/index';
+import {PERFORM_SIGN_IN} from "../../utilities/eventsDefinitions";
 
 function OrderButton({disabled = false}) {
 	const {
@@ -29,9 +30,27 @@ function OrderButton({disabled = false}) {
 
 	const [guestSignInVisible, setGuestSignInVisible] = useState(false);
 
+	useEffect(() => {
+		const toggleModal = () => {
+			if (!guestSignInVisible) {
+				setGuestSignInVisible(true);
+			}
+		};
+
+		if (guestOrderEnabled) {
+			Liferay.on(PERFORM_SIGN_IN, toggleModal);
+		}
+
+		return () => {
+			if (guestOrderEnabled) {
+				Liferay.detach(PERFORM_SIGN_IN, toggleModal);
+			}
+		}
+	}, [guestOrderEnabled, guestSignInVisible, setGuestSignInVisible]);
+
 	return (
 		<div className="mini-cart-submit">
-			{guestOrderEnabled ? (
+			{guestOrderEnabled && signInURL ? (
 				<>
 					<ClayButton
 						block

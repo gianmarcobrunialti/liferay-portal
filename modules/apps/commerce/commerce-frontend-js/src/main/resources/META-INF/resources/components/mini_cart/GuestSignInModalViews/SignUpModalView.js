@@ -34,6 +34,7 @@ function SignUpModalView({
 		accountName: false,
 		accountType: false,
 	});
+	const [userEmail, setUserEmail] = useState('');
 
 	const iframeFormRef = useRef(null);
 	const iframeLoadedOnceRef = useRef(false);
@@ -42,7 +43,8 @@ function SignUpModalView({
 
 	const attachIframeFormListener = useCallback(() => {
 		const handler = (event) => {
-			const hasFormErrors = event.target.querySelector('.has-error');
+			const hasFormErrors = iframeFormRef.current?.querySelector(
+				'.has-error');
 
 			if (errors.accountName || errors.accountType || hasFormErrors) {
 				event.preventDefault();
@@ -52,15 +54,20 @@ function SignUpModalView({
 				return false;
 			}
 
+			const formEmailAddress = iframeFormRef.current.querySelector(
+				'[name$="emailAddress"]')?.value;
+
+			setUserEmail(formEmailAddress);
+
 			setIsLoading(true);
 
 			return event;
 		};
 
-		if (iframeSubmitRef.current) {
-			iframeSubmitRef.current.addEventListener('click', handler);
+		if (iframeFormRef.current) {
+			iframeFormRef.current.addEventListener('submit', handler);
 		}
-	}, [errors, setIsLoading]);
+	}, [errors, setIsLoading, setUserEmail]);
 
 	const onLoad = useCallback(
 		(event) => {
@@ -72,8 +79,8 @@ function SignUpModalView({
 						'.login-container .alert-success'
 					)?.innerText;
 
-					if (accountName && accountType && signUpSuccessMessage) {
-						storeAccountInformation({accountName, accountType});
+					if (accountName && accountType && userEmail && signUpSuccessMessage) {
+						storeAccountInformation({accountName, accountType, userEmail});
 
 						setAlert({
 							message: signUpSuccessMessage,
@@ -81,9 +88,9 @@ function SignUpModalView({
 						});
 
 						setActiveView(SIGN_IN);
-					}
 
-					return;
+						return;
+					}
 				}
 
 				iframeLoadedOnceRef.current = true;
@@ -126,20 +133,30 @@ function SignUpModalView({
 	);
 
 	useEffect(() => {
-		if (iframeSubmitRef.current) {
+		if (iframeSubmitRef.current && accountName && accountType) {
 			iframeSubmitRef.current.click();
 		}
 	}, [errors]);
 
 	useEffect(() => {
 		if (availableAccountTypes.length === 1) {
-			setAccountType(availableAccountTypes[0]);
+			setAccountType(availableAccountTypes[0].value);
 		}
 	}, [availableAccountTypes, setAccountType]);
 
 	return (
 		<>
 			<ClayModal.Body className="sign-up-modal-view">
+				<iframe
+					className="border-0 w-100"
+					id="modalIframe"
+					onLoad={onLoad}
+					ref={(ref) => {
+						iframeRef.current = ref;
+					}}
+					src={viewsMap[SIGN_UP].url}
+				/>
+
 				<ClayForm.Group className="mb-3 px-1">
 					<h3 className="mb-3 sheet-subtitle">
 						{Liferay.Language.get('account-detail')}
@@ -191,6 +208,7 @@ function SignUpModalView({
 							<ClayForm.Group
 								className={classnames('mb-3', {
 									'has-error': errors.accountType,
+									'hide': availableAccountTypes.length === 1,
 								})}
 							>
 								<label htmlFor="available-accounts-list">
@@ -214,18 +232,17 @@ function SignUpModalView({
 									}
 									id="available-account-types"
 									name="available-account-types"
-									onChange={(event) =>
-										setAccountType(event.target.value)
-									}
+									onChange={(event) => {
+										console.log(event.target.value);
+										setAccountType(event.target.value);
+									}}
 								>
 									{availableAccountTypes.map(
-										(accountType, index) => (
+										({label, value}, index) => (
 											<ClaySelect.Option
-												key={`${accountType}_${index}`}
-												label={Liferay.Language.get(
-													accountType
-												)}
-												value={accountType}
+												key={`${value}_${index}`}
+												label={label}
+												value={value}
 											/>
 										)
 									)}
@@ -246,16 +263,6 @@ function SignUpModalView({
 						</Col>
 					</Row>
 				</ClayForm.Group>
-
-				<iframe
-					className="border-0 w-100"
-					id="modalIframe"
-					onLoad={onLoad}
-					ref={(ref) => {
-						iframeRef.current = ref;
-					}}
-					src={viewsMap[SIGN_UP].url}
-				/>
 			</ClayModal.Body>
 
 			<ClayModal.Footer
@@ -291,7 +298,7 @@ function SignUpModalView({
 							onClick={doSubmit}
 							type="button"
 						>
-							{Liferay.Language.get('create-account')}
+							{Liferay.Language.get('done')}
 						</ClayButton>
 					</ClayButton.Group>
 				}

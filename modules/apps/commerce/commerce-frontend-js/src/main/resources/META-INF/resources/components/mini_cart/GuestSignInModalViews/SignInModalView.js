@@ -54,7 +54,7 @@ function SignInModalView({setActiveView, setIsLoading, viewsMap}) {
 				}}
 				type="button"
 			>
-				{Liferay.Language.get('create-account')}
+				{Liferay.Language.get('sign-up')}
 			</ClayButton>
 		</ClayModal.Body>
 	);

@@ -59,7 +59,7 @@ function GuestModal({isVisible, setIsVisible: removeModal, signInURL}) {
 					/>
 
 					<ClayModal.Header>
-						{Liferay.Language.get(viewsMap[activeView].title)}
+						{viewsMap[activeView].title}
 					</ClayModal.Header>
 
 					{(viewsMap[activeView].url ||
