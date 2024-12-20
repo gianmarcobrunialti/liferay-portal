@@ -48,7 +48,6 @@ import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.servlet.PortalSessionThreadLocal;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -298,8 +297,9 @@ public class CommerceAccountHelperImpl implements CommerceAccountHelper {
 
 			HttpSession httpSession = originalHttpServletRequest.getSession();
 
-			CommerceOrder commerceOrder = (CommerceOrder)httpSession.getAttribute(
-				CommerceCheckoutWebKeys.SELECT_ACCOUNT_ON_LOGIN);
+			CommerceOrder commerceOrder =
+				(CommerceOrder)httpSession.getAttribute(
+					CommerceCheckoutWebKeys.SELECT_ACCOUNT_ON_LOGIN);
 
 			if (commerceOrder != null) {
 				setCurrentCommerceAccount(
