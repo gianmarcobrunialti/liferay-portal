@@ -209,8 +209,8 @@ export function cart({
 	detachedOpener,
 	displayDiscountLevels,
 	displayTotalItemsQuantity,
-	guestOrderEnabled,
 	groupId,
+	guestOrderEnabled,
 	id,
 	itemsQuantity,
 	labels,
@@ -219,8 +219,8 @@ export function cart({
 	orderId,
 	productURLSeparator,
 	requestQuoteEnabled,
-	siteDefaultURL,
 	signInURL,
+	siteDefaultURL,
 	toggleable,
 }) {
 	MiniCart(miniCartId, miniCartId, {
