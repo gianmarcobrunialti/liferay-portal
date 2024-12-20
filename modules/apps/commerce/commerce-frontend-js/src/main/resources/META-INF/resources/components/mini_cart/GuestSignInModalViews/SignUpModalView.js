@@ -72,51 +72,47 @@ function SignUpModalView({
 
 	const onLoad = useCallback(
 		(event) => {
-			const iframeBody = iframeRef.current?.contentDocument.body;
-
-			if (iframeBody) {
-				if (iframeLoadedOnceRef.current) {
-					const signUpSuccessMessage = iframeBody.querySelector(
+			if (iframeRef.current && iframeLoadedOnceRef.current) {
+				const successMessage =
+					iframeRef.current.contentDocument.body.querySelector(
 						'.login-container .alert-success'
 					)?.innerText;
 
-					if (
-						accountName &&
-						accountType &&
-						userEmail &&
-						signUpSuccessMessage
-					) {
-						storeAccountInformation({
-							accountName,
-							accountType,
-							userEmail,
-						});
+				if (accountName && accountType && userEmail && successMessage) {
+					storeAccountInformation({
+						accountName,
+						accountType,
+						userEmail,
+					});
 
-						setAlert({
-							message: signUpSuccessMessage,
-							type: 'success',
-						});
+					setAlert({
+						message: successMessage,
+						type: 'success',
+					});
 
-						setActiveView(SIGN_IN);
+					setActiveView(SIGN_IN);
 
-						return;
-					}
+					return;
+				} else {
+					iframeLoadedOnceRef.current = false;
+
+					iframeRef.current.contentWindow.location.reload();
 				}
-
-				iframeLoadedOnceRef.current = true;
-
-				const {form, submitButton} = getIframeDOMHooks(
-					iframeRef.current,
-					SIGN_UP
-				);
-
-				iframeFormRef.current = form;
-				iframeSubmitRef.current = submitButton;
-
-				attachIframeFormListener();
-
-				setIsLoading(false);
 			}
+
+			iframeLoadedOnceRef.current = true;
+
+			const {form, submitButton} = getIframeDOMHooks(
+				iframeRef.current,
+				SIGN_UP
+			);
+
+			iframeFormRef.current = form;
+			iframeSubmitRef.current = submitButton;
+
+			attachIframeFormListener();
+
+			setIsLoading(false);
 
 			return event;
 		},
