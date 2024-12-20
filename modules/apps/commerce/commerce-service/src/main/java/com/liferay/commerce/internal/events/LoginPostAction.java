@@ -337,9 +337,10 @@ public class LoginPostAction extends Action {
 							commerceChannelGroupId),
 						cookie.getValue(), user);
 
-				String userEmail = accountInformationModel.getUserEmailAddress();
+				String userEmailAddress =
+					accountInformationModel.getUserEmailAddress();
 
-				if (userEmail.equals(user.getEmailAddress())) {
+				if (userEmailAddress.equals(user.getEmailAddress())) {
 					accountEntry = _createAccountEntry(
 						commerceChannelGroupId,
 						accountInformationModel.getAccountName(),
@@ -393,16 +394,14 @@ public class LoginPostAction extends Action {
 			HttpServletRequest originalHttpServletRequest =
 				_portal.getOriginalServletRequest(httpServletRequest);
 
-			HttpSession httpSession =
-				originalHttpServletRequest.getSession();
+			HttpSession httpSession = originalHttpServletRequest.getSession();
 
 			httpSession.setAttribute(
-				CommerceCheckoutWebKeys.SELECT_ACCOUNT_ON_LOGIN,
-				commerceOrder);
+				CommerceCheckoutWebKeys.SELECT_ACCOUNT_ON_LOGIN, commerceOrder);
 
 			httpSession.setAttribute(
 				LoginPostAction._GUEST_ORDER_COOKIE_IDENTIFIER +
-				commerceOrder.getGroupId(),
+					commerceOrder.getGroupId(),
 				commerceOrder.getUuid());
 		}
 		else {
@@ -410,7 +409,6 @@ public class LoginPostAction extends Action {
 				accountEntry, commerceOrder.getGroupId(), commerceOrder,
 				httpServletRequest, user.getUserId());
 		}
-
 	}
 
 	private void _updateGuestCommerceOrder(
@@ -527,7 +525,9 @@ public class LoginPostAction extends Action {
 			return _accountType;
 		}
 
-		public String getUserEmailAddress() {return _userEmailAddress; }
+		public String getUserEmailAddress() {
+			return _userEmailAddress;
+		}
 
 		private String _extractValue(String keyValue) {
 			return StringUtil.extractLast(keyValue, StringPool.EQUAL);
