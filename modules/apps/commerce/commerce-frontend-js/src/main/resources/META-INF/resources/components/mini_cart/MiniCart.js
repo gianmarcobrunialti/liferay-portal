@@ -13,7 +13,8 @@ import {
 	CART_UPDATED,
 	CURRENT_ACCOUNT_UPDATED,
 	CURRENT_ORDER_DELETED,
-	CURRENT_ORDER_UPDATED, GUEST_ORDER_ENABLED,
+	CURRENT_ORDER_UPDATED,
+	GUEST_ORDER_ENABLED,
 } from '../../utilities/eventsDefinitions';
 import {showErrorNotification} from '../../utilities/notifications';
 import MiniCartContext from './MiniCartContext';

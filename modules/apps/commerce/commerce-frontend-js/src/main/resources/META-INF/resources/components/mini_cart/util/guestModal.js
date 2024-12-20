@@ -200,8 +200,9 @@ function setupSignUp(iframeElement) {
 	const sheetElement = formElement.querySelector('form .sheet');
 	const sheetSectionElement = formElement.querySelector('.sheet-section');
 
-	const optionalFieldElements = sheetSectionElement
-		.querySelectorAll('.control-label:not(:has(.reference-mark))');
+	const optionalFieldElements = sheetSectionElement.querySelectorAll(
+		'.control-label:not(:has(.reference-mark))'
+	);
 
 	Array.from(optionalFieldElements).forEach((element) => {
 		if (!element.parentElement.className.includes('input-Date-wrapper')) {
@@ -238,13 +239,7 @@ export function storeAccountInformation({accountName, accountType, userEmail}) {
 
 	cookie.setValue(
 		groupId,
-		`accountName=${
-			accountName
-		}#accountType=${
-			accountType
-		}#userEmail=${
-			userEmail
-		}`
+		`accountName=${accountName}#accountType=${accountType}#userEmail=${userEmail}`
 	);
 }
 

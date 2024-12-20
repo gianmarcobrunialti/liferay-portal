@@ -43,8 +43,8 @@ function SignUpModalView({
 
 	const attachIframeFormListener = useCallback(() => {
 		const handler = (event) => {
-			const hasFormErrors = iframeFormRef.current?.querySelector(
-				'.has-error');
+			const hasFormErrors =
+				iframeFormRef.current?.querySelector('.has-error');
 
 			if (errors.accountName || errors.accountType || hasFormErrors) {
 				event.preventDefault();
@@ -55,7 +55,8 @@ function SignUpModalView({
 			}
 
 			const formEmailAddress = iframeFormRef.current.querySelector(
-				'[name$="emailAddress"]')?.value;
+				'[name$="emailAddress"]'
+			)?.value;
 
 			setUserEmail(formEmailAddress);
 
@@ -79,8 +80,17 @@ function SignUpModalView({
 						'.login-container .alert-success'
 					)?.innerText;
 
-					if (accountName && accountType && userEmail && signUpSuccessMessage) {
-						storeAccountInformation({accountName, accountType, userEmail});
+					if (
+						accountName &&
+						accountType &&
+						userEmail &&
+						signUpSuccessMessage
+					) {
+						storeAccountInformation({
+							accountName,
+							accountType,
+							userEmail,
+						});
 
 						setAlert({
 							message: signUpSuccessMessage,
