@@ -157,7 +157,7 @@ public class LoginPostAction extends Action {
 		}
 	}
 
-	private void _bindAccountToOrder(
+	private void _associateAccountToOrder(
 			AccountEntry accountEntry, long commerceChannelGroupId,
 			CommerceOrder commerceOrder, HttpServletRequest httpServletRequest,
 			long userId)
@@ -337,10 +337,14 @@ public class LoginPostAction extends Action {
 							commerceChannelGroupId),
 						cookie.getValue(), user);
 
-				accountEntry = _createAccountEntry(
-					commerceChannelGroupId,
-					accountInformationModel.getAccountName(),
-					accountInformationModel.getAccountType(), user);
+				String userEmail = accountInformationModel.getUserEmailAddress();
+
+				if (userEmail.equals(user.getEmailAddress())) {
+					accountEntry = _createAccountEntry(
+						commerceChannelGroupId,
+						accountInformationModel.getAccountName(),
+						accountInformationModel.getAccountType(), user);
+				}
 
 				CookiesManagerUtil.deleteCookies(
 					cookie.getDomain(), httpServletRequest, httpServletResponse,
@@ -378,34 +382,35 @@ public class LoginPostAction extends Action {
 				_commerceAccountHelper.getCommerceSiteType(
 					commerceOrder.getGroupId()),
 				user.getUserId());
-
-			if (accountEntry == null) {
-				commerceOrder.setUserId(user.getUserId());
-
-				commerceOrder = _commerceOrderLocalService.updateCommerceOrder(
-					commerceOrder);
-
-				HttpServletRequest originalHttpServletRequest =
-					_portal.getOriginalServletRequest(httpServletRequest);
-
-				HttpSession httpSession =
-					originalHttpServletRequest.getSession();
-
-				httpSession.setAttribute(
-					CommerceCheckoutWebKeys.SELECT_ACCOUNT_ON_LOGIN,
-					commerceOrder);
-
-				httpSession.setAttribute(
-					LoginPostAction._GUEST_ORDER_COOKIE_IDENTIFIER +
-						commerceOrder.getGroupId(),
-					commerceOrder.getUuid());
-			}
-			else {
-				_bindAccountToOrder(
-					accountEntry, commerceOrder.getGroupId(), commerceOrder,
-					httpServletRequest, user.getUserId());
-			}
 		}
+
+		if (accountEntry == null) {
+			commerceOrder.setUserId(user.getUserId());
+
+			commerceOrder = _commerceOrderLocalService.updateCommerceOrder(
+				commerceOrder);
+
+			HttpServletRequest originalHttpServletRequest =
+				_portal.getOriginalServletRequest(httpServletRequest);
+
+			HttpSession httpSession =
+				originalHttpServletRequest.getSession();
+
+			httpSession.setAttribute(
+				CommerceCheckoutWebKeys.SELECT_ACCOUNT_ON_LOGIN,
+				commerceOrder);
+
+			httpSession.setAttribute(
+				LoginPostAction._GUEST_ORDER_COOKIE_IDENTIFIER +
+				commerceOrder.getGroupId(),
+				commerceOrder.getUuid());
+		}
+		else {
+			_associateAccountToOrder(
+				accountEntry, commerceOrder.getGroupId(), commerceOrder,
+				httpServletRequest, user.getUserId());
+		}
+
 	}
 
 	private void _updateGuestCommerceOrder(
@@ -449,7 +454,7 @@ public class LoginPostAction extends Action {
 					AccountConstants.ACCOUNT_ENTRY_TYPE_PERSON, user));
 		}
 
-		_bindAccountToOrder(
+		_associateAccountToOrder(
 			userAccountEntries.get(0), commerceChannelGroupId, commerceOrder,
 			httpServletRequest, user.getUserId());
 	}
@@ -522,6 +527,8 @@ public class LoginPostAction extends Action {
 			return _accountType;
 		}
 
+		public String getUserEmailAddress() {return _userEmailAddress; }
+
 		private String _extractValue(String keyValue) {
 			return StringUtil.extractLast(keyValue, StringPool.EQUAL);
 		}
@@ -548,11 +555,15 @@ public class LoginPostAction extends Action {
 							AccountConstants.ACCOUNT_ENTRY_TYPE_PERSON;
 					}
 				}
+				else if (keyValue.startsWith("userEmail=")) {
+					_userEmailAddress = keyValue;
+				}
 			}
 		}
 
 		private String _accountName;
 		private String _accountType;
+		private String _userEmailAddress;
 
 	}
 
