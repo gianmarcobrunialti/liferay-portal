@@ -502,18 +502,17 @@ public class LoginPostAction extends Action {
 		public AccountInformationModel(
 			int commerceSiteType, String cookieValue, User user) {
 
-			if (commerceSiteType == CommerceChannelConstants.SITE_TYPE_B2C) {
-				_accountName = user.getFullName();
-				_accountType = AccountConstants.ACCOUNT_ENTRY_TYPE_PERSON;
+			_populateModelFromCookie(cookieValue);
+
+			if (commerceSiteType ==
+					CommerceChannelConstants.SITE_TYPE_B2B) {
+
+				_accountType = AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS;
 			}
-			else {
-				_populateModelFromCookie(cookieValue);
+			else if (commerceSiteType ==
+					 CommerceChannelConstants.SITE_TYPE_B2C) {
 
-				if (commerceSiteType ==
-						CommerceChannelConstants.SITE_TYPE_B2B) {
-
-					_accountType = AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS;
-				}
+				_accountType = AccountConstants.ACCOUNT_ENTRY_TYPE_PERSON;
 			}
 		}
 
