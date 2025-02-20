@@ -21,6 +21,7 @@ import com.liferay.commerce.frontend.taglib.internal.model.WorkflowStatusModel;
 import com.liferay.commerce.frontend.taglib.internal.servlet.ServletContextUtil;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderType;
+import com.liferay.commerce.order.CommerceOrderHttpHelper;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.service.CommerceOrderTypeLocalService;
 import com.liferay.commerce.util.CommerceOrderInfoItemUtil;
@@ -96,7 +97,8 @@ public class AccountSelectorTag extends IncludeTag {
 			_accountEntry = commerceContext.getAccountEntry();
 			_accountEntryAllowedTypes =
 				commerceContext.getAccountEntryAllowedTypes();
-			_addCommerceOrderURL = _getAddCommerceOrderURL(httpServletRequest);
+			_addCommerceOrderURL =
+				_commerceOrderHttpHelper.getCommerceCartBaseURL(httpServletRequest);
 			_checkoutURL = _getCheckoutURL(httpServletRequest);
 			_commerceOrder = commerceContext.getCommerceOrder();
 
@@ -155,6 +157,8 @@ public class AccountSelectorTag extends IncludeTag {
 
 		setServletContext(ServletContextUtil.getServletContext());
 
+		_commerceOrderHttpHelper =
+			ServletContextUtil.getCommerceOrderHttpHelper();
 		_commerceOrderPortletResourcePermission =
 			ServletContextUtil.getCommerceOrderPortletResourcePermission();
 		_commerceOrderTypeLocalService =
@@ -289,8 +293,6 @@ public class AccountSelectorTag extends IncludeTag {
 					CommercePortletKeys.COMMERCE_OPEN_ORDER_CONTENT)
 			).setActionName(
 				"/commerce_open_order_content/edit_commerce_order"
-			).setCMD(
-				Constants.ADD
 			).buildString();
 		}
 
@@ -501,6 +503,7 @@ public class AccountSelectorTag extends IncludeTag {
 	private long _commerceChannelGroupId;
 	private long _commerceChannelId;
 	private CommerceOrder _commerceOrder;
+	private CommerceOrderHttpHelper _commerceOrderHttpHelper;
 	private PortletResourcePermission _commerceOrderPortletResourcePermission;
 	private CommerceOrderTypeLocalService _commerceOrderTypeLocalService;
 	private ConfigurationProvider _configurationProvider;

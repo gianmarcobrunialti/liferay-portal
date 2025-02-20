@@ -442,8 +442,6 @@ public class OrdersDataSetFragmentRenderer implements FragmentRenderer {
 					PortletRequest.ACTION_PHASE)
 			).setActionName(
 				"/commerce_open_order_content/edit_commerce_order"
-			).setCMD(
-				Constants.ADD
 			).buildString();
 		}
 

@@ -58,6 +58,7 @@ import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletURLFactory;
+import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
@@ -68,8 +69,10 @@ import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -175,6 +178,58 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 
 		return _commerceOrderLocalService.fetchCommerceOrderByUuidAndGroupId(
 			uuid, groupId);
+	}
+
+	public String getCommerceCartBaseURL(HttpServletRequest httpServletRequest)
+		throws PortalException {
+
+		if (hasCommerceOrderPortlet(
+			httpServletRequest, CommercePortletKeys.COMMERCE_OPEN_ORDER_CONTENT)) {
+
+			PortletURL portletURL = null;
+
+			long plid = PortalUtil.getPlidFromPortletId(
+				PortalUtil.getScopeGroupId(httpServletRequest),
+				CommercePortletKeys.COMMERCE_OPEN_ORDER_CONTENT);
+
+			portletURL = PortletURLFactoryUtil.create(
+				httpServletRequest,
+				CommercePortletKeys.COMMERCE_OPEN_ORDER_CONTENT, plid,
+				PortletRequest.RENDER_PHASE);
+
+			portletURL.setParameter(
+				"mvcRenderCommandName",
+				"/commerce_open_order_content/edit_commerce_order");
+			portletURL.setParameter(
+				"backURL",
+				ParamUtil.getString(httpServletRequest, "backURL"));
+
+			return portletURL.toString();
+		}
+
+		return HtmlUtil.escape(
+			CommerceOrderInfoItemUtil.getCommerceOrderFriendlyURL(
+				_friendlyURLSeparatorProviderSnapshot.get(),
+				httpServletRequest));
+	}
+
+	@Override
+	public boolean hasCommerceOrderPortlet(
+		HttpServletRequest httpServletRequest, String portletKey)
+		throws PortalException {
+
+		if (
+			portletKey.equals(CommercePortletKeys.COMMERCE_OPEN_ORDER_CONTENT) ||
+			portletKey.equals(CommercePortletKeys.COMMERCE_ORDER_CONTENT) ||
+			portletKey.equals(CommercePortletKeys.COMMERCE_CART_CONTENT)
+		) {
+
+			long groupId = _portal.getScopeGroupId(httpServletRequest);
+
+			return _portal.getPlidFromPortletId(groupId, portletKey) > 0;
+		}
+
+		return false;
 	}
 
 	@Override

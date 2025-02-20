@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {openModal, openToast} from 'frontend-js-web';
+import {createPortletURL, openModal, openToast} from 'frontend-js-web';
 
 import ServiceProvider from '../ServiceProvider/index';
 import {DEFAULT_ORDER_DETAILS_PORTLET_ID} from '../components/mini_cart/util/constants';
@@ -84,7 +84,9 @@ export function createCommerceCart({
 
 	const createOrder = hasCommerceOpenOrderContentPortlet
 		? (orderTypeId) => {
-				const createOrderActionURL = new URL(orderDetailURL);
+				const createOrderActionURL = createPortletURL(orderDetailURL, {
+					cmd: 'ADD',
+				});
 
 				if (orderTypeId) {
 					createOrderActionURL.searchParams.set(
