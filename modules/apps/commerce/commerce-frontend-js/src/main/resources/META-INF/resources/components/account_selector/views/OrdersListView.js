@@ -99,7 +99,6 @@ function OrdersListView({
 							accountId: currentAccount.id,
 							commerceChannelId,
 							currencyCode,
-							hasCommerceOpenOrderContentPortlet,
 							orderDetailURL: createOrderURL,
 							orderTypes,
 						});
