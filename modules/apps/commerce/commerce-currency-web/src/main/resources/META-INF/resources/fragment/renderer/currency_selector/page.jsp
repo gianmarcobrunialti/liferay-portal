@@ -12,6 +12,12 @@
 	props='<%=
 		HashMapBuilder.<String, Object>put(
 			"commerceChannelId", commerceChannelId
+		).put(
+			"commerceOrderDetailBaseURL", commerceOrderDetailBaseURL
+		).put(
+			"commerceOrderId", commerceOrderId
+		).put(
+			"commerceOrderTypes", commerceOrderTypes
 		).build()
 	%>'
 />

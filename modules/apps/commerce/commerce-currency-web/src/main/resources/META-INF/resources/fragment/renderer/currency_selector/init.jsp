@@ -8,10 +8,14 @@
 <%@ taglib uri="http://liferay.com/tld/react" prefix="react" %><%@
 taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %>
 
-<%@ page import="com.liferay.portal.kernel.util.HashMapBuilder" %>
+<%@page import="com.liferay.portal.kernel.json.JSONArray" %><%@
+page import="com.liferay.portal.kernel.util.HashMapBuilder" %>
 
 <liferay-theme:defineObjects />
 
 <%
 long commerceChannelId = (long)request.getAttribute("liferay-commerce:currency-selector:commerceChannelId");
+String commerceOrderDetailBaseURL = (String)request.getAttribute("liferay-commerce:currency-selector:commerceOrderDetailBaseURL");
+long commerceOrderId = (long)request.getAttribute("liferay-commerce:currency-selector:commerceOrderId");
+JSONArray commerceOrderTypes = (long)request.getAttribute("liferay-commerce:currency-selector:commerceOrderTypes");
 %>
