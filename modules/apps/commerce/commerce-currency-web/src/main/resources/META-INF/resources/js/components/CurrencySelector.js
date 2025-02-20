@@ -3,57 +3,75 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {CURRENT_ORDER_UPDATED,} from '../../utilities/eventsDefinitions';
 import ClayButton from '@clayui/button';
 import DropDown from '@clayui/drop-down';
 import {CommerceServiceProvider} from 'commerce-frontend-js';
 import {openToast} from 'frontend-js-web';
 import React, {useCallback, useEffect, useState} from 'react';
+import {
+	DEFAULT_ORDER_DETAILS_PORTLET_ID,
+	getCommerceCurrencyCookie,
+	openCurrencyConfirmationModal,
+	setCommerceCurrencyCookie
+} from "../util";
 
 const DeliveryCatalogResource =
 	CommerceServiceProvider.DeliveryCatalogAPI('v1');
 
-function CurrencySelector({commerceChannelId}) {
+function CurrencySelector({
+	commerceChannelId,
+	commerceOrderDetailBaseURL,
+	commerceOrderId,
+	commerceOrderTypes: orderTypes,
+}) {
+
 	const [availableCurrencies, setAvailableCurrencies] = useState(null);
+	const [currentCommerceOrderId, setCurrentCommerceOrderId] = useState(commerceOrderId);
+	const [selectedCurrency, setSelectedCurrency] = useState(null)
 
-	const getCurrencyFromURL = useCallback(() => {
-		if (availableCurrencies !== null) {
-			const currentURL = new URL(window.location.href);
+	const setCurrencyCookie = useCallback(() => {
+		const currentCommerceCurrencyCode = getCommerceCurrencyCookie();
 
-			const currentCurrencyCode =
-				currentURL.searchParams.get('currency-code');
+		if (!currentCommerceCurrencyCode) {
+			setCommerceCurrencyCookie(selectedCurrency.code);
 
-			return {
-				code: currentCurrencyCode,
-				symbol: availableCurrencies.find(
-					(item) => item.code === currentCurrencyCode
-				)?.symbol,
-			};
+			return;
 		}
 
-		return {
-			code: '',
-			symbol: '',
-		};
-	}, [availableCurrencies]);
+		const hasCurrencyChanged =
+			currentCommerceCurrencyCode !== selectedCurrency.code;
 
-	const setCurrentCurrency = (item) => {
-		const currentCurrency = getCurrencyFromURL();
+		if (hasCurrencyChanged && currentCommerceOrderId) {
+			const {accountId} = Liferay.CommerceContext.account;
 
-		if (currentCurrency.code !== item.code) {
-			const currentURL = new URL(window.location.href);
-
-			currentURL.searchParams.set('currency-code', item.code);
-
-			window.location.href = currentURL.toString();
+			openCurrencyConfirmationModal({
+				accountId,
+				commerceChannelId,
+				currencyCode: selectedCurrency.code,
+				hasCommerceOpenOrderContentPortlet:
+					commerceOrderDetailBaseURL.includes(
+						DEFAULT_ORDER_DETAILS_PORTLET_ID),
+				orderDetailURL: commerceOrderDetailBaseURL,
+				orderTypes,
+			})
 		}
-	};
+		else if (hasCurrencyChanged && !currentCommerceOrderId) {
+			window.location.reload();
+		}
+}, [currentCommerceOrderId, selectedCurrency]);
 
 	useEffect(() => {
 		if (availableCurrencies === null) {
 			DeliveryCatalogResource.getCurrenciesByChannelId(commerceChannelId)
-				.then((response) => {
-					if (response.items.length) {
-						setAvailableCurrencies(response.items);
+				.then(({items: currencies}) => {
+					if (currencies.length) {
+						setAvailableCurrencies(currencies);
+
+						const {currencyCode} = Liferay.CommerceContext.currency;
+
+						setSelectedCurrency(currencies.find(
+							({code}) => code === currencyCode));
 					}
 				})
 				.catch((error) => {
@@ -67,9 +85,37 @@ function CurrencySelector({commerceChannelId}) {
 					});
 				});
 		}
+
+		return () => {};
 	}, [availableCurrencies, commerceChannelId]);
 
-	const {code, symbol} = getCurrencyFromURL();
+	useEffect(() => {
+		if (selectedCurrency?.id) {
+			setCurrencyCookie();
+		}
+
+		return () => {};
+	}, [selectedCurrency]);
+
+	useEffect(() => {
+		const onOrderChange = ({order: {currencyCode, id}}) => {
+			setCurrentCommerceOrderId(id);
+
+			setSelectedCurrency(
+				availableCurrencies.find(({code}) => code === currencyCode)
+			);
+		}
+
+		Liferay.on(CURRENT_ORDER_UPDATED, onOrderChange);
+
+		return () => {
+			Liferay.detach(CURRENT_ORDER_UPDATED, onOrderChange);
+		};
+	}, [
+		availableCurrencies,
+		setCurrentCommerceOrderId,
+		setSelectedCurrency,
+	]);
 
 	return (
 		availableCurrencies?.length && (
@@ -77,22 +123,23 @@ function CurrencySelector({commerceChannelId}) {
 				<DropDown
 					items={availableCurrencies}
 					trigger={
-						<ClayButton>
-							{symbol} {code}
+						<ClayButton
+							className="border-0 btn-sm"
+							displayType="secondary"
+						>
+							{selectedCurrency.symbol} {selectedCurrency.code}
 						</ClayButton>
 					}
 				>
-					{(item) => (
+					{(currency) => currency.active ? (
 						<DropDown.Item
-							active={item.active}
-							key={item.id}
-							onClick={() => {
-								setCurrentCurrency(item);
-							}}
+							active={currency.id === selectedCurrency.id}
+							key={currency.id}
+							onClick={() => setSelectedCurrency(currency)}
 						>
-							{item.symbol} {item.code}
+							{currency.symbol} {currency.code}
 						</DropDown.Item>
-					)}
+					) : null}
 				</DropDown>
 			</>
 		)
