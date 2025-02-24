@@ -19,6 +19,7 @@ import {liferayNavigate} from '../../utilities/index';
 import {showErrorNotification} from '../../utilities/notifications';
 
 import './request_quote.scss';
+import {CommerceContext} from '../../index';
 
 const CartResource = ServiceProvider.DeliveryCartAPI('v1');
 
@@ -145,20 +146,31 @@ function RequestQuote({
 						return onClick(event);
 					}
 
-					return CartResource.createCartByChannelId(channel.id, {
-						accountId,
-						cartItems: [
-							{
-								options: JSON.stringify(
-									cpInstance.skuOptions || JSON.stringify([])
-								),
-								quantity: cpInstance.quantity || 1,
-								skuId: cpInstance.skuId,
-								skuUnitOfMeasure: cpInstance.skuUnitOfMeasure,
-							},
-						],
-						currencyCode: channel.currencyCode,
-					})
+					let currencyCode = channel.currencyCode;
+
+					if (CommerceContext) {
+						currencyCode = CommerceContext.currency.currencyCode;
+					}
+
+					return CartResource.createCartByChannelId(
+						channel.id,
+						{
+							accountId,
+							cartItems: [
+								{
+									options: JSON.stringify(
+										cpInstance.skuOptions ||
+											JSON.stringify([])
+									),
+									quantity: cpInstance.quantity || 1,
+									skuId: cpInstance.skuId,
+									skuUnitOfMeasure:
+										cpInstance.skuUnitOfMeasure,
+								},
+							],
+							currencyCode,
+						}
+					)
 						.then((order) => {
 							liferayNavigate(
 								orderDetailURL.replace(escape('{id}'), order.id)

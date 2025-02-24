@@ -25,8 +25,8 @@ function resolveCartItemsBatchPath(basePath = '') {
 
 export default function CartItem(basePath) {
 	return {
-		createItemByCartId: (cartId, json) =>
-			AJAX.POST(resolveItemsPath(basePath, cartId), json),
+		createItemByCartId: (cartId, json, params) =>
+			AJAX.POST(resolveItemsPath(basePath, cartId), json, {}, params),
 
 		deleteItemById: (itemId) =>
 			AJAX.DELETE(resolveCartItemsPath(basePath, itemId)),

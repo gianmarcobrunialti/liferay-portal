@@ -6,6 +6,7 @@
 import {openModal} from 'frontend-js-web';
 
 import ServiceProvider from '../../ServiceProvider/index';
+import {CommerceContext} from '../../index';
 import {CURRENT_ORDER_UPDATED} from '../../utilities/eventsDefinitions';
 
 const CartResource = ServiceProvider.DeliveryCartAPI('v1');
@@ -64,20 +65,29 @@ export async function addToCart(
 	skuOptions,
 	skuOptionsNamespace
 ) {
+	let currencyCode = channel.currencyCode;
+
+	if (CommerceContext) {
+		currencyCode = CommerceContext.currency.currencyCode;
+	}
+
 	if (!cartId) {
-		const newCart = await CartResource.createCartByChannelId(channel.id, {
-			accountId,
-			cartItems: cpInstances.map((cpInstance) =>
-				formatCartItem(
-					cpInstance,
-					namespace,
-					skuOptions,
-					skuOptionsNamespace
-				)
-			),
-			currencyCode: channel.currencyCode,
-			orderTypeId,
-		});
+		const newCart = await CartResource.createCartByChannelId(
+			channel.id,
+			{
+				accountId,
+				cartItems: cpInstances.map((cpInstance) =>
+					formatCartItem(
+						cpInstance,
+						namespace,
+						skuOptions,
+						skuOptionsNamespace
+					)
+				),
+				currencyCode,
+				orderTypeId,
+			}
+		);
 
 		Liferay.fire(CURRENT_ORDER_UPDATED, {order: newCart});
 
@@ -92,7 +102,8 @@ export async function addToCart(
 				namespace,
 				skuOptions,
 				skuOptionsNamespace
-			)
+			),
+			{priceListCurrencyCode: currencyCode}
 		);
 
 		const fetchedCart = await CartResource.getCartByIdWithItems(cartId);
@@ -178,9 +189,12 @@ export async function addToCart(
 		}
 	});
 
-	const updatedCart = await CartResource.updateCartById(cartId, {
-		cartItems: updatedCartItems,
-	});
+	const updatedCart = await CartResource.updateCartById(
+		cartId,
+		{
+			cartItems: updatedCartItems,
+		}
+	);
 
 	if (removedItems.length) {
 		openModal({
