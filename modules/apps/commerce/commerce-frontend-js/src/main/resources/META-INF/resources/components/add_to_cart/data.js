@@ -72,22 +72,21 @@ export async function addToCart(
 	}
 
 	if (!cartId) {
-		const newCart = await CartResource.createCartByChannelId(
-			channel.id,
-			{
-				accountId,
-				cartItems: cpInstances.map((cpInstance) =>
-					formatCartItem(
-						cpInstance,
-						namespace,
-						skuOptions,
-						skuOptionsNamespace
-					)
-				),
-				currencyCode,
-				orderTypeId,
-			}
-		);
+		const newCart = await CartResource.createCartByChannelId(channel.id, {
+			accountId,
+			cartItems: cpInstances.map((cpInstance) =>
+				formatCartItem(
+					cpInstance,
+					namespace,
+					skuOptions,
+					skuOptionsNamespace
+				)
+			),
+			currencyCode,
+			orderTypeId,
+		});
+
+		newCart.currencyCode = currencyCode;
 
 		Liferay.fire(CURRENT_ORDER_UPDATED, {order: newCart});
 
@@ -107,6 +106,8 @@ export async function addToCart(
 		);
 
 		const fetchedCart = await CartResource.getCartByIdWithItems(cartId);
+
+		fetchedCart.currencyCode = currencyCode;
 
 		Liferay.fire(CURRENT_ORDER_UPDATED, {order: fetchedCart});
 
@@ -189,12 +190,9 @@ export async function addToCart(
 		}
 	});
 
-	const updatedCart = await CartResource.updateCartById(
-		cartId,
-		{
-			cartItems: updatedCartItems,
-		}
-	);
+	const updatedCart = await CartResource.updateCartById(cartId, {
+		cartItems: updatedCartItems,
+	});
 
 	if (removedItems.length) {
 		openModal({
@@ -222,6 +220,8 @@ export async function addToCart(
 			title: Liferay.Language.get('cart-updated'),
 		});
 	}
+
+	updatedCart.currencyCode = currencyCode;
 
 	Liferay.fire(CURRENT_ORDER_UPDATED, {order: updatedCart});
 
