@@ -152,25 +152,20 @@ function RequestQuote({
 						currencyCode = CommerceContext.currency.currencyCode;
 					}
 
-					return CartResource.createCartByChannelId(
-						channel.id,
-						{
-							accountId,
-							cartItems: [
-								{
-									options: JSON.stringify(
-										cpInstance.skuOptions ||
-											JSON.stringify([])
-									),
-									quantity: cpInstance.quantity || 1,
-									skuId: cpInstance.skuId,
-									skuUnitOfMeasure:
-										cpInstance.skuUnitOfMeasure,
-								},
-							],
-							currencyCode,
-						}
-					)
+					return CartResource.createCartByChannelId(channel.id, {
+						accountId,
+						cartItems: [
+							{
+								options: JSON.stringify(
+									cpInstance.skuOptions || JSON.stringify([])
+								),
+								quantity: cpInstance.quantity || 1,
+								skuId: cpInstance.skuId,
+								skuUnitOfMeasure: cpInstance.skuUnitOfMeasure,
+							},
+						],
+						currencyCode,
+					})
 						.then((order) => {
 							liferayNavigate(
 								orderDetailURL.replace(escape('{id}'), order.id)
