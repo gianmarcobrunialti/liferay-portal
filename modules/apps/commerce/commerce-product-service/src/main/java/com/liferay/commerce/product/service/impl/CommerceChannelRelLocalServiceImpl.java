@@ -80,7 +80,13 @@ public class CommerceChannelRelLocalServiceImpl
 		commerceChannelRel.setClassPK(classPK);
 		commerceChannelRel.setCommerceChannelId(commerceChannelId);
 
-		return commerceChannelRelPersistence.update(commerceChannelRel);
+		commerceChannelRel = commerceChannelRelPersistence.update(commerceChannelRel);
+
+		_reindexCommerceChannelRels(
+			commerceChannelRel.getClassNameId(),
+			commerceChannelRel.getClassPK());
+
+		return commerceChannelRel;
 	}
 
 	@Override
