@@ -667,11 +667,11 @@ definition {
 
 		WaitForElementPresent(locator1 = "CommerceEntry#ORDER_ID_FROM_ACCOUNT_SELECTOR");
 
-		var getSecondId = selenium.getText("CommerceEntry#ORDER_ID_FROM_ACCOUNT_SELECTOR");
+		WaitForElementPresent(locator1 = "CommerceEntry#ORDER_ID_FROM_ACCOUNT_SELECTOR_2");
 
-		WaitForElementPresent(locator1 = "CommerceEntry#ORDER_ID_FROM_ACCOUNT_SELECTOR");
+		var getSecondId = selenium.getText("CommerceEntry#ORDER_ID_FROM_ACCOUNT_SELECTOR_2");
 
-		Click(locator1 = "CommerceEntry#ORDER_ID_FROM_ACCOUNT_SELECTOR");
+		Click(locator1 = "CommerceEntry#ORDER_ID_FROM_ACCOUNT_SELECTOR_2");
 
 		AssertElementNotPresent(
 			key_filterOption = ${getFirstId},

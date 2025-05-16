@@ -1239,6 +1239,11 @@
 </tr>
 <tr>
 	<td>ORDER_ID_FROM_ACCOUNT_SELECTOR</td>
+	<td>//table[contains(@class,'orders-table')]/tbody/tr[1]//a</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ORDER_ID_FROM_ACCOUNT_SELECTOR_2</td>
 	<td>//table[contains(@class,'orders-table')]/tbody/tr[2]//a</td>
 	<td></td>
 </tr>
