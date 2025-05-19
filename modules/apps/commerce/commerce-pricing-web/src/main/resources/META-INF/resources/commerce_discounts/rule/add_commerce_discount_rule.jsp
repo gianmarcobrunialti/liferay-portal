@@ -14,6 +14,7 @@ List<CommerceDiscountRuleType> commerceDiscountRuleTypes = commerceDiscountDispl
 %>
 
 <commerce-ui:modal-content
+	useNativeSubmit="<%= false %>"
 	title='<%= LanguageUtil.get(request, "add-discount-rule") %>'
 >
 	<aui:form method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "apiSubmit(this.form);" %>' useNamespace="<%= false %>">

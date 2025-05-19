@@ -27,13 +27,14 @@ if (commerceChannel != null) {
 %>
 
 <commerce-ui:modal-content
+	useNativeSubmit="<%= false %>"
 	submitButtonLabel='<%= LanguageUtil.get(request, "add") %>'
 	title='<%= LanguageUtil.get(request, "add-channel") %>'
 >
 	<portlet:actionURL name="/commerce_channels/edit_commerce_channel" var="editCommerceChannelActionURL" />
 
-	<aui:form cssClass="container-fluid container-fluid-max-xl" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "apiSubmit(this.form);" %>' useNamespace="<%= false %>">
-		<div class="lfr-form-content">
+	<aui:form method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "apiSubmit(this.form);" %>' useNamespace="<%= false %>">
+		<div>
 			<aui:model-context bean="<%= commerceChannel %>" model="<%= CommerceChannel.class %>" />
 
 			<aui:input disabled="<%= viewOnly %>" name="name" value="<%= name %>" />

@@ -14,6 +14,7 @@ CommerceOrderTypeDisplayContext commerceOrderTypeDisplayContext = (CommerceOrder
 <portlet:actionURL name="/commerce_order_type/edit_commerce_order_type" var="editCommerceOrderTypeActionURL" />
 
 <commerce-ui:modal-content
+	useNativeSubmit="<%= false %>"
 	title='<%= LanguageUtil.get(request, "add-order-type") %>'
 >
 	<aui:form method="post" name="fm">

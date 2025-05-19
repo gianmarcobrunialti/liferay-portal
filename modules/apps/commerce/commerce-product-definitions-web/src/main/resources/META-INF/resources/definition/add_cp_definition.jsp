@@ -8,6 +8,7 @@
 <%@ include file="/init.jsp" %>
 
 <commerce-ui:modal-content
+	useNativeSubmit="<%= false %>"
 	title='<%= LanguageUtil.get(request, "create-new-product") %>'
 >
 	<aui:form cssClass="container-fluid container-fluid-max-xl" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "apiSubmit();" %>'>

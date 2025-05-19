@@ -18,6 +18,7 @@ List<CommerceCurrency> commerceCurrencies = commerceCatalogDisplayContext.getCom
 <portlet:actionURL name="/commerce_catalogs/edit_commerce_catalog" var="editCommerceCatalogActionURL" />
 
 <commerce-ui:modal-content
+	useNativeSubmit="<%= false %>"
 	title='<%= LanguageUtil.get(request, "add-catalog") %>'
 >
 	<aui:form method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "apiSubmit(this.form);" %>' useNamespace="<%= false %>">

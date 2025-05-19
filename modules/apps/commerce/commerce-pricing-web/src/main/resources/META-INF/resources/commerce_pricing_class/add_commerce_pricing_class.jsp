@@ -20,6 +20,7 @@ String defaultLanguageId = LocaleUtil.toLanguageId(defaultLocale);
 <portlet:actionURL name="/commerce_pricing_classes/edit_commerce_pricing_class" var="editCommercePricingClassActionURL" />
 
 <commerce-ui:modal-content
+	useNativeSubmit="<%= false %>"
 	title='<%= LanguageUtil.get(request, "add-product-group") %>'
 >
 	<aui:form method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "apiSubmit(this.form);" %>' useNamespace="<%= false %>">

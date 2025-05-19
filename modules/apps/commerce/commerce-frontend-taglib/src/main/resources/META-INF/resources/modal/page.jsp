@@ -13,25 +13,4 @@ String containerId = randomNamespace + "modal-root";
 
 <div class="modal-root" id="<%= containerId %>"></div>
 
-<liferay-frontend:component
-	context='<%=
-		HashMapBuilder.<String, Object>put(
-			"containerId", containerId
-		).put(
-			"id", id
-		).put(
-			"portletId", portletDisplay.getRootPortletId()
-		).put(
-			"refreshPageOnClose", refreshPageOnClose
-		).put(
-			"size", size
-		).put(
-			"spritemap", spritemap
-		).put(
-			"title", title
-		).put(
-			"url", url
-		).build()
-	%>'
-	module="{modal} from commerce-frontend-taglib"
-/>
+<!-- TODO Remove -->

@@ -12,6 +12,7 @@ CommerceChannel commerceChannel = commerceOrderContentDisplayContext.fetchCommer
 %>
 
 <commerce-ui:modal-content
+	useNativeSubmit="<%= false %>"
 	submitButtonLabel='<%= LanguageUtil.get(request, "add-order") %>'
 	title='<%= LanguageUtil.format(locale, "select-x", "order-type") %>'
 >

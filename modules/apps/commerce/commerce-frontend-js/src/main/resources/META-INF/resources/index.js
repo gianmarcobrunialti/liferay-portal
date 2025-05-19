@@ -28,7 +28,6 @@ export {
 	ItemFinder,
 	MiniCart,
 	MiniCartContext,
-	Modal,
 	Multishipping,
 	Price,
 	ProductOptionCheckbox,

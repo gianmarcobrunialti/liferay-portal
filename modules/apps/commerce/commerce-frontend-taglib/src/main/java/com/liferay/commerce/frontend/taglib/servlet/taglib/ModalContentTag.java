@@ -14,6 +14,7 @@ import javax.servlet.jsp.PageContext;
 
 /**
  * @author Fabio Diego Mastrorilli
+ * @author Gianmarco Brunialti Masera
  */
 public class ModalContentTag extends IncludeTag {
 
@@ -30,6 +31,8 @@ public class ModalContentTag extends IncludeTag {
 
 		httpServletRequest.setAttribute(
 			_ATTRIBUTE_NAMESPACE + "contentCssClasses", _contentCssClasses);
+		httpServletRequest.setAttribute(
+			_ATTRIBUTE_NAMESPACE + "useNativeSubmit", _useNativeSubmit);
 		httpServletRequest.setAttribute(
 			_ATTRIBUTE_NAMESPACE + "modalId", _modalId);
 		httpServletRequest.setAttribute(
@@ -50,6 +53,8 @@ public class ModalContentTag extends IncludeTag {
 	public String getContentCssClasses() {
 		return _contentCssClasses;
 	}
+
+	public boolean getUseNativeSubmit() { return _useNativeSubmit; }
 
 	public String getModalId() {
 		return _modalId;
@@ -77,6 +82,10 @@ public class ModalContentTag extends IncludeTag {
 
 	public void setContentCssClasses(String contentCssClasses) {
 		_contentCssClasses = contentCssClasses;
+	}
+
+	public void setUseNativeSubmit(boolean useNativeSubmit) {
+		_useNativeSubmit = useNativeSubmit;
 	}
 
 	public void setModalId(String modalId) {
@@ -115,6 +124,7 @@ public class ModalContentTag extends IncludeTag {
 		super.cleanUp();
 
 		_contentCssClasses = null;
+		_useNativeSubmit = true;
 		_modalId = null;
 		_redirect = null;
 		_showCancelButton = true;
@@ -141,6 +151,7 @@ public class ModalContentTag extends IncludeTag {
 	private static final String _START_PAGE = "/modal_content/start.jsp";
 
 	private String _contentCssClasses;
+	private boolean _useNativeSubmit = true;
 	private String _modalId;
 	private String _redirect;
 	private boolean _showCancelButton = true;

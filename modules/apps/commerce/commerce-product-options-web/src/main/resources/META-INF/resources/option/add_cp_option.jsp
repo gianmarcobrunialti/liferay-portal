@@ -12,6 +12,7 @@ CPOptionDisplayContext cpOptionDisplayContext = (CPOptionDisplayContext)request.
 %>
 
 <commerce-ui:modal-content
+	useNativeSubmit="<%= false %>"
 	title='<%= LanguageUtil.get(request, "create-new-option") %>'
 >
 	<aui:form method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "apiSubmit();" %>'>

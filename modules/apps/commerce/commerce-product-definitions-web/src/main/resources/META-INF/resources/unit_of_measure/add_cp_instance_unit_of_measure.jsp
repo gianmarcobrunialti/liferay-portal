@@ -14,6 +14,7 @@ CPInstance cpInstance = cpInstanceUnitOfMeasureDisplayContext.getCPInstance();
 %>
 
 <commerce-ui:modal-content
+	useNativeSubmit="<%= false %>"
 	submitButtonLabel='<%= LanguageUtil.get(request, "add") %>'
 	title='<%= LanguageUtil.get(request, "add-unit-of-measure") %>'
 >

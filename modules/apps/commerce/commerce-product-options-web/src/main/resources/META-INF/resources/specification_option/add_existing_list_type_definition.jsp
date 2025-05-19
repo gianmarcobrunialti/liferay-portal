@@ -12,6 +12,7 @@ long cpSpecificationOptionId = ParamUtil.getLong(request, "cpSpecificationOption
 %>
 
 <commerce-ui:modal-content
+	useNativeSubmit="<%= false %>"
 	submitButtonLabel='<%= LanguageUtil.get(request, "save") %>'
 	title='<%= LanguageUtil.get(request, "add-an-existing-picklist") %>'
 >

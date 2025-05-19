@@ -16,6 +16,7 @@ taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
 
 <%@ page import="com.liferay.petra.string.StringPool" %><%@
+page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.servlet.SessionMessages" %><%@
 page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
@@ -29,6 +30,7 @@ page import="com.liferay.portal.kernel.util.Validator" %>
 
 <%
 String contentCssClasses = (String)request.getAttribute("liferay-commerce:modal-content:contentCssClasses");
+boolean useNativeSubmit = (boolean)request.getAttribute("liferay-commerce:modal-content:useNativeSubmit");
 String redirect = (String)request.getAttribute("liferay-commerce:modal-content:redirect");
 boolean showCancelButton = (boolean)request.getAttribute("liferay-commerce:modal-content:showCancelButton");
 boolean showSubmitButton = (boolean)request.getAttribute("liferay-commerce:modal-content:showSubmitButton");

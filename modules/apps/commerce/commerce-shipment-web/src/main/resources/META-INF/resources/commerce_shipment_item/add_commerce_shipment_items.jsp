@@ -16,6 +16,7 @@ CommerceShipment commerceShipment = commerceShipmentDisplayContext.getCommerceSh
 <portlet:actionURL name="/commerce_shipment/edit_commerce_shipment" var="editCommerceShipmentURL" />
 
 <commerce-ui:modal-content
+	useNativeSubmit="<%= false %>"
 	contentCssClasses="p-0"
 	redirect="<%= redirect %>"
 	showSubmitButton="<%= true %>"

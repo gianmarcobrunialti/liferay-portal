@@ -14,6 +14,7 @@ COREntryDisplayContext corEntryDisplayContext = (COREntryDisplayContext)request.
 <portlet:actionURL name="/cor_entry/edit_cor_entry" var="editCOREntryActionURL" />
 
 <commerce-ui:modal-content
+	useNativeSubmit="<%= false %>"
 	title='<%= LanguageUtil.get(request, "add-order-rule") %>'
 >
 	<aui:form method="post" name="fm">

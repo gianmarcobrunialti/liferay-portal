@@ -14,6 +14,7 @@ CommerceTermEntryDisplayContext commerceTermEntryDisplayContext = (CommerceTermE
 <portlet:actionURL name="/commerce_term_entry/edit_commerce_term_entry" var="editCommerceTermEntryActionURL" />
 
 <commerce-ui:modal-content
+	useNativeSubmit="<%= false %>"
 	title='<%= LanguageUtil.get(request, "add-term") %>'
 >
 	<aui:form method="post" name="fm">

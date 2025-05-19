@@ -16,6 +16,7 @@ CommerceCatalog commerceCatalog = cpDefinition.getCommerceCatalog();
 %>
 
 <commerce-ui:modal-content
+	useNativeSubmit="<%= false %>"
 	title='<%= LanguageUtil.get(request, "create-new-specification-value") %>'
 >
 	<aui:form cssClass="container-fluid container-fluid-max-xl" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "apiSubmit();" %>'>

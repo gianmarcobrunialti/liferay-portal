@@ -14,6 +14,7 @@ CommerceInventoryWarehousesDisplayContext commerceInventoryWarehousesDisplayCont
 <portlet:actionURL name="/commerce_inventory_warehouse/edit_commerce_inventory_warehouse" var="editCommerceInventoryWarehouseActionURL" />
 
 <commerce-ui:modal-content
+	useNativeSubmit="<%= false %>"
 	title='<%= LanguageUtil.get(request, "add-warehouse") %>'
 >
 	<aui:form method="post" name="fm">
