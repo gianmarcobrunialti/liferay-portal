@@ -22,17 +22,13 @@ const ProductOptionUpload = ({
 }) => {
 	const errorsKey = 'errors';
 	const skuOptionsKey = 'skuOptions';
-	const [hasErrors, setHasErrors] = useState(false);
 
+	const [hasErrors, setHasErrors] = useState(false);
 	const [skuOptionsAtomState, setSkuOptionsAtomState] =
 		useLiferayState(skuOptionsAtom);
 
 	const handleChange = useCallback(
-		({key, value}) => {
-			if (key !== productOption.key) {
-				return;
-			}
-
+		({value = '{}'}) => {
 			let currentSkuOptions = skuOptionsAtomState.skuOptions.slice();
 
 			const currentSkuOption = currentSkuOptions.find(
@@ -65,8 +61,11 @@ const ProductOptionUpload = ({
 				];
 			}
 
-			setHasErrors((forceRequired || productOption.required) &&
-						 (!value || value === '{}'));
+			if ((forceRequired || productOption.required) &&
+				(!value || value === '{}')) {
+
+				setHasErrors(true);
+			}
 
 			setSkuOptionsAtomState({
 				...skuOptionsAtomState,
@@ -88,7 +87,6 @@ const ProductOptionUpload = ({
 			productOption,
 			skuOptionsAtomState,
 			skuOptionsKey,
-			setHasErrors,
 			setSkuOptionsAtomState,
 		]
 	);
@@ -100,23 +98,10 @@ const ProductOptionUpload = ({
 					new DDMFormHandler({
 						DDMFormInstance,
 						cpDefinitionId,
+						forceRequired: forceRequired || productOption.required,
+						key: productOption.key,
 						namespace,
 						portletId: CP_CONTENT_WEB_PORTLET_KEY,
-					});
-
-					setHasErrors(forceRequired || productOption.required);
-
-					setSkuOptionsAtomState((previousSkuOptionsAtomState) => {
-						return {
-							...previousSkuOptionsAtomState,
-							[errorsKey]: getSkuOptionsErrors(
-								forceRequired || productOption.required,
-								false,
-								productOption,
-								previousSkuOptionsAtomState
-							),
-							namespace
-						};
 					});
 				}
 			}
@@ -126,8 +111,6 @@ const ProductOptionUpload = ({
 		forceRequired,
 		namespace,
 		productOption,
-		setHasErrors,
-		setSkuOptionsAtomState,
 	]);
 
 	useEffect(() => {
