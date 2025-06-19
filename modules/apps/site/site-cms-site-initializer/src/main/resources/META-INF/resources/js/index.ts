@@ -36,6 +36,7 @@ export {default as ViewDashboard} from './main/dashboard/ViewDashboard';
 export {default as AddSpaceMembers} from './main/spaces/AddSpaceMembers';
 export {default as NewSpace} from './main/spaces/NewSpace';
 export {default as SpacesNavigation} from './main/spaces_navigation/SpacesNavigation';
+export {default as AssetTypeInfoPanelContainer} from './main/components/info_panel/AssetTypeInfoPanelContainer';
 
 // Structure Builder
 
