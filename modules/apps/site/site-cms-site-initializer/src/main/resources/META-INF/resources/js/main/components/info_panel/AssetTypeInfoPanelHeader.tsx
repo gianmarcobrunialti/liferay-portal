@@ -5,7 +5,7 @@ import ClayIcon from "@clayui/icon";
 import {sub} from "frontend-js-web";
 
 const ASSET_TYPE = {
-    CONTENT: 'content',
+    CONTENTS: 'contents',
     EMPTY: 'empty',
     FILES: 'files',
     FOLDER: 'folder',
@@ -28,7 +28,7 @@ const AssetTypeInfoPanelHeader = () => {
                     {type !== ASSET_TYPE.EMPTY && (
                         <ClayIcon
                             className="inline-item inline-item-before"
-                            symbol={type === ASSET_TYPE.CONTENT ? "forms" :
+                            symbol={type === ASSET_TYPE.CONTENTS ? "forms" :
                                 type === ASSET_TYPE.FILES ? "document-image" :
                                     type === ASSET_TYPE.FOLDER ? "folder" :
                                         "check-square"}
@@ -48,7 +48,7 @@ const AssetTypeInfoPanelHeader = () => {
                                 [items.length]
                             )
                         )}
-                        {(type === ASSET_TYPE.FILES || type === ASSET_TYPE.CONTENT || type === ASSET_TYPE.FOLDER) &&
+                        {(type === ASSET_TYPE.FILES || type === ASSET_TYPE.CONTENTS || type === ASSET_TYPE.FOLDER) &&
                          (
                              name
                             )}

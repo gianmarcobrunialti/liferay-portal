@@ -1,0 +1,13 @@
+@import 'atlas-variables';
+
+.sidebar-layout {
+	--sidebar-layout-width: 472px !important;
+}
+
+.c-slideout .sidebar {
+	background-color: $white !important;
+
+	.sidebar-header {
+		border-bottom-width: 0;
+	}
+}

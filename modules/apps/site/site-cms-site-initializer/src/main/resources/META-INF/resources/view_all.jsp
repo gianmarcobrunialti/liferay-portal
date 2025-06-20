@@ -26,6 +26,8 @@ ViewAllSectionDisplayContext viewAllSectionDisplayContext = (ViewAllSectionDispl
 		selectionType="multiple"
 		style="fluid"
 	/>
+</div>
 
+<div>
 	<react:component module="{AssetTypeInfoPanelContainer} from site-cms-site-initializer" />
 </div>
