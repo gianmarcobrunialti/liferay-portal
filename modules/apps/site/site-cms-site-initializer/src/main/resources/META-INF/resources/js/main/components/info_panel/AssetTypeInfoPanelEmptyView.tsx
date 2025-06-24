@@ -2,16 +2,11 @@ import React, {useContext} from 'react';
 import {AssetTypeInfoPanelContext} from "./context";
 import {getImage} from "../../util/getImage";
 import ClayEmptyState from "@clayui/empty-state";
+import {ASSET_TYPE} from "./util/constants";
 
-const ASSET_TYPE = {
-    CONTENT: 'content',
-    EMPTY: 'empty',
-    FILES: 'files',
-    FOLDER: 'folder',
-    MULTIPLE: 'multiple',
-}
+// TODO Check SVG
 
-const AssetTypeInfoPanelFilesView = () => {
+const AssetTypeInfoPanelEmptyView = () => {
     const {
         id,
         externalReferenceCode,
@@ -51,4 +46,4 @@ const AssetTypeInfoPanelFilesView = () => {
 };
 
 
-export default AssetTypeInfoPanelFilesView;
+export default AssetTypeInfoPanelEmptyView;

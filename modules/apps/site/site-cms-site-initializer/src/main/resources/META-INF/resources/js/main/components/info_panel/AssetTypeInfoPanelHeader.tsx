@@ -1,60 +1,53 @@
 import React, {useContext} from 'react';
+import classnames from 'classnames';
 import {AssetTypeInfoPanelContext} from "./context";
 import {SidePanel} from "@clayui/core";
 import ClayIcon from "@clayui/icon";
 import {sub} from "frontend-js-web";
-
-const ASSET_TYPE = {
-    CONTENTS: 'contents',
-    EMPTY: 'empty',
-    FILES: 'files',
-    FOLDER: 'folder',
-    MULTIPLE: 'multiple',
-}
+import {ASSET_TYPE} from "./util/constants";
 
 const AssetTypeInfoPanelHeader = () => {
-    const {
-        externalReferenceCode,
-        id,
-        items,
-        name,
-        type,
-    } = useContext(AssetTypeInfoPanelContext);
+    const {icon, items = [], name, type} = useContext(AssetTypeInfoPanelContext);
 
     return (
         <>
             <SidePanel.Header>
-                <span className="text-5">
+                <SidePanel.Title>
                     {type !== ASSET_TYPE.EMPTY && (
                         <ClayIcon
-                            className="inline-item inline-item-before"
-                            symbol={type === ASSET_TYPE.CONTENTS ? "forms" :
-                                type === ASSET_TYPE.FILES ? "document-image" :
-                                    type === ASSET_TYPE.FOLDER ? "folder" :
-                                        "check-square"}
+                            className={classnames(
+                                "asset-icon inline-item inline-item-before",
+                                {
+                                    'asset-icon-files': type ===
+                                                        ASSET_TYPE.FILES,
+                                }
+                            )}
+                            symbol={icon || ''}
                         >
                         </ClayIcon>
                     )}
-                    <SidePanel.Title
-                        className="inline-item inline-item-after"
-                    >
-                        <h3>
+
+                    <h3 className="asset-title inline-item inline-item-after">
                         {type === ASSET_TYPE.EMPTY && (
                             Liferay.Language.get('no-assets-selected')
                         )}
+
                         {type === ASSET_TYPE.MULTIPLE && (
                             sub(
                                 Liferay.Language.get('x-assets-selected'),
                                 [items.length]
                             )
                         )}
-                        {(type === ASSET_TYPE.FILES || type === ASSET_TYPE.CONTENTS || type === ASSET_TYPE.FOLDER) &&
-                         (
-                             name
-                            )}
-                        </h3>
-                    </SidePanel.Title>
-                </span>
+
+                        {(type === ASSET_TYPE.FILES || type ===
+                          ASSET_TYPE.CONTENTS || type ===
+                          ASSET_TYPE.FOLDER) && (
+                             <>
+                                 {name}
+                             </>
+                         )}
+                    </h3>
+                </SidePanel.Title>
             </SidePanel.Header>
         </>
     );

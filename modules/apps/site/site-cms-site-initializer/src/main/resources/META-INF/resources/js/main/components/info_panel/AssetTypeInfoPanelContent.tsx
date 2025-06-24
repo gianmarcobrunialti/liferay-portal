@@ -1,54 +1,45 @@
-import React, {useCallback, useEffect, useState} from 'react';
-import {AssetTypeInfoPanelContext} from "./context";
-import AssetTypeInfoPanelHeader from "./AssetTypeInfoPanelHeader";
+//@ts-ignore
 
-/*
-    - Context Provider
-        {
-            id: <assetId / Object Entry Id>,
-            externalReferenceCode: <asset ERC / Object Entry ERC>,
-            type: <asset Type>tab-pane active fade show
-            ...
-        }
-        - header
-            - asset type resolution
-                - tab
-
+/**
+ * SPDX-FileCopyrightText: (c) 2025 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-const AssetTypeInfoPanelContainer = ({
-                                         externalReferenceCode,
-                                         id,
-                                         type,
-                                     }) => {
-    const [objectEntry, setObjectEntry] = useState(null);
+import React, {
+    useContext,
+    useEffect,
+    useRef,
+    useState
+} from 'react';
+import {Button, SidePanel} from "@clayui/core";
+import {SidePanelContext} from "@clayui/core/lib/side-panel/context";
+import AssetTypeInfoPanelHeader from "./AssetTypeInfoPanelHeader";
+import AssetTypeInfoPanelBody from "./AssetTypeInfoPanelBody";
 
-    const fetchObjectEntry = useCallback(async () =>
-        fetch('...')
-            .then((objectEntry) => {
-                setObjectEntry(objectEntry);
-            })
-            .catch(() => {}), []);
+import {AssetTypeInfoPanelContext} from "./context";
+import {SAMPLE_ASSET_OBJECT} from "./mocks";
 
-    useEffect(() => {
-        /*
-        if (someCondition()) {
-            const objectEntryAPIResponse = await someAPICall();
+import '../../../../css/components/AssetTypeInfoPanel.scss';
+import {getBaseAssetInfo} from "./util";
 
-            setAssetERC(objectEntryAPIResponse.externalReferenceCode);
-        }
-         */
-    }, []);
+const AssetTypeInfoPanelContent = () => {
+    const [objectEntry, setObjectEntry] = useState(SAMPLE_ASSET_OBJECT);
+
+    const assetInfo = getBaseAssetInfo(objectEntry);
 
     return (
-        <AssetTypeInfoPanelContext.Provider value={{
-            externalReferenceCode: assetERC,
-            id: assetId,
-            type: assetType,
-        }}>
-            <AssetTypeInfoPanelHeader/>
-        </AssetTypeInfoPanelContext.Provider>
+        <>
+            <AssetTypeInfoPanelContext.Provider value={{
+                objectEntry,
+                ...assetInfo,
+            }}>
+                <AssetTypeInfoPanelHeader/>
+
+                <AssetTypeInfoPanelBody/>
+            </AssetTypeInfoPanelContext.Provider>
+        </>
     );
 };
 
-export default AssetTypeInfoPanelContainer;
+export default AssetTypeInfoPanelContent;
+

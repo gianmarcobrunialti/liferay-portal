@@ -1,5 +1,5 @@
-import DetailsTabContent from "./DetailsTabContent";
 import CategorizationTabContent from "./CategorizationTabContent";
+import DetailsTabContent from "./DetailsTabContent";
 import PerformanceTabContent from "./PerformanceTabContent";
 import VersionsTabContent from "./VersionsTabContent";
 

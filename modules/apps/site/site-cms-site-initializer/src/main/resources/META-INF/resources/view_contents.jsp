@@ -27,7 +27,3 @@ ViewContentsSectionDisplayContext viewContentsSectionDisplayContext = (ViewConte
 		style="fluid"
 	/>
 </div>
-
-<div>
-	<react:component module="{AssetTypeInfoPanelContainer} from site-cms-site-initializer" />
-</div>

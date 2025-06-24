@@ -4,14 +4,6 @@ import Tabs from "@clayui/tabs";
 import {TABS} from "./tabs_content";
 import {SidePanel} from "@clayui/core";
 
-const ASSET_TYPE = {
-    CONTENT: 'content',
-    EMPTY: 'empty',
-    FILES: 'files',
-    FOLDER: 'folder',
-    MULTIPLE: 'multiple',
-}
-
 const AssetTypeInfoPanelFilesView = () => {
     const {
         id,
@@ -25,10 +17,11 @@ const AssetTypeInfoPanelFilesView = () => {
         <>
             <Tabs
                 active={active}
-                onActiveChange={setActive}>
-                {Object.entries(TABS).map(([key, value]) => (
+                onActiveChange={setActive}
+            >
+                {Object.entries(TABS).map(([key, value], index) => (
                     <Tabs.Item
-                        key={key}
+                        key={`tab_${key}_${index}`}
                         innerProps={{
                             'aria-controls': `tabpanel-${value.id}`,
                         }}
@@ -37,11 +30,10 @@ const AssetTypeInfoPanelFilesView = () => {
                     </Tabs.Item>
                 ))}
             </Tabs>
+
             <Tabs.Content active={active} fade>
-                {Object.entries(TABS).map(([key, value]) => (
-                    <Tabs.TabPane
-                        key={key}
-                    >
+                {Object.entries(TABS).map(([key, value], index) => (
+                    <Tabs.TabPane key={`pane_${key}_${index}`}>
                         <SidePanel.Body>
                             <value.component/>
                         </SidePanel.Body>
