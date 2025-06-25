@@ -96,16 +96,6 @@ public class SkuOptionSerDes {
 			sb.append("\"");
 		}
 
-		if (skuOption.getRequired() != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"required\": ");
-
-			sb.append(skuOption.getRequired());
-		}
-
 		if (skuOption.getSkuId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -256,13 +246,6 @@ public class SkuOptionSerDes {
 			map.put("quantity", String.valueOf(skuOption.getQuantity()));
 		}
 
-		if (skuOption.getRequired() == null) {
-			map.put("required", null);
-		}
-		else {
-			map.put("required", String.valueOf(skuOption.getRequired()));
-		}
-
 		if (skuOption.getSkuId() == null) {
 			map.put("skuId", null);
 		}
@@ -356,9 +339,6 @@ public class SkuOptionSerDes {
 			else if (Objects.equals(jsonParserFieldName, "quantity")) {
 				return false;
 			}
-			else if (Objects.equals(jsonParserFieldName, "required")) {
-				return false;
-			}
 			else if (Objects.equals(jsonParserFieldName, "skuId")) {
 				return false;
 			}
@@ -413,11 +393,6 @@ public class SkuOptionSerDes {
 			else if (Objects.equals(jsonParserFieldName, "quantity")) {
 				if (jsonParserFieldValue != null) {
 					skuOption.setQuantity((String)jsonParserFieldValue);
-				}
-			}
-			else if (Objects.equals(jsonParserFieldName, "required")) {
-				if (jsonParserFieldValue != null) {
-					skuOption.setRequired((Boolean)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "skuId")) {
