@@ -299,7 +299,7 @@ export function filterOptions(jsonString) {
 		options = [];
 	}
 
-	return options.filter((option) => !!option.value.length);
+	return options.filter((option) => !!option.value.length && option.value.some((value) => !!value));
 }
 
 export function parseValue(value) {
