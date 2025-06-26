@@ -13,7 +13,7 @@ import Asterisk from './Asterisk';
 import {
 	getProductOptionName,
 	getSkuOptionsErrors,
-	initialSkuOptionsAtomState,
+	INITIAL_SKU_OPTIONS_ATOM_STATE,
 	isRequired,
 } from './utils';
 
@@ -132,7 +132,7 @@ const ProductOptionCheckboxMultiple = ({
 						miniCartErrors: [],
 						miniCartSkuOptions: [],
 					})
-				: setSkuOptionsAtomState(initialSkuOptionsAtomState);
+				: setSkuOptionsAtomState(INITIAL_SKU_OPTIONS_ATOM_STATE);
 
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);

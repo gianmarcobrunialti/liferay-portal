@@ -13,7 +13,7 @@ import Asterisk from './Asterisk';
 import {
 	getProductOptionName,
 	getSkuOptionsErrors,
-	initialSkuOptionsAtomState,
+	INITIAL_SKU_OPTIONS_ATOM_STATE,
 	isRequired,
 } from './utils';
 
@@ -97,7 +97,7 @@ const ProductOptionNumeric = ({
 						miniCartErrors: [],
 						miniCartSkuOptions: [],
 					})
-				: setSkuOptionsAtomState(initialSkuOptionsAtomState); // eslint-disable-next-line react-hooks/exhaustive-deps
+				: setSkuOptionsAtomState(INITIAL_SKU_OPTIONS_ATOM_STATE); // eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	const handleChange = ({target: {value}}) => {

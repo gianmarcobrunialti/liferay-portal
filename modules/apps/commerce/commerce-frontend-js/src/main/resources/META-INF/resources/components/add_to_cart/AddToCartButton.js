@@ -40,8 +40,8 @@ function AddToCartButton({
 	const isMounted = useIsMounted();
 
 	const buttonDisabled = useMemo(
-		() => skuOptionsAtomState.errors?.length || disabled,
-		[disabled, skuOptionsAtomState.errors]
+		() => (skuOptionsAtomState.errors?.length && skuOptionsAtomState.namespace === settings.namespace) || disabled,
+		[disabled, skuOptionsAtomState.errors, settings.namespace]
 	);
 
 	const handleClickAddToCart = useCallback(
@@ -133,7 +133,7 @@ function AddToCartButton({
 				event.preventDefault();
 
 				const hasInvalidQuantities = cpInstances.some(
-					({validQuantity}) => !validQuantity
+					({validQuantity = true}) => !validQuantity
 				);
 
 				if (hasInvalidQuantities) {
