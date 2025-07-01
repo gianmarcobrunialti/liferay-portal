@@ -1,54 +1,59 @@
-import React, {useCallback, useEffect, useState} from 'react';
-import {AssetTypeInfoPanelContext} from "./context";
-import AssetTypeInfoPanelHeader from "./AssetTypeInfoPanelHeader";
-
-/*
-    - Context Provider
-        {
-            id: <assetId / Object Entry Id>,
-            externalReferenceCode: <asset ERC / Object Entry ERC>,
-            type: <asset Type>tab-pane active fade show
-            ...
-        }
-        - header
-            - asset type resolution
-                - tab
-
+/**
+ * SPDX-FileCopyrightText: (c) 2025 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-const AssetTypeInfoPanelContainer = ({
-                                         externalReferenceCode,
-                                         id,
-                                         type,
-                                     }) => {
-    const [objectEntry, setObjectEntry] = useState(null);
+import React, {useEffect, useState} from 'react';
+import AssetTypeInfoPanelHeader from "./AssetTypeInfoPanelHeader";
+import AssetTypeInfoPanelBody from "./AssetTypeInfoPanelBody";
+import {AssetTypeInfoPanelContext, IAssetTypeInfoPanelContext} from "./context";
+import {
+    getBaseAssetInformation,
+    IAssetInformation,
+    IAssetObjectEntry
+} from "./util";
 
-    const fetchObjectEntry = useCallback(async () =>
-        fetch('...')
-            .then((objectEntry) => {
-                setObjectEntry(objectEntry);
-            })
-            .catch(() => {}), []);
+import '../../../../css/components/AssetTypeInfoPanel.scss';
+import {EVENTS} from "./util/constants";
+import {error} from 'console';
+
+const AssetTypeInfoPanelContent = () => {
+    const [assetInfo, setAssetInfo] = useState({} as IAssetInformation);
+    const [objectEntries, setObjectEntries] = useState([] as IAssetObjectEntry[]);
 
     useEffect(() => {
-        /*
-        if (someCondition()) {
-            const objectEntryAPIResponse = await someAPICall();
+        const handler = ({items}: {items: IAssetObjectEntry[]}): void => {
+            error('======> handler called');
 
-            setAssetERC(objectEntryAPIResponse.externalReferenceCode);
+            setObjectEntries(items as IAssetObjectEntry[]);
+        };
+
+        Liferay.on(EVENTS.ASSET_DATA, handler);
+
+        return () => {
+            Liferay.detach(EVENTS.ASSET_DATA, handler);
         }
-         */
-    }, []);
+    }, [setObjectEntries]);
+
+    useEffect(() => {
+        if (objectEntries.length === 1) {
+            setAssetInfo(getBaseAssetInformation(objectEntries[0]));
+        }
+    }, [objectEntries]);
 
     return (
-        <AssetTypeInfoPanelContext.Provider value={{
-            externalReferenceCode: assetERC,
-            id: assetId,
-            type: assetType,
-        }}>
-            <AssetTypeInfoPanelHeader/>
-        </AssetTypeInfoPanelContext.Provider>
+        <>
+            <AssetTypeInfoPanelContext.Provider value={{
+                objectEntries,
+                ...assetInfo,
+            } as IAssetTypeInfoPanelContext}>
+                <AssetTypeInfoPanelHeader/>
+
+                <AssetTypeInfoPanelBody/>
+            </AssetTypeInfoPanelContext.Provider>
+        </>
     );
 };
 
-export default AssetTypeInfoPanelContainer;
+export default AssetTypeInfoPanelContent;
+

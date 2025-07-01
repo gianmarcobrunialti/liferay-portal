@@ -12,6 +12,8 @@ import NameRenderer from './cell_renderers/NameRenderer';
 import SpaceRenderer from './cell_renderers/SpaceRenderer';
 import TypeRenderer from './cell_renderers/TypeRenderer';
 import addOnClickToCreationMenuItems from './utils/addOnClickToCreationMenuItems';
+import AssetTypeInfoPanel from '../components/info_panel/AssetTypeInfoPanelContent';
+import {EVENTS} from "../components/info_panel/util/constants";
 
 const ACTIONS = {
 	createAsset: createAssetAction,
@@ -60,6 +62,7 @@ export default function AllFDSPropsTransformer({
 				} as IInternalRenderer,
 			],
 		},
+		infoPanelComponent: AssetTypeInfoPanel,
 		itemsActions: itemsActions.map((action) => {
 			if (action?.data?.id === 'download') {
 				return {
@@ -71,5 +74,13 @@ export default function AllFDSPropsTransformer({
 
 			return action;
 		}),
+		onActionDropdownItemClick: ({action, itemData}: {action: any, itemData: []}) => {
+			if (action?.data?.id === 'show-details') {
+				Liferay.fire(EVENTS.ASSET_DATA, {items: [{...itemData}]});
+			}
+		},
+		onSelectedItemsChange: (selectedItems: any[]) => {
+			Liferay.fire(EVENTS.ASSET_DATA, {items: selectedItems});
+		},
 	};
 }

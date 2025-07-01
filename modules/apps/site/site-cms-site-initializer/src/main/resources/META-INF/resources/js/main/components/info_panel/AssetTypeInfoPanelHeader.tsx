@@ -1,61 +1,59 @@
 import React, {useContext} from 'react';
-import {AssetTypeInfoPanelContext} from "./context";
-import {SidePanel} from "@clayui/core";
+import classnames from 'classnames';
+import {AssetTypeInfoPanelContext, IAssetTypeInfoPanelContext} from "./context";
 import ClayIcon from "@clayui/icon";
 import {sub} from "frontend-js-web";
+import {ASSET_TYPE} from "./util/constants";
 
-const ASSET_TYPE = {
-    CONTENTS: 'contents',
-    EMPTY: 'empty',
-    FILES: 'files',
-    FOLDER: 'folder',
-    MULTIPLE: 'multiple',
+const renderTitle = ({
+    objectEntries,
+    title,
+    title_i18n,
+    type
+}: IAssetTypeInfoPanelContext) => {
+    if (!objectEntries?.length) {
+        return <>{Liferay.Language.get('no-assets-selected')}</>
+    }
+    else if (objectEntries?.length > 1) {
+        return <>{
+            sub(
+                Liferay.Language.get('x-assets-selected'),
+                objectEntries.length
+            )
+        }</>;
+    }
+    else if (type === ASSET_TYPE.FILES || type === ASSET_TYPE.CONTENTS || type === ASSET_TYPE.FOLDER) {
+        return <>{!title_i18n
+            ? title
+            : title_i18n[Liferay.ThemeDisplay.getLanguageId()] || title}</>
+    }
+
+    return null;
 }
 
 const AssetTypeInfoPanelHeader = () => {
-    const {
-        externalReferenceCode,
-        id,
-        items,
-        name,
-        type,
-    } = useContext(AssetTypeInfoPanelContext);
+    const context = useContext(AssetTypeInfoPanelContext);
 
     return (
         <>
-            <SidePanel.Header>
-                <span className="text-5">
-                    {type !== ASSET_TYPE.EMPTY && (
+            <div className="sidebar-header">
+                <div className="component-title">
+                    {context.objectEntries?.length === 1 && (
                         <ClayIcon
-                            className="inline-item inline-item-before"
-                            symbol={type === ASSET_TYPE.CONTENTS ? "forms" :
-                                type === ASSET_TYPE.FILES ? "document-image" :
-                                    type === ASSET_TYPE.FOLDER ? "folder" :
-                                        "check-square"}
+                            className={classnames(
+                                "asset-icon inline-item inline-item-before",
+                                {'asset-icon-files': context.type === ASSET_TYPE.FILES}
+                            )}
+                            symbol={context.icon || ''}
                         >
                         </ClayIcon>
                     )}
-                    <SidePanel.Title
-                        className="inline-item inline-item-after"
-                    >
-                        <h3>
-                        {type === ASSET_TYPE.EMPTY && (
-                            Liferay.Language.get('no-assets-selected')
-                        )}
-                        {type === ASSET_TYPE.MULTIPLE && (
-                            sub(
-                                Liferay.Language.get('x-assets-selected'),
-                                [items.length]
-                            )
-                        )}
-                        {(type === ASSET_TYPE.FILES || type === ASSET_TYPE.CONTENTS || type === ASSET_TYPE.FOLDER) &&
-                         (
-                             name
-                            )}
-                        </h3>
-                    </SidePanel.Title>
-                </span>
-            </SidePanel.Header>
+
+                    <h3 className="asset-title inline-item inline-item-after">
+                        {renderTitle(context)}
+                    </h3>
+                </div>
+            </div>
         </>
     );
 };

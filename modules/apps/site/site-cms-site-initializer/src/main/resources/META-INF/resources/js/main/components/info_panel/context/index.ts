@@ -1,21 +1,18 @@
 import React from 'react';
+import {IAssetInformation, IAssetObjectEntry} from "../util";
 
-interface IAssetTypeSidePanelContext {
-    externalReferenceCode?: string | null;
-    id?: number | null;
-    items?: any[] | [];
-    name?: string | null;
-    objectEntry?: any;
-    type?: string | null;
+export interface IAssetTypeInfoPanelContext extends IAssetInformation {
+    objectEntries?: IAssetObjectEntry[];
 }
 
-const BASE_CONTEXT: IAssetTypeSidePanelContext = {
+const BASE_CONTEXT: IAssetTypeInfoPanelContext = {
     externalReferenceCode: null,
+    icon: null,
     id: null,
-    items: [],
-    name: null,
-    objectEntry: null,
-    type: 'files',
+    objectEntries: [],
+    title: null,
+    title_i18n: null,
+    type: null,
 };
 
 export const AssetTypeInfoPanelContext = React.createContext(BASE_CONTEXT);

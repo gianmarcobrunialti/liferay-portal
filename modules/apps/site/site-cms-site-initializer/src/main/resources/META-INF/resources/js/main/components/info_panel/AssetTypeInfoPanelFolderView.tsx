@@ -1,17 +1,10 @@
-import React, {useContext, useState} from 'react';
-import {AssetTypeInfoPanelContext} from "./context";
+import React, {useState} from 'react';
 import Tabs from "@clayui/tabs";
 import DetailsTabContent from "./tabs_content/DetailsTabContent";
 import PerformanceTabContent from "./tabs_content/PerformanceTabContent";
 import {TABS} from "./tabs_content";
 
 const AssetTypeInfoPanelFilesView = () => {
-    const {
-        id,
-        externalReferenceCode,
-        type,
-    } = useContext(AssetTypeInfoPanelContext);
-
     const [active, setActive] = useState(0);
 
     return (

@@ -1,36 +1,23 @@
 import React, {useContext} from 'react';
-import {AssetTypeInfoPanelContext} from "./context";
+import {AssetTypeInfoPanelContext, IAssetTypeInfoPanelContext} from "./context";
 import AssetTypeInfoPanelFilesView from "./AssetTypeInfoPanelFilesView";
-import AssetTypeInfoPanelEmptyView from "./AssetTypeInfoPanelEmptyView";
+import AssetTypeInfoPanelDefaultView from "./AssetTypeInfoPanelDefaultView";
 import AssetTypeInfoPanelFolderView from "./AssetTypeInfoPanelFolderView";
-
-const ASSET_TYPE = {
-    CONTENT: 'content',
-    EMPTY: 'empty',
-    FILES: 'files',
-    FOLDER: 'folder',
-    MULTIPLE: 'multiple',
-}
+import {ASSET_TYPE} from "./util/constants";
 
 const AssetTypeInfoPanelBody = () => {
     const {
-        id,
-        externalReferenceCode,
+        objectEntries = [],
         type,
-    } = useContext(AssetTypeInfoPanelContext);
+    }: IAssetTypeInfoPanelContext = useContext(AssetTypeInfoPanelContext);
 
     return (
         <>
-            {type === ASSET_TYPE.EMPTY
-             || type === ASSET_TYPE.MULTIPLE ?
-                <AssetTypeInfoPanelEmptyView/>
-                :
-                type === ASSET_TYPE.FILES
-                || type === ASSET_TYPE.CONTENT
-                    ?
-                    <AssetTypeInfoPanelFilesView/>
-                    :
-                    <AssetTypeInfoPanelFolderView/>
+            {(objectEntries.length > 1 || !objectEntries.length)
+                ? <AssetTypeInfoPanelDefaultView/>
+                : (type === ASSET_TYPE.FOLDER)
+                    ? <AssetTypeInfoPanelFolderView/>
+                    : <AssetTypeInfoPanelFilesView />
             }
         </>
     );
