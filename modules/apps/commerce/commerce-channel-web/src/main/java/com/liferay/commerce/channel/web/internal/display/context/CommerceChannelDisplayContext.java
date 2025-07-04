@@ -562,6 +562,19 @@ public class CommerceChannelDisplayContext
 		return commerceOrderConfiguration.orderSelectionDisabled();
 	}
 
+	public boolean undoCartItemDeletionDisabled() throws PortalException {
+		CommerceChannel commerceChannel = getCommerceChannel();
+
+		CommerceOrderConfiguration commerceOrderConfiguration =
+			_configurationProvider.getConfiguration(
+				CommerceOrderConfiguration.class,
+				new GroupServiceSettingsLocator(
+					commerceChannel.getGroupId(),
+					CommerceConstants.SERVICE_NAME_COMMERCE_ORDER));
+
+		return commerceOrderConfiguration.undoCartItemDeletionDisabled();
+	}
+
 	public boolean isQuickCheckoutEnabled() throws PortalException {
 		CommerceChannel commerceChannel = getCommerceChannel();
 
@@ -606,6 +619,19 @@ public class CommerceChannelDisplayContext
 					CommerceConstants.SERVICE_NAME_COMMERCE_ORDER));
 
 		return commerceOrderCheckoutConfiguration.showSeparateOrderItems();
+	}
+
+	public boolean isSlowConnectionOrderFlowEnabled() throws PortalException {
+		CommerceChannel commerceChannel = getCommerceChannel();
+
+		CommerceOrderConfiguration commerceOrderConfiguration =
+			_configurationProvider.getConfiguration(
+				CommerceOrderConfiguration.class,
+				new GroupServiceSettingsLocator(
+					commerceChannel.getGroupId(),
+					CommerceConstants.SERVICE_NAME_COMMERCE_ORDER));
+
+		return commerceOrderConfiguration.slowConnectionOrderFlowEnabled();
 	}
 
 	private CommerceAccountGroupServiceConfiguration

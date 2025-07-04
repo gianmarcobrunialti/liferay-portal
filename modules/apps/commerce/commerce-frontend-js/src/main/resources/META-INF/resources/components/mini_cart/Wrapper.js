@@ -9,8 +9,15 @@ import MiniCartContext from './MiniCartContext';
 import {hasPriceOnApplication} from './util/index';
 
 function Wrapper() {
-	const {CartViews, cartState, editedItem, isOpen, requestQuoteEnabled} =
-		useContext(MiniCartContext);
+	const {
+		CartViews,
+		cartState,
+		editedItem,
+		isOpen,
+		isUpdating,
+		requestQuoteEnabled
+	} = useContext(MiniCartContext);
+
 	const {cartItems = []} = cartState;
 	const cartHasPriceOnApplicationItems = hasPriceOnApplication(cartItems);
 
@@ -37,13 +44,11 @@ function Wrapper() {
 					</div>
 
 					<CartViews.OrderButton
-						disabled={
-							!cartItems.length || cartHasPriceOnApplicationItems
-						}
+						disabled={!cartItems.length || cartHasPriceOnApplicationItems || isUpdating}
 					/>
 
 					{(requestQuoteEnabled || cartHasPriceOnApplicationItems) &&
-						!!cartItems.length && <CartViews.RequestQuoteButton />}
+						!!cartItems.length && <CartViews.RequestQuoteButton disabled={isUpdating} />}
 				</>
 			)}
 		</div>

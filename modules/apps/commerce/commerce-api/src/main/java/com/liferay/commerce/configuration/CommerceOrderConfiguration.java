@@ -41,4 +41,14 @@ public interface CommerceOrderConfiguration {
 	)
 	public boolean orderSelectionDisabled();
 
+	@Meta.AD(
+		deflt = "false", name = "slow-connection-order-flow-enabled", required = false
+	)
+	public boolean slowConnectionOrderFlowEnabled();
+
+	@Meta.AD(
+		deflt = "false", name = "can-undo-cart-item-deletion", required = false
+	)
+	public boolean undoCartItemDeletionDisabled();
+
 }

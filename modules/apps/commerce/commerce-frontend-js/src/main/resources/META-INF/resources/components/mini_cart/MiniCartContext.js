@@ -16,6 +16,7 @@ export const DEFAULT_MINI_CART_CONTEXT_VALUE = {
 	CartViews: {},
 	accountId: 0,
 	actionURLs: {},
+	canUndoCartItemDeletion: true,
 	cartState: {},
 	closeCart: () => {},
 	displayDiscountLevels: false,
