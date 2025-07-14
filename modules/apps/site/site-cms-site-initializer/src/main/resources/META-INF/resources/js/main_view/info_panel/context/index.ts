@@ -12,7 +12,7 @@ import {
 
 export interface IAssetTypeInfoPanelContext
 	extends ISearchAssetTypeInformation {
-	objectEntries?: ISearchAssetObjectEntry[];
+	objectEntries: ISearchAssetObjectEntry[] | [];
 }
 
 const BASE_CONTEXT: IAssetTypeInfoPanelContext = {
@@ -21,7 +21,7 @@ const BASE_CONTEXT: IAssetTypeInfoPanelContext = {
 	id: null,
 	objectEntries: [],
 	title: null,
-	title_i18n: null,
+	title_i18n: {},
 	type: null,
 };
 

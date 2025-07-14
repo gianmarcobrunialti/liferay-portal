@@ -8,7 +8,7 @@ import Label from '@clayui/label';
 import {dateUtils, fetch, sub} from 'frontend-js-web';
 import React, {useCallback, useContext, useEffect, useState} from 'react';
 
-import {IAssetObjectEntry} from '../../../../structure_builder/types/AssetType';
+import {IAssetObjectEntry} from '../../../structure_builder/types/AssetType';
 import {
 	AssetTypeInfoPanelContext,
 	IAssetTypeInfoPanelContext,
@@ -22,9 +22,9 @@ const VersionsTabContent = () => {
 	);
 
 	const [versionedObjectEntries, setVersionedObjectEntries] = useState<{
-		items: IAssetObjectEntry[];
 		count: number;
-	}>({items: [], count: 0});
+		items: IAssetObjectEntry[];
+	}>({count: 0, items: []});
 
 	const getVersionedObjectEntries = useCallback(async () => {
 		const [
@@ -36,13 +36,13 @@ const VersionsTabContent = () => {
 		] = objectEntries;
 
 		const response = await fetch(
-			`${href}?page=1&page_size=${MAX_LIST_SIZE}`
+			`${href}?page=1&pageSize=${MAX_LIST_SIZE}`
 		);
 
 		if (response.ok) {
 			const {items, totalCount} = await response.json();
 
-			setVersionedObjectEntries({items, count: totalCount});
+			setVersionedObjectEntries({count: totalCount, items});
 		}
 	}, [objectEntries, setVersionedObjectEntries]);
 

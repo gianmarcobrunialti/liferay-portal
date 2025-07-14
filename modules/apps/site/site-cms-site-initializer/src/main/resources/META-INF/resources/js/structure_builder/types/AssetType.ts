@@ -13,19 +13,24 @@ export interface IAssetFile {
 		label: string;
 	};
 	name: string;
+	previewURL: string;
 	thumbnailURL: string;
 }
 
 export interface IAssetObjectEntry {
+    actions: any;
 	creator: any;
 	dateCreated: string;
 	dateModified: string;
 	externalReferenceCode: string;
+    expirationDate: string;
 	file?: IAssetFile;
+    friendlyUrlPath: string;
 	id: number;
 	keywords: any[];
 	objectEntryFolderExternalReferenceCode: string;
 	objectEntryFolderId: number;
+    reviewDate: string;
 	scopeId: number;
 	scopeKey: string;
 	status: {
@@ -48,7 +53,7 @@ export interface ISearchAssetObjectEntry {
 	actions: any;
 	dateCreated: string;
 	dateModified: string;
-	embedded: Partial<IAssetObjectEntry>;
+	embedded: IAssetObjectEntry;
 	entryClassName: string;
 	score: number;
 }
@@ -60,7 +65,7 @@ export interface ISearchAssetTypeInformation {
 	title?: string | null;
 	title_i18n?: {
 		[key: string]: string;
-	} | null;
+	} | {};
 	type?: string | null;
 }
 
