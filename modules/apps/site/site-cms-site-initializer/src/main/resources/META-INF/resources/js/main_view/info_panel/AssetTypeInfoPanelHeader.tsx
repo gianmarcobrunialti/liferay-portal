@@ -57,13 +57,10 @@ const AssetTypeInfoPanelHeader = () => {
 				<span className="text-truncate-inline">
 					{context.objectEntries?.length === 1 && (
 						<ClayIcon
-							className={classnames(
-								'asset-icon inline-item inline-item-before',
-								{
-									'asset-icon-files':
-										context.type === ASSET_TYPE.FILES,
-								}
-							)}
+							className={classnames('asset-icon', {
+								'asset-icon-files':
+									context.type === ASSET_TYPE.FILES,
+							})}
 							symbol={context.icon || ''}
 						></ClayIcon>
 					)}
