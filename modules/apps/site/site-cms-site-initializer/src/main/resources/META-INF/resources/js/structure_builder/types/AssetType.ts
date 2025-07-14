@@ -38,6 +38,8 @@ export interface IAssetObjectEntry {
 		label: string;
 		label_i18n: string;
 	};
+    taxonomyCategoryBriefs: any[];
+    taxonomyCategoryIds: number[];
 	systemProperties: IAssetVersion;
 	title: string;
 	title_i18n: any;
