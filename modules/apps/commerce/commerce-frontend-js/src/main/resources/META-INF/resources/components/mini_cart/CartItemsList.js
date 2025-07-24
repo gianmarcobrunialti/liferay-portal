@@ -5,7 +5,13 @@
 
 import ClayAlert from '@clayui/alert';
 import ClayIcon from '@clayui/icon';
-import React, {useCallback, useContext, useEffect, useState} from 'react';
+import React, {
+	useCallback,
+	useContext,
+	useEffect,
+	useRef,
+	useState
+} from 'react';
 
 import CartQuickAdd from './CartQuickAdd';
 import MiniCartContext from './MiniCartContext';
@@ -70,6 +76,8 @@ export default function CartItemsList({showPriceOnApplicationInfo = false}) {
 		});
 	}, [setPages]);
 
+	const cartItemsListRef = useRef(null);
+
 	useEffect(() => {
 		updateReplacedSKUList();
 	}, [updateReplacedSKUList]);
@@ -109,11 +117,15 @@ export default function CartItemsList({showPriceOnApplicationInfo = false}) {
 
 			{cartItems.length ? (
 				<>
-						<div className="mini-cart-cart-items">
-							<InfiniteScroller
-								onBottomTouched={() => loadItems(pages.page)}
-								scrollCompleted={pages.page >= pages.lastPage}
-							>
+					<div className="mini-cart-cart-items"
+						 ref={cartItemsListRef}
+					>
+						<InfiniteScroller
+							maxHeight="100%"
+							onBottomTouched={() => loadItems(pages.page)}
+							scrollCompleted={pages.page >= pages.lastPage}
+							scrollingElementRef={cartItemsListRef}
+						>
 							{cartItems.map((currentCartItem, index) => {
 								const updateCartItem = (callback) => {
 									const updatedCartItem =
@@ -139,7 +151,7 @@ export default function CartItemsList({showPriceOnApplicationInfo = false}) {
 								);
 							})}
 						</InfiniteScroller>
-						</div>
+					</div>
 
 					<CartViews.Summary
 						dataMapper={summaryDataMapper}

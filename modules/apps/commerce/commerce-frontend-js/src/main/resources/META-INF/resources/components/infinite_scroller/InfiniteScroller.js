@@ -5,7 +5,8 @@
 
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import PropTypes from 'prop-types';
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {debounce} from "frontend-js-web";
 
 function InfiniteScroller({
 	children,
@@ -13,11 +14,17 @@ function InfiniteScroller({
 	maxHeight,
 	onBottomTouched,
 	scrollCompleted,
+	scrollingElementRef = useRef(null),
 }) {
 	const [scrollingAreaRendered, setScrollingAreaRendered] = useState(false);
 	const infiniteLoaderRef = useRef(null);
 	const [infiniteLoaderRendered, setInfiniteLoaderRendered] = useState(false);
-	const scrollingAreaRef = useRef(null);
+	const scrollingAreaRef = scrollingElementRef;
+
+	const debounceOnBottomTouched = useMemo(
+		() => debounce(async () => onBottomTouched(), 500),
+		[onBottomTouched]
+	);
 
 	const setScrollingArea = useCallback((node) => {
 		scrollingAreaRef.current = node;
@@ -46,12 +53,12 @@ function InfiniteScroller({
 
 		const observer = new IntersectionObserver((entries) => {
 			if (entries[0].intersectionRatio === 1) {
-				onBottomTouched();
+				debounceOnBottomTouched();
 			}
 		}, options);
 
 		observer.observe(infiniteLoaderRef.current);
-	}, [onBottomTouched]);
+	}, [debounceOnBottomTouched]);
 
 	useEffect(() => {
 		if (
