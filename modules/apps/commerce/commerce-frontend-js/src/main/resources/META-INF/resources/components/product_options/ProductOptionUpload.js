@@ -114,7 +114,7 @@ const ProductOptionUpload = ({
 					value: ['{}'],
 				},
 			],
-		}))
+		}));
 
 		Liferay.componentReady('ProductOptions' + cpDefinitionId).then(
 			(DDMFormInstance) => {
