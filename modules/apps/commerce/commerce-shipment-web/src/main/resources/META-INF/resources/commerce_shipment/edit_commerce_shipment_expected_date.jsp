@@ -14,19 +14,12 @@ CommerceShipment commerceShipment = commerceShipmentDisplayContext.getCommerceSh
 
 Date expectedDate = commerceShipment.getExpectedDate();
 
-int expectedDay = 0;
-int expectedMonth = -1;
-int expectedYear = 0;
 String dateString = null;
 
 Format format = FastDateFormatFactoryUtil.getSimpleDateFormat("yyyy-MM-dd", locale);
 
 if (expectedDate != null) {
 	Calendar calendar = CalendarFactoryUtil.getCalendar(expectedDate.getTime());
-
-	expectedDay = calendar.get(Calendar.DAY_OF_MONTH);
-	expectedMonth = calendar.get(Calendar.MONTH);
-	expectedYear = calendar.get(Calendar.YEAR);
 
 	dateString = format.format(calendar.getTime());
 }

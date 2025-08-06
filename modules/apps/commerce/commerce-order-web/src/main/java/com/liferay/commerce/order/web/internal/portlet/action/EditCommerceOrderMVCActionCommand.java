@@ -50,7 +50,11 @@ import jakarta.portlet.PortletRequest;
 
 import java.io.IOException;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -591,7 +595,7 @@ public class EditCommerceOrderMVCActionCommand extends BaseMVCActionCommand {
 	}
 
 	private void _updateRequestedDeliveryDate(ActionRequest actionRequest)
-		throws PortalException {
+		throws PortalException, ParseException {
 
 		long commerceOrderId = ParamUtil.getLong(
 			actionRequest, "commerceOrderId");
@@ -599,31 +603,25 @@ public class EditCommerceOrderMVCActionCommand extends BaseMVCActionCommand {
 		CommerceOrder commerceOrder = _commerceOrderService.getCommerceOrder(
 			commerceOrderId);
 
-		int requestedDeliveryDateMonth = ParamUtil.getInteger(
-			actionRequest, "requestedDeliveryDateMonth");
-		int requestedDeliveryDateDay = ParamUtil.getInteger(
-			actionRequest, "requestedDeliveryDateDay");
-		int requestedDeliveryDateYear = ParamUtil.getInteger(
-			actionRequest, "requestedDeliveryDateYear");
-		int requestedDeliveryDateHour = ParamUtil.getInteger(
-			actionRequest, "requestedDeliveryDateHour");
-		int requestedDeliveryDateMinute = ParamUtil.getInteger(
-			actionRequest, "requestedDeliveryDateMinute");
-		int requestedDeliveryDateAmPm = ParamUtil.getInteger(
-			actionRequest, "requestedDeliveryDateAmPm");
+		String expectedDeliveryDate = ParamUtil.getString(
+			actionRequest, "requestedDeliveryDate");
 
-		if (requestedDeliveryDateAmPm == Calendar.PM) {
-			requestedDeliveryDateHour += 12;
-		}
+		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+
+		Date startDate = dateFormat.parse(expectedDeliveryDate);
+
+		Calendar calendar = Calendar.getInstance();
+
+		calendar.setTime(startDate);
 
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			CommerceOrder.class.getName(), actionRequest);
 
 		_commerceOrderService.updateInfo(
 			commerceOrder.getCommerceOrderId(), commerceOrder.getPrintedNote(),
-			requestedDeliveryDateMonth, requestedDeliveryDateDay,
-			requestedDeliveryDateYear, requestedDeliveryDateHour,
-			requestedDeliveryDateMinute, serviceContext);
+			calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH),
+			calendar.get(Calendar.YEAR), calendar.get(Calendar.HOUR_OF_DAY),
+			calendar.get(Calendar.MINUTE), serviceContext);
 	}
 
 	private void _updateShippingAddress(ActionRequest actionRequest)
