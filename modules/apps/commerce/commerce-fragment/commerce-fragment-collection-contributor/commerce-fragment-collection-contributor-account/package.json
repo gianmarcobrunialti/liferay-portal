@@ -1,0 +1,15 @@
+{
+	"dependencies": {
+		"frontend-js-components-web": "*",
+		"frontend-js-web": "*"
+	},
+	"private": true,
+	"main": "js/index.js",
+	"name": "@liferay/commerce-fragment-collection-contributor-account",
+	"scripts": {
+		"build": "node-scripts build",
+		"checkFormat": "node-scripts format --check",
+		"format": "node-scripts format"
+	},
+	"version": "1.0.4"
+}
