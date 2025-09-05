@@ -97,6 +97,7 @@ page import="com.liferay.portal.security.auth.ScreenNameValidatorFactory" %><%@
 page import="com.liferay.portal.util.PropsValues" %>
 
 <%@ page import="java.text.Format" %>
+<%@ page import="com.liferay.portal.kernel.util.HashMapBuilder" %>
 
 <%@ page import="java.util.Calendar" %><%@
 page import="java.util.Date" %><%@

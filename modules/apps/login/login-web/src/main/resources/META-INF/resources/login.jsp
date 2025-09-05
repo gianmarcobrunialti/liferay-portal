@@ -180,61 +180,23 @@
 			<%@ include file="/navigation.jspf" %>
 		</div>
 
-		<aui:script position="inline" sandbox="<%= true %>">
-			var form = document.getElementById('<portlet:namespace /><%= formName %>');
-
-			form.action = '';
-
-			if (form) {
-				form.addEventListener('submit', (event) => {
-					event.preventDefault();
-
-					<c:if test="<%= PropsValues.SESSION_ENABLE_PERSISTENT_COOKIES && PropsValues.SESSION_TEST_COOKIE_SUPPORT %>">
-						if (!navigator.cookieEnabled) {
-							document
-								.getElementById('<portlet:namespace />cookieDisabled')
-								.classList.remove('hide');
-
-							return;
-						}
-					</c:if>
-
-					<c:if test="<%= Validator.isNotNull(redirect) %>">
-						var redirect = form.querySelector('#<portlet:namespace />redirect');
-
-						if (redirect) {
-							var redirectVal = redirect.getAttribute('value');
-
-							redirect.setAttribute('value', redirectVal + window.location.hash);
-						}
-					</c:if>
-
-					form.action = '<%= loginURL %>';
-
-					submitForm(form);
-				});
-
-				var password = form.querySelector('#<portlet:namespace />password');
-
-				if (password) {
-					password.addEventListener('keypress', (event) => {
-						Liferay.Util.showCapsLock(
-							event,
-							'<portlet:namespace />passwordCapsLockSpan'
-						);
-					});
-				}
-			}
-			window.onload = function () {
-				const signInButton = document.getElementsByClassName(
-					'btn disabled btn-primary'
-				)[0];
-
-				if (signInButton) {
-					signInButton.classList.remove('disabled');
-					signInButton.disabled = false;
-				}
-			};
-		</aui:script>
+		<liferay-frontend:component
+			context="<%=
+			HashMapBuilder.<String, Object>put(
+				"formName", formName
+			).put(
+				"isEnablePersistentCookies", PropsValues.SESSION_ENABLE_PERSISTENT_COOKIES
+			).put(
+				"isSessionCookieSupport", PropsValues.SESSION_TEST_COOKIE_SUPPORT
+			).put(
+				"loginURL", loginURL
+			).put(
+				"namespace", liferayPortletResponse.getNamespace()
+			).put(
+				"redirect", redirect
+			).build()
+			%>"
+			module="{submitHandler} from login-web"
+		/>
 	</c:otherwise>
 </c:choose>
