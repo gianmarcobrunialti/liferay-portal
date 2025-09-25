@@ -13,6 +13,7 @@ export class DataSetPage {
 		container: Locator;
 		headRow: Locator;
 	};
+	readonly selectAllLink: Locator;
 
 	constructor(page: Page) {
 		this.activeViewSelector = page.getByLabel('Show View Options');
@@ -25,6 +26,10 @@ export class DataSetPage {
 		};
 
 		this.page = page;
+		this.selectAllLink = page.getByRole('link', {
+			exact: true,
+			name: 'Select All',
+		});
 	}
 
 	getRow(filter: string) {
