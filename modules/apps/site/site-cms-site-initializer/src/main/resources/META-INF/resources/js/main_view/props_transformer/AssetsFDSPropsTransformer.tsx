@@ -273,7 +273,6 @@ export default function AssetsFDSPropsTransformer({
 		}) => {
 			if (action?.data?.id === 'default-permissions') {
 				defaultPermissionsBulkAction({
-					apiURL: otherProps.apiURL,
 					className: OBJECT_ENTRY_FOLDER_CLASS_NAME,
 					defaultPermissionAdditionalProps:
 						additionalProps.defaultPermissionAdditionalProps || {},
@@ -282,7 +281,6 @@ export default function AssetsFDSPropsTransformer({
 			}
 			else if (action?.data?.id === 'delete') {
 				deleteAssetEntriesBulkAction({
-					apiURL: otherProps.apiURL,
 					selectedData,
 				});
 			}
@@ -295,7 +293,6 @@ export default function AssetsFDSPropsTransformer({
 			}
 			else if (action?.data?.id === 'permissions') {
 				permissionsBulkAction({
-					apiURL: otherProps.apiURL,
 					className: OBJECT_ENTRY_FOLDER_CLASS_NAME,
 					defaultPermissionAdditionalProps:
 						additionalProps.defaultPermissionAdditionalProps || {},

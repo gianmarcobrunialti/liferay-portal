@@ -19,8 +19,12 @@ const OBJECT_ENTRY_FOLDER_CLASS_NAME =
 	'com.liferay.object.model.ObjectEntryFolder';
 
 export function composeCreateTaskURL(
-	apiURL: string,
-	{filters = [], searchQuery = '', selectAll = false}: IBulkActionFDSData,
+	{
+		apiURL = '',
+		filters = [],
+		searchQuery = '',
+		selectAll = false,
+	}: IBulkActionFDSData,
 	useDownloadURL: boolean = false
 ): string {
 	const url: string = useDownloadURL

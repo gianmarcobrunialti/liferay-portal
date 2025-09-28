@@ -38,31 +38,30 @@ export default function DefaultPermissionModalContent({
 	const [loading, setLoading] = useState(false);
 	const [propagate, setPropagate] = useState(false);
 
-	const saveHandler = useCallback(
-		async (event: any) => {
-			event.preventDefault();
+    const saveHandler = useCallback(
+        async (event: any) => {
+            event.preventDefault();
 
-			setLoading(true);
+            setLoading(true);
 
-			try {
-				if (!currentObjectEntry) {
-					throw new Error();
-				}
+            try {
+                if (!currentObjectEntry) {
+                    throw new Error();
+                }
 
-				const response =
-					await CMSDefaultPermissionService.updateObjectEntry({
-						defaultPermissions: JSON.stringify(currentValues),
-						externalReferenceCode:
-							currentObjectEntry.externalReferenceCode,
-					});
+                const response =
+                    await CMSDefaultPermissionService.updateObjectEntry({
+                        defaultPermissions: JSON.stringify(currentValues),
+                        externalReferenceCode:
+                        currentObjectEntry.externalReferenceCode,
+                    });
 
-				if (response.error) {
-					throw new Error();
-				}
+                if (response.error) {
+                    throw new Error();
+                }
 
 				if (propagate) {
 					triggerAssetBulkAction({
-						apiURL,
 						keyValues: {
 							defaultPermissions: JSON.stringify(currentValues),
 							depotGroupId: currentObjectEntry?.depotGroupId || 0,
@@ -78,6 +77,7 @@ export default function DefaultPermissionModalContent({
 						},
 						overrideDefaultErrorToast: true,
 						selectedData: {
+                            apiURL,
 							selectAll: true,
 						},
 						type: 'DefaultPermissionBulkAction',
@@ -104,11 +104,11 @@ export default function DefaultPermissionModalContent({
 					type: 'danger',
 				});
 
-				setLoading(false);
-			}
-		},
-		[apiURL, closeModal, currentObjectEntry, currentValues, propagate]
-	);
+                setLoading(false);
+            }
+        },
+        [apiURL, closeModal, currentObjectEntry, currentValues, propagate]
+    );
 
 	const onChangeHandler = useCallback((data: any) => {
 		setCurrentValues(data);

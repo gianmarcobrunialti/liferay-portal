@@ -81,7 +81,6 @@ async function getEntriesSpaces(
  * Handles bulk deletion logic and modal display based on trash status of spaces.
  */
 async function handleBulkDeletion({
-	apiURL,
 	selectedData,
 }: {
 	apiURL: string;
@@ -106,14 +105,13 @@ async function handleBulkDeletion({
 	// Scenario 1: All spaces have trash disabled
 
 	if (noEntriesHaveTrashEnabled) {
-		showModal(apiURL, confirmationMessage, title, selectedData);
+		showModal(confirmationMessage, title, selectedData);
 	}
 
 	// Scenario 2: Some spaces have trash enabled, but not all
 
 	else if (someEntriesHaveTrashEnabled && !allEntriesHaveTrashEnabled) {
 		showModal(
-			apiURL,
 			Liferay.Language.get('bulk-delete-cms-entries-confirmation'),
 			Liferay.Language.get('delete-entries'),
 			selectedData
@@ -124,10 +122,10 @@ async function handleBulkDeletion({
 
 	else if (allEntriesHaveTrashEnabled) {
 		if (!isFromRecycleBin(selectedData)) {
-			executeBulkDeleteAction(apiURL, selectedData);
+			await executeBulkDeleteAction(selectedData);
 		}
 		else {
-			showModal(apiURL, confirmationMessage, title, selectedData);
+			showModal(confirmationMessage, title, selectedData);
 		}
 	}
 }
@@ -136,7 +134,6 @@ async function handleBulkDeletion({
  * Shows the bulk delete confirmation modal.
  */
 async function showModal(
-	apiURL: string,
 	confirmationMessage: string,
 	title: string,
 	selectedData: any
@@ -163,8 +160,7 @@ async function showModal(
 				label: Liferay.Language.get('delete'),
 				onClick: async ({processClose}: {processClose: () => void}) => {
 					processClose();
-
-					executeBulkDeleteAction(apiURL, selectedData, processClose);
+					await executeBulkDeleteAction(selectedData, processClose);
 				},
 			},
 		],
@@ -178,11 +174,9 @@ async function showModal(
  * Entry point for bulk delete action.
  */
 export default async function deleteAssetEntriesBulkAction({
-	apiURL = '',
 	selectedData,
 }: {
-	apiURL: string;
-	selectedData: IBulkActionFDSData;
+	selectedData: any;
 }): Promise<void> {
-	await handleBulkDeletion({apiURL, selectedData});
+	await handleBulkDeletion(selectedData);
 }

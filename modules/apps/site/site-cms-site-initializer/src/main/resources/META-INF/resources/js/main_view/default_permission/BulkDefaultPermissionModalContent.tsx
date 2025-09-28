@@ -44,12 +44,10 @@ export const OBJECT_ENTRY_FOLDER_CLASS_NAME =
 	'com.liferay.object.model.ObjectEntryFolder';
 
 export function defaultPermissionsBulkAction({
-	apiURL,
 	className,
 	defaultPermissionAdditionalProps,
 	selectedData,
 }: {
-	apiURL?: string;
 	className: string;
 	defaultPermissionAdditionalProps: any;
 	selectedData: any;
@@ -87,7 +85,6 @@ export function defaultPermissionsBulkAction({
 		contentComponent: ({closeModal}: {closeModal: () => void}) =>
 			BulkDefaultPermissionModalContent({
 				...defaultPermissionAdditionalProps,
-				apiURL,
 				className,
 				closeModal,
 				selectedData,
@@ -98,12 +95,11 @@ export function defaultPermissionsBulkAction({
 
 export default function BulkDefaultPermissionModalContent({
 	actions,
-	apiURL,
 	className,
 	closeModal,
 	roles,
 	selectedData,
-}: BulkDefaultPermissionModalContentProps & {apiURL?: string}) {
+}: BulkDefaultPermissionModalContentProps) {
 	const [currentValues, setCurrentValues] =
 		useState<AssetRoleSelectedActions>({});
 	const [loading, setLoading] = useState(false);
@@ -111,20 +107,19 @@ export default function BulkDefaultPermissionModalContent({
 	const saveHandler = useCallback(() => {
 		setLoading(true);
 
-		triggerAssetBulkAction({
-			apiURL,
-			keyValues: {
-				defaultPermissions: JSON.stringify(currentValues),
-			},
-			onCreateSuccess: (_response) => {
-				closeModal();
+        triggerAssetBulkAction({
+            keyValues: {
+                defaultPermissions: JSON.stringify(currentValues),
+            },
+            onCreateSuccess: (_response) => {
+                closeModal();
 
-				setLoading(false);
-			},
-			selectedData,
-			type: 'DefaultPermissionBulkAction',
-		});
-	}, [apiURL, closeModal, currentValues, selectedData]);
+                setLoading(false);
+            },
+            selectedData,
+            type: 'DefaultPermissionBulkAction',
+        });
+    }, [closeModal, currentValues, selectedData]);
 
 	const onChangeHandler = useCallback((data: any) => {
 		setCurrentValues(data);

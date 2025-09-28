@@ -7,6 +7,7 @@ import {ISearchAssetObjectEntry} from '../../structure_builder/types/AssetType';
 import {RequestResult} from '../services/ApiHelper';
 
 export interface IBulkActionFDSData {
+	apiURL?: string;
 	filters?:
 		| Array<{
 				id: number;
@@ -70,7 +71,6 @@ export interface IBulkActionTaskStarter {
 export interface IBulkActionTaskStarterDTO<
 	T extends keyof IBulkActionTaskType,
 > {
-	apiURL?: string;
 	keyValues?: IBulkActionTaskType[T];
 	onCreateError?:
 		| ((response: RequestResult<IBulkActionTaskPage>) => void)

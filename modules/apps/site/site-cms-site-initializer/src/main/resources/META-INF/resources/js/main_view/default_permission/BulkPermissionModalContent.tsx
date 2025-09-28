@@ -28,12 +28,10 @@ import {
 } from './DefaultPermissionTypes';
 
 export function permissionsBulkAction({
-	apiURL,
 	className,
 	defaultPermissionAdditionalProps,
 	selectedData,
 }: {
-	apiURL?: string;
 	className: string;
 	defaultPermissionAdditionalProps: any;
 	selectedData: any;
@@ -45,7 +43,6 @@ export function permissionsBulkAction({
 		contentComponent: ({closeModal}: {closeModal: () => void}) =>
 			BulkPermissionModalContent({
 				...defaultPermissionAdditionalProps,
-				apiURL,
 				className,
 				closeModal,
 				selectedData,
@@ -56,39 +53,37 @@ export function permissionsBulkAction({
 
 export default function BulkPermissionModalContent({
 	actions,
-	apiURL,
 	className,
 	closeModal,
 	roles,
 	selectedData,
-}: BulkPermissionModalContentProps & {apiURL: string}) {
+}: BulkPermissionModalContentProps) {
 	const [currentValues, setCurrentValues] =
 		useState<AssetRoleSelectedActions>({});
 	const [loading, setLoading] = useState(false);
 	const [tabs, setTabs] = useState<Array<AssetType> | undefined>(undefined);
 
-	const saveHandler = useCallback(
-		(event: any) => {
-			event.preventDefault();
+    const saveHandler = useCallback(
+        (event: any) => {
+            event.preventDefault();
 
-			setLoading(true);
+            setLoading(true);
 
-			triggerAssetBulkAction({
-				apiURL,
-				keyValues: {
-					configuration: JSON.stringify(currentValues),
-				},
-				onCreateSuccess: (_response) => {
-					closeModal();
+            triggerAssetBulkAction({
+                keyValues: {
+                    configuration: JSON.stringify(currentValues),
+                },
+                onCreateSuccess: (_response) => {
+                    closeModal();
 
-					setLoading(false);
-				},
-				selectedData,
-				type: 'PermissionBulkAction',
-			});
-		},
-		[apiURL, closeModal, currentValues, selectedData]
-	);
+                    setLoading(false);
+                },
+                selectedData,
+                type: 'PermissionBulkAction',
+            });
+        },
+        [closeModal, currentValues, selectedData]
+    );
 
 	const onChangeHandler = useCallback((data: any) => {
 		setCurrentValues(data);

@@ -54,7 +54,7 @@ export class BulkActionTaskStarter implements IBulkActionTaskStarter {
 	}: IBulkActionTaskStarterDTO<keyof IBulkActionTaskType> & {
 		classNameId: number;
 	}) {
-		if (!apiURL) {
+		if (!selectedData.apiURL) {
 			throw new Error('Cannot POST bulk action task.');
 		}
 
@@ -69,7 +69,6 @@ export class BulkActionTaskStarter implements IBulkActionTaskStarter {
 			selectedData
 		) as TBulkActionTaskDTO;
 		this.postURL = composeCreateTaskURL(
-			apiURL,
 			selectedData,
 			type === 'DownloadBulkAction'
 		);
