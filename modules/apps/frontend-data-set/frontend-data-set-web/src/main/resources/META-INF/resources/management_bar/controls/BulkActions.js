@@ -49,6 +49,7 @@ function BulkActions({
 	const {
 		actionParameterName,
 		allItemsSelectedActive,
+		apiURL = '',
 		onBulkActionItemClick,
 		searchParam,
 		showBulkActionsManagementBar,
@@ -79,6 +80,7 @@ function BulkActions({
 
 	function handleActionClick(
 		actionDefinition,
+		apiURL,
 		formId,
 		formName,
 		loadData,
@@ -113,6 +115,7 @@ function BulkActions({
 				loadData,
 				namespace,
 				selectedData: {
+					apiURL,
 					items: allItemsSelectedActive ? [] : selectedItems,
 					keyValues: allItemsSelectedActive ? [] : selectedItemsValue,
 					selectAll: allItemsSelectedActive,
@@ -280,6 +283,7 @@ function BulkActions({
 														onClick={() =>
 															handleActionClick(
 																highlightedBulkAction,
+																apiURL,
 																formId,
 																formName,
 																loadData,
@@ -335,6 +339,7 @@ function BulkActions({
 															onClick={() =>
 																handleActionClick(
 																	actionDefinition,
+																	apiURL,
 																	formId,
 																	formName,
 																	loadData,
