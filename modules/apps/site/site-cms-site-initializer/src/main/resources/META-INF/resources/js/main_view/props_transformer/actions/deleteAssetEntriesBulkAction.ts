@@ -181,7 +181,7 @@ export default async function deleteAssetEntriesBulkAction({
 	apiURL = '',
 	selectedData,
 }: {
-	apiURL?: string;
+	apiURL: string;
 	selectedData: IBulkActionFDSData;
 }): Promise<void> {
 	await handleBulkDeletion({apiURL, selectedData});
