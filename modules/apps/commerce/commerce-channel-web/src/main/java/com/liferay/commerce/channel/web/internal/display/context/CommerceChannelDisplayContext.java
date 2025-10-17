@@ -224,14 +224,14 @@ public class CommerceChannelDisplayContext
 	}
 
 	public CommerceChannel getCommerceChannel() throws PortalException {
-		long commerceChannelId = ParamUtil.getLong(
-			httpServletRequest, "commerceChannelId");
-
-		if (commerceChannelId == 0) {
-			return null;
+		if (_commerceChannel != null) {
+			return _commerceChannel;
 		}
 
-		return _commerceChannelService.fetchCommerceChannel(commerceChannelId);
+		_commerceChannel = _commerceChannelService.getCommerceChannel(
+			ParamUtil.getLong(httpServletRequest, "commerceChannelId"));
+
+		return _commerceChannel;
 	}
 
 	public long getCommerceChannelId() throws PortalException {
@@ -341,6 +341,19 @@ public class CommerceChannelDisplayContext
 
 		return commerceOrderImporterDateFormatConfiguration.
 			orderImporterDateFormat();
+	}
+
+	public String getOrderVisibilityScope() throws PortalException {
+		CommerceChannel commerceChannel = getCommerceChannel();
+
+		CommerceOrderConfiguration commerceOrderConfiguration =
+			_configurationProvider.getConfiguration(
+				CommerceOrderConfiguration.class,
+				new GroupServiceSettingsLocator(
+					commerceChannel.getGroupId(),
+					CommerceConstants.SERVICE_NAME_COMMERCE_ORDER));
+
+		return commerceOrderConfiguration.orderVisibilityScope();
 	}
 
 	@Override
@@ -677,6 +690,7 @@ public class CommerceChannelDisplayContext
 	private final AccountEntryService _accountEntryService;
 	private CommerceAccountGroupServiceConfiguration
 		_commerceAccountGroupServiceConfiguration;
+	private CommerceChannel _commerceChannel;
 	private final CommerceChannelHealthStatusRegistry
 		_commerceChannelHealthStatusRegistry;
 	private final ModelResourcePermission<CommerceChannel>

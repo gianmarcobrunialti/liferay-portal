@@ -187,6 +187,24 @@ Map<String, String> contextParams = HashMapBuilder.<String, String>put(
 					<div class="col-lg-6">
 						<aui:input checked="<%= commerceChannelDisplayContext.isUndoCartItemDeletionDisabled() %>" helpMessage="configures-whether-a-buyer-can-undo-the-deletion-of-an-item-from-the-mini-cart" label="undo-cart-item-deletion-disabled" labelOff="disabled" labelOn="enabled" name="settings--undoCartItemDeletionDisabled--" type="toggle-switch" />
 					</div>
+
+					<div class="col-lg-6">
+						<aui:select label="order-visibility-scope" name="settings--orderVisibilityScope--">
+
+							<%
+							String orderVisibilityScope = commerceChannelDisplayContext.getOrderVisibilityScope();
+
+							for (String curOrderVisibilityScope : CommerceOrderConstants.ORDER_VISIBILITY_SCOPES) {
+							%>
+
+								<aui:option label="<%= curOrderVisibilityScope %>" selected="<%= orderVisibilityScope.equals(curOrderVisibilityScope) %>" value="<%= curOrderVisibilityScope %>" />
+
+							<%
+							}
+							%>
+
+						</aui:select>
+					</div>
 				</div>
 
 				<div class="row">
