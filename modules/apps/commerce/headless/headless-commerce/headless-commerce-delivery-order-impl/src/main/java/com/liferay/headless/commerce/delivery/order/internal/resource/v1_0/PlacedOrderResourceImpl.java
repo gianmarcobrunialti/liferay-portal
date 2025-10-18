@@ -21,6 +21,7 @@ import com.liferay.commerce.order.engine.CommerceOrderEngine;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceOrderService;
+import com.liferay.commerce.util.CommerceChannelConfigurationUtil;
 import com.liferay.commerce.util.CommerceCheckoutStep;
 import com.liferay.commerce.util.CommerceCheckoutStepRegistry;
 import com.liferay.headless.commerce.core.util.ExpandoUtil;
@@ -37,9 +38,12 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.Filter;
+import com.liferay.portal.kernel.search.filter.TermFilter;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
@@ -93,6 +97,19 @@ public class PlacedOrderResourceImpl extends BasePlacedOrderResourceImpl {
 		return SearchUtil.search(
 			null,
 			booleanQuery -> {
+				if (CommerceOrderConstants.ORDER_VISIBILITY_SCOPE_USER.equals(
+						CommerceChannelConfigurationUtil.
+							getCommerceOrderVisibilityScope(
+								commerceChannel.getGroupId()))) {
+
+					BooleanFilter booleanFilter =
+						booleanQuery.getPreBooleanFilter();
+
+					booleanFilter.add(
+						new TermFilter(
+							Field.USER_NAME, contextUser.getFullName()),
+						BooleanClauseOccur.MUST);
+				}
 			},
 			filter, CommerceOrder.class.getName(), search, pagination,
 			queryConfig -> queryConfig.setSelectedFieldNames(
@@ -171,6 +188,19 @@ public class PlacedOrderResourceImpl extends BasePlacedOrderResourceImpl {
 		return SearchUtil.search(
 			null,
 			booleanQuery -> {
+				if (CommerceOrderConstants.ORDER_VISIBILITY_SCOPE_USER.equals(
+						CommerceChannelConfigurationUtil.
+							getCommerceOrderVisibilityScope(
+								commerceChannel.getGroupId()))) {
+
+					BooleanFilter booleanFilter =
+						booleanQuery.getPreBooleanFilter();
+
+					booleanFilter.add(
+						new TermFilter(
+							Field.USER_NAME, contextUser.getFullName()),
+						BooleanClauseOccur.MUST);
+				}
 			},
 			filter, CommerceOrder.class.getName(), search, pagination,
 			queryConfig -> queryConfig.setSelectedFieldNames(

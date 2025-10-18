@@ -51,6 +51,7 @@ import com.liferay.commerce.shipping.engine.fixed.model.CommerceShippingFixedOpt
 import com.liferay.commerce.shipping.engine.fixed.service.CommerceShippingFixedOptionLocalService;
 import com.liferay.commerce.term.model.CommerceTermEntry;
 import com.liferay.commerce.term.service.CommerceTermEntryLocalService;
+import com.liferay.commerce.util.CommerceChannelConfigurationUtil;
 import com.liferay.commerce.util.CommerceCheckoutStep;
 import com.liferay.commerce.util.CommerceCheckoutStepRegistry;
 import com.liferay.commerce.util.CommerceShippingEngineRegistry;
@@ -80,9 +81,12 @@ import com.liferay.portal.kernel.model.Region;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.Filter;
+import com.liferay.portal.kernel.search.filter.TermFilter;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
@@ -129,6 +133,7 @@ import org.osgi.service.component.annotations.ServiceScope;
 /**
  * @author Andrea Sbarra
  * @author Alessio Antonio Rendina
+ * @author Gianmarco Brunialti Masera
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v1_0/cart.properties",
@@ -170,7 +175,7 @@ public class CartResourceImpl extends BaseCartResourceImpl {
 
 	@Override
 	public Cart getCart(Long cartId) throws Exception {
-		return _toCart(_commerceOrderService.getCommerceOrder(cartId));
+		return _toCart(cartId);
 	}
 
 	@Override
@@ -230,6 +235,18 @@ public class CartResourceImpl extends BaseCartResourceImpl {
 		return SearchUtil.search(
 			null,
 			booleanQuery -> {
+				if (CommerceOrderConstants.ORDER_VISIBILITY_SCOPE_USER.equals(
+						CommerceChannelConfigurationUtil.
+							getCommerceOrderVisibilityScope(
+								commerceChannel.getGroupId()))) {
+
+					BooleanFilter booleanFilter =
+						booleanQuery.getPreBooleanFilter();
+
+					booleanFilter.add(
+						new TermFilter("userName", contextUser.getFullName()),
+						BooleanClauseOccur.MUST);
+				}
 			},
 			filter, CommerceOrder.class.getName(), search, pagination,
 			queryConfig -> queryConfig.setSelectedFieldNames(
@@ -252,8 +269,7 @@ public class CartResourceImpl extends BaseCartResourceImpl {
 			},
 			sorts,
 			document -> _toCart(
-				_commerceOrderService.getCommerceOrder(
-					GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)))));
+				GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK))));
 	}
 
 	@Override
@@ -292,6 +308,19 @@ public class CartResourceImpl extends BaseCartResourceImpl {
 		return SearchUtil.search(
 			null,
 			booleanQuery -> {
+				if (CommerceOrderConstants.ORDER_VISIBILITY_SCOPE_USER.equals(
+						CommerceChannelConfigurationUtil.
+							getCommerceOrderVisibilityScope(
+								commerceChannel.getGroupId()))) {
+
+					BooleanFilter booleanFilter =
+						booleanQuery.getPreBooleanFilter();
+
+					booleanFilter.add(
+						new TermFilter(
+							Field.USER_NAME, contextUser.getFullName()),
+						BooleanClauseOccur.MUST);
+				}
 			},
 			filter, CommerceOrder.class.getName(), search, pagination,
 			queryConfig -> queryConfig.setSelectedFieldNames(
@@ -315,8 +344,7 @@ public class CartResourceImpl extends BaseCartResourceImpl {
 			},
 			sorts,
 			document -> _toCart(
-				_commerceOrderService.getCommerceOrder(
-					GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)))));
+				GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK))));
 	}
 
 	@Override
@@ -1173,10 +1201,13 @@ public class CartResourceImpl extends BaseCartResourceImpl {
 	}
 
 	private Cart _toCart(CommerceOrder commerceOrder) throws Exception {
+		return _toCart(commerceOrder.getCommerceOrderId());
+	}
+
+	private Cart _toCart(long commerceOrderId) throws Exception {
 		return _cartDTOConverter.toDTO(
 			new DefaultDTOConverterContext(
-				commerceOrder.getCommerceOrderId(),
-				contextAcceptLanguage.getPreferredLocale()));
+				commerceOrderId, contextAcceptLanguage.getPreferredLocale()));
 	}
 
 	private void _updateCommerceOrderAddress(
