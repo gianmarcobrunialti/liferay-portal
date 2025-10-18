@@ -171,14 +171,21 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 
 		HttpSession httpSession = httpServletRequest.getSession();
 
-		CommerceOrder commerceOrder = _commerceOrderService.getCommerceOrder(
-			commerceOrderId);
+		try {
+			CommerceOrder commerceOrder =
+				_commerceOrderService.getCommerceOrder(commerceOrderId);
 
-		httpSession.removeAttribute(
-			CommerceOrder.class.getName() + StringPool.POUND +
-				commerceOrder.getGroupId());
+			httpSession.removeAttribute(
+				CommerceOrder.class.getName() + StringPool.POUND +
+					commerceOrder.getGroupId());
 
-		_commerceOrderService.deleteCommerceOrder(commerceOrderId);
+			_commerceOrderService.deleteCommerceOrder(commerceOrderId);
+		}
+		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(portalException);
+			}
+		}
 	}
 
 	@Override
@@ -468,8 +475,16 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 			HttpServletRequest httpServletRequest)
 		throws PortalException {
 
-		CommerceOrder commerceOrder = getCurrentCommerceOrder(
-			httpServletRequest);
+		CommerceOrder commerceOrder = null;
+
+		try {
+			commerceOrder = getCurrentCommerceOrder(httpServletRequest);
+		}
+		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(portalException);
+			}
+		}
 
 		if (commerceOrder == null) {
 			return BigDecimal.ZERO;
@@ -841,11 +856,21 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 			_unsetCurrentCommerceOrder();
 		}
 
-		CommerceOrder userCommerceOrder =
-			_commerceOrderService.fetchCommerceOrder(
+		CommerceOrder userCommerceOrder;
+
+		try {
+			userCommerceOrder = _commerceOrderService.fetchCommerceOrder(
 				accountEntry.getAccountEntryId(),
 				commerceContext.getCommerceChannelGroupId(), user.getUserId(),
 				CommerceOrderConstants.ORDER_STATUS_OPEN);
+		}
+		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(portalException);
+			}
+
+			userCommerceOrder = null;
+		}
 
 		if (userCommerceOrder == null) {
 			httpSession.removeAttribute(cookieName);
@@ -974,11 +999,20 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 				 (accountEntry.getAccountEntryId() !=
 					 commerceOrder.getCommerceAccountId()))) {
 
-				commerceOrder = _commerceOrderService.fetchCommerceOrder(
-					accountEntry.getAccountEntryId(),
-					commerceChannel.getGroupId(),
-					_portal.getUserId(httpServletRequest),
-					CommerceOrderConstants.ORDER_STATUS_OPEN);
+				try {
+					commerceOrder = _commerceOrderService.fetchCommerceOrder(
+						accountEntry.getAccountEntryId(),
+						commerceChannel.getGroupId(),
+						_portal.getUserId(httpServletRequest),
+						CommerceOrderConstants.ORDER_STATUS_OPEN);
+				}
+				catch (PortalException portalException) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(portalException);
+					}
+
+					commerceOrder = null;
+				}
 			}
 
 			if (commerceOrder != null) {
