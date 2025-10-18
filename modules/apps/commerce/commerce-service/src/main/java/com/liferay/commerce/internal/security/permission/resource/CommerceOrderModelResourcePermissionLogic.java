@@ -15,6 +15,7 @@ import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceOrderLocalService;
+import com.liferay.commerce.util.CommerceChannelConfigurationUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -35,6 +36,7 @@ import java.util.List;
 /**
  * @author Andrea Di Giorgi
  * @author Alessio Antonio Rendina
+ * @author Gianmarco Brunialti Masera
  */
 public class CommerceOrderModelResourcePermissionLogic
 	implements ModelResourcePermissionLogic<CommerceOrder> {
@@ -65,6 +67,15 @@ public class CommerceOrderModelResourcePermissionLogic
 			PermissionChecker permissionChecker, String name,
 			CommerceOrder commerceOrder, String actionId)
 		throws PortalException {
+
+		if (CommerceOrderConstants.ORDER_VISIBILITY_SCOPE_USER.equals(
+				CommerceChannelConfigurationUtil.
+					getCommerceOrderVisibilityScope(
+						commerceOrder.getGroupId())) &&
+			!commerceOrder.isGuestOrder() && actionId.equals(ActionKeys.VIEW)) {
+
+			return _hasOwnerPermission(permissionChecker, commerceOrder);
+		}
 
 		AccountEntry accountEntry = commerceOrder.getAccountEntry();
 
