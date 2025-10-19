@@ -69,6 +69,7 @@ import com.liferay.commerce.shipping.engine.fixed.model.CommerceShippingFixedOpt
 import com.liferay.commerce.shipping.engine.fixed.service.CommerceShippingFixedOptionLocalService;
 import com.liferay.commerce.term.model.CommerceTermEntry;
 import com.liferay.commerce.term.service.CommerceTermEntryLocalService;
+import com.liferay.commerce.util.CommerceChannelConfigurationUtil;
 import com.liferay.commerce.util.CommerceOrderThreadLocal;
 import com.liferay.commerce.util.CommerceShippingEngineRegistry;
 import com.liferay.commerce.util.CommerceUtil;
@@ -103,6 +104,10 @@ import com.liferay.portal.kernel.repository.LocalRepository;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
+import com.liferay.portal.kernel.search.BooleanClause;
+import com.liferay.portal.kernel.search.BooleanClauseFactoryUtil;
+import com.liferay.portal.kernel.search.BooleanClauseOccur;
+import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
@@ -115,6 +120,9 @@ import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.SortFactoryUtil;
+import com.liferay.portal.kernel.search.filter.BooleanFilter;
+import com.liferay.portal.kernel.search.filter.TermFilter;
+import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
@@ -2331,6 +2339,19 @@ public class CommerceOrderLocalServiceImpl
 		if (commerceAccountIds != null) {
 			searchContext.setAttribute(
 				"commerceAccountIds", commerceAccountIds);
+
+			if (CommerceOrderConstants.ORDER_VISIBILITY_SCOPE_USER.equals(
+					CommerceChannelConfigurationUtil.
+						getCommerceOrderVisibilityScope(
+							commerceChannelGroupId))) {
+
+				searchContext.setBooleanClauses(
+					new BooleanClause[] {
+						BooleanClauseFactoryUtil.create(
+							_buildUserScopeQuery(),
+							BooleanClauseOccur.MUST.getName())
+					});
+			}
 		}
 
 		searchContext.setCompanyId(companyId);
@@ -2357,6 +2378,26 @@ public class CommerceOrderLocalServiceImpl
 		queryConfig.setScoreEnabled(false);
 
 		return searchContext;
+	}
+
+	private BooleanQuery _buildUserScopeQuery() {
+		PermissionChecker permissionChecker =
+			PermissionThreadLocal.getPermissionChecker();
+
+		User user = permissionChecker.getUser();
+
+		TermFilter termFilter = new TermFilter(
+			Field.USER_NAME, user.getFullName());
+
+		BooleanFilter booleanFilter = new BooleanFilter();
+
+		booleanFilter.add(termFilter, BooleanClauseOccur.MUST);
+
+		BooleanQueryImpl booleanQueryImpl = new BooleanQueryImpl();
+
+		booleanQueryImpl.setPreBooleanFilter(booleanFilter);
+
+		return booleanQueryImpl;
 	}
 
 	private List<CommercePaymentMethodGroupRel>
