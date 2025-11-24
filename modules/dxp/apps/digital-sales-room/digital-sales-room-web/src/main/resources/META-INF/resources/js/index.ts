@@ -4,3 +4,4 @@
  */
 
 export {default as DSRInitializer} from './components/DSRInitializer';
+export {default as Test} from './components/Test';

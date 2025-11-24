@@ -18,6 +18,18 @@ ViewAccountEntriesManagementToolbarDisplayContext viewAccountEntriesManagementTo
 	propsTransformer="{AccountEntriesManagementToolbarPropsTransformer} from account-admin-web"
 />
 
+<div>
+	<div>
+		jsp
+	</div>
+
+	<div>
+		<react:component
+			module="{Test} from digital-sales-room-web"
+		/>
+	</div>
+</div>
+
 <clay:container-fluid>
 	<aui:form method="post" name="fm">
 		<aui:input name="accountEntryIds" type="hidden" />
