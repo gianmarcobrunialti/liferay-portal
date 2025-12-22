@@ -99,9 +99,9 @@ export interface IBulkActionTaskType {
 	DeleteBulkAction: {};
 	DownloadBulkAction: {};
 	KeywordBulkAction: {
-		append: boolean;
-		toAddTagNames: string[];
-		toRemoveTagNames: string[];
+		append?: boolean;
+		keywordsToAdd?: string[];
+		keywordsToRemove?: string[];
 	};
 	MoveBulkAction: {
 		objectEntryFolderId: number;
@@ -112,14 +112,18 @@ export interface IBulkActionTaskType {
 	};
 	ResetPermissionBulkAction: {};
 	TaxonomyCategoryBulkAction: {
-		append: boolean;
-		toAddCategoryIds: string[];
-		toRemoveCategoryIds: string[];
+		append?: boolean;
+		taxonomyCategoryIdsToAdd?: number[];
+		taxonomyCategoryIdsToRemove?: number[];
 	};
 }
 
 export type TBulkActionTaskDTO = {
 	bulkActionItems: IBulkActionFDSDataItemTransformed[] | [];
-	selectAll: IBulkActionFDSData['selectAll'];
+	selectAll?: IBulkActionFDSData['selectAll'];
+	selectionScope?: {
+		selectAll: IBulkActionFDSData['selectAll'];
+		[k: string]: any;
+	},
 	type: keyof IBulkActionTaskType;
 } & IBulkActionTaskType[keyof IBulkActionTaskType];

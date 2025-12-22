@@ -2,8 +2,9 @@
  * SPDX-FileCopyrightText: (c) 2025 Liferay, Inc. https://liferay.com
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
+import {ITaxonomyCategoryBrief} from "../../../../common/types/AssetType";
 
-interface TaxonomyCategory {
+interface TaxonomyCategory extends ITaxonomyCategoryBrief {
 	actions?: Actions;
 	availableLanguages?: string[];
 	dateCreated?: string;
@@ -47,5 +48,4 @@ interface TaxonomyCategoryProperty {
 	externalReferenceCode?: string;
 	key: string;
 	value: string;
-
 }

@@ -5,6 +5,9 @@
 
 import {IVocabulary} from '../../common/types/IVocabulary';
 import ApiHelper from './ApiHelper';
+import {IBulkActionFDSData} from "../types/BulkActionTask";
+import {composeCreateTaskDTO} from "../../main_view/bulk_actions_monitor/util";
+import {IAssetTaxonomyCategory} from "../types/AssetType";
 
 async function createVocabulary(siteId: number, vocabulary: IVocabulary) {
 	return await ApiHelper.post<IVocabulary>(
@@ -26,4 +29,16 @@ async function updateVocabulary(vocabulary: IVocabulary) {
 	);
 }
 
-export default {createVocabulary, fetchVocabulary, updateVocabulary};
+async function getCommonCategories(groupId: number, selectedData: IBulkActionFDSData) {
+	return await ApiHelper.post<any>(
+		`/o/bulk/v1.0/sites/${groupId}/taxonomy-vocabularies/common`,
+		composeCreateTaskDTO('TaxonomyCategoryBulkAction', {}, selectedData)
+	);
+}
+
+export default {
+	createVocabulary,
+	getCommonCategories,
+	fetchVocabulary,
+	updateVocabulary
+};

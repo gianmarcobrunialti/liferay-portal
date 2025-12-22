@@ -15,6 +15,10 @@ import {
 	URL_DOWNLOAD_BULK_ACTION_TASK,
 	URL_TASKS_REPORT_DETAIL,
 } from './constants';
+import {
+	IAssetObjectEntry,
+	ISearchAssetObjectEntry
+} from "../../../common/types/AssetType";
 
 export function composeCreateTaskURL(
 	apiURL: string,
@@ -52,7 +56,7 @@ export function composeCreateTaskURL(
 }
 
 export function composeCreateTaskDTO(
-	actionKey: keyof IBulkActionTaskType,
+	type: keyof IBulkActionTaskType,
 	keyValues: IBulkActionTaskType[keyof IBulkActionTaskType] = {},
 	{items = [], selectAll = false}: IBulkActionFDSData
 ): TBulkActionTaskDTO {
@@ -64,7 +68,7 @@ export function composeCreateTaskDTO(
 					file,
 					id: classPK,
 					title: name,
-				} = {} as any,
+				} = {} as IAssetObjectEntry,
 				entryClassName,
 				externalReferenceCode,
 			}: any) => {
@@ -76,15 +80,15 @@ export function composeCreateTaskDTO(
 					name,
 				} as IBulkActionFDSDataItemTransformed;
 
-				if (actionKey === 'DownloadBulkAction') {
+				if (type === 'DownloadBulkAction') {
 					itemsTransformed.file = file;
 				}
 
 				return itemsTransformed;
 			}
 		),
-		selectAll,
-		type: actionKey,
+		selectionScope: {selectAll},
+		type,
 		...keyValues,
 	} as TBulkActionTaskDTO;
 }

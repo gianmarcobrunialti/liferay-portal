@@ -5,6 +5,8 @@
 
 import {Tag} from '../types/Tag';
 import ApiHelper from './ApiHelper';
+import {composeCreateTaskDTO} from "../../main_view/bulk_actions_monitor/util";
+import {IBulkActionFDSData} from "../types/BulkActionTask";
 
 async function createTag({
 	assetLibraryId,
@@ -33,6 +35,14 @@ async function createTag({
 	);
 }
 
+async function getCommonTags(selectedData: IBulkActionFDSData) {
+	return await ApiHelper.post<any>(
+		`/o/bulk/v1.0/keywords/common`,
+		composeCreateTaskDTO('KeywordBulkAction', {}, selectedData)
+	);
+}
+
 export default {
 	createTag,
+	getCommonTags,
 };
