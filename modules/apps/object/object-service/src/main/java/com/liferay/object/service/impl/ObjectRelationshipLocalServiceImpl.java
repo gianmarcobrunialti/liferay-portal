@@ -2110,8 +2110,9 @@ public class ObjectRelationshipLocalServiceImpl
 			ObjectDefinition objectDefinition2)
 		throws PortalException {
 
-		if (FeatureFlagManagerUtil.isEnabled(
-				objectDefinition1.getCompanyId(), "LPD-58677") &&
+		if ((FeatureFlagManagerUtil.isEnabled(
+				objectDefinition1.getCompanyId(), "LPD-58677") || FeatureFlagManagerUtil.isEnabled(
+			objectDefinition1.getCompanyId(), "LPD-66359")) &&
 			ObjectDefinitionUtil.isInvokerBundleAllowed() &&
 			objectDefinition1.isUnmodifiableSystemObject() &&
 			objectDefinition2.isModifiableAndSystem()) {

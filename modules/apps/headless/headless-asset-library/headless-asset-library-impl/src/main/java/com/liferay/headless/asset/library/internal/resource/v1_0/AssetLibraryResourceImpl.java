@@ -582,7 +582,9 @@ public class AssetLibraryResourceImpl extends BaseAssetLibraryResourceImpl {
 
 		return UnicodePropertiesBuilder.create(
 			true
-		).put(
+		).put("accountId", GetterUtil.getString(
+			settings.getAccountId(),
+			unicodeProperties.getProperty("accountId"))).put(
 			"autoTaggingEnabled",
 			_getBooleanValue(
 				unicodeProperties.getProperty("autoTaggingEnabled"),
@@ -641,7 +643,7 @@ public class AssetLibraryResourceImpl extends BaseAssetLibraryResourceImpl {
 
 		return UnicodePropertiesBuilder.create(
 			true
-		).put(
+		).put("accountId", GetterUtil.getLong(settings.getAccountId())).put(
 			"autoTaggingEnabled",
 			GetterUtil.getBoolean(settings.getAutoTaggingEnabled())
 		).put(

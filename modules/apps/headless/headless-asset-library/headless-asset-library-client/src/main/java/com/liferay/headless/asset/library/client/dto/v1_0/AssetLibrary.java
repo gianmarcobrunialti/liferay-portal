@@ -516,7 +516,8 @@ public class AssetLibrary implements Cloneable, Serializable {
 
 	public static enum Type {
 
-		ASSET_LIBRARY("AssetLibrary"), PROJECT("Project"), SPACE("Space");
+		ASSET_LIBRARY("AssetLibrary"), DIGITAL_SALES_ROOM("DigitalSalesRoom"),
+		PROJECT("Project"), SPACE("Space");
 
 		public static Type create(String value) {
 			for (Type type : values()) {

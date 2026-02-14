@@ -40,7 +40,7 @@
 			"subject": {
 				"en_US": "Digital Sales Room: [%DIGITAL_SALES_ROOM_NAME%]"
 			},
-			"system": false,
+			"system": true,
 			"type": "email",
 			"typeLabel": "Email"
 		}

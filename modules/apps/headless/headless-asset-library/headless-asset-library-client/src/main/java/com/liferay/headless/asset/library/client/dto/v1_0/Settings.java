@@ -25,6 +25,27 @@ public class Settings implements Cloneable, Serializable {
 		return SettingsSerDes.toDTO(json);
 	}
 
+	public Long getAccountId() {
+		return accountId;
+	}
+
+	public void setAccountId(Long accountId) {
+		this.accountId = accountId;
+	}
+
+	public void setAccountId(
+		UnsafeSupplier<Long, Exception> accountIdUnsafeSupplier) {
+
+		try {
+			accountId = accountIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long accountId;
+
 	public Boolean getAutoTaggingEnabled() {
 		return autoTaggingEnabled;
 	}

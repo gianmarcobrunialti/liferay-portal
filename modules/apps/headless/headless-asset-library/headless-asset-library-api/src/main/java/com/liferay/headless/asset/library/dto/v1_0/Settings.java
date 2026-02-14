@@ -52,6 +52,47 @@ public class Settings implements Serializable {
 	}
 
 	@io.swagger.v3.oas.annotations.media.Schema
+	public Long getAccountId() {
+		if (_accountIdSupplier != null) {
+			accountId = _accountIdSupplier.get();
+
+			_accountIdSupplier = null;
+		}
+
+		return accountId;
+	}
+
+	public void setAccountId(Long accountId) {
+		this.accountId = accountId;
+
+		_accountIdSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setAccountId(
+		UnsafeSupplier<Long, Exception> accountIdUnsafeSupplier) {
+
+		_accountIdSupplier = () -> {
+			try {
+				return accountIdUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Long accountId;
+
+	@JsonIgnore
+	private Supplier<Long> _accountIdSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Boolean getAutoTaggingEnabled() {
 		if (_autoTaggingEnabledSupplier != null) {
 			autoTaggingEnabled = _autoTaggingEnabledSupplier.get();
@@ -449,6 +490,18 @@ public class Settings implements Serializable {
 		StringBundler sb = new StringBundler();
 
 		sb.append("{");
+
+		Long accountId = getAccountId();
+
+		if (accountId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"accountId\": ");
+
+			sb.append(accountId);
+		}
 
 		Boolean autoTaggingEnabled = getAutoTaggingEnabled();
 

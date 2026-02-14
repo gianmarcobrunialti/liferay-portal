@@ -45,6 +45,16 @@ public class SettingsSerDes {
 
 		sb.append("{");
 
+		if (settings.getAccountId() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"accountId\": ");
+
+			sb.append(settings.getAccountId());
+		}
+
 		if (settings.getAutoTaggingEnabled() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -183,6 +193,13 @@ public class SettingsSerDes {
 
 		Map<String, String> map = new TreeMap<>();
 
+		if (settings.getAccountId() == null) {
+			map.put("accountId", null);
+		}
+		else {
+			map.put("accountId", String.valueOf(settings.getAccountId()));
+		}
+
 		if (settings.getAutoTaggingEnabled() == null) {
 			map.put("autoTaggingEnabled", null);
 		}
@@ -275,7 +292,12 @@ public class SettingsSerDes {
 
 		@Override
 		protected boolean parseMaps(String jsonParserFieldName) {
-			if (Objects.equals(jsonParserFieldName, "autoTaggingEnabled")) {
+			if (Objects.equals(jsonParserFieldName, "accountId")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "autoTaggingEnabled")) {
+
 				return false;
 			}
 			else if (Objects.equals(
@@ -317,7 +339,15 @@ public class SettingsSerDes {
 			Settings settings, String jsonParserFieldName,
 			Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "autoTaggingEnabled")) {
+			if (Objects.equals(jsonParserFieldName, "accountId")) {
+				if (jsonParserFieldValue != null) {
+					settings.setAccountId(
+						Long.valueOf((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "autoTaggingEnabled")) {
+
 				if (jsonParserFieldValue != null) {
 					settings.setAutoTaggingEnabled(
 						(Boolean)jsonParserFieldValue);
