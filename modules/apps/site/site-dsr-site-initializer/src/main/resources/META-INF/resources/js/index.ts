@@ -4,3 +4,5 @@
  */
 
 export {default as RoomsFDSPropsTransformer} from './components/props_transformer/RoomsFDSPropsTransformer';
+
+export {default as DSRAnalyticsNavigation} from './main_view/analytics/components/AnalyticsNavigation';

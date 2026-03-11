@@ -1,0 +1,38 @@
+query SitesMetricTabsQuery($channelId: String, $interval: String!, $rangeEnd: String, $rangeKey: Int, $rangeStart: String) {
+	site(
+    channelId: $channelId
+    interval: $interval
+    rangeEnd: $rangeEnd
+    rangeKey: $rangeKey
+    rangeStart: $rangeStart
+  ) {
+    bounceRateMetric {
+      ...TabsFragment
+      __typename
+    }
+    sessionDurationMetric {
+      ...TabsFragment
+      __typename
+    }
+    sessionsPerVisitorMetric {
+      ...TabsFragment
+      __typename
+    }
+    visitorsMetric {
+      ...TabsFragment
+      __typename
+    }
+    __typename
+  }
+}
+
+fragment TabsFragment on Metric {
+  previousValue
+  trend {
+    percentage
+    trendClassification
+    __typename
+  }
+  value
+  __typename
+}"
