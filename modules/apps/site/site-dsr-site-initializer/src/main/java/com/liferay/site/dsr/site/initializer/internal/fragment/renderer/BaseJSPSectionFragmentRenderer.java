@@ -5,7 +5,6 @@
 
 package com.liferay.site.dsr.site.initializer.internal.fragment.renderer;
 
-import com.liferay.fragment.renderer.FragmentRenderer;
 import com.liferay.fragment.renderer.FragmentRendererContext;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringUtil;
@@ -27,7 +26,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Stefano Motta
  */
 public abstract class BaseJSPSectionFragmentRenderer<T>
-	implements FragmentRenderer {
+	extends BaseSectionFragmentRenderer {
 
 	@Override
 	public String getCollectionKey() {
