@@ -1,0 +1,14 @@
+.data-sets {
+	thead th {
+		height: 2.5rem;
+	}
+
+	thead th:last-child,
+	tbody td:last-child {
+		display: none;
+	}
+
+	.table-responsive {
+		overflow-x: hidden;
+	}
+}
