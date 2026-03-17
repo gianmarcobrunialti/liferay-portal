@@ -7,4 +7,12 @@ import '../css/main.scss';
 
 export {default as RoomComments} from './components/RoomComments';
 export {default as RoomsFDSPropsTransformer} from './components/props_transformer/RoomsFDSPropsTransformer';
-export {default as CMSFileSelectorEventHandler} from './document_library/CMSFileSelectorEventHandler';
+
+// Main
+
+export {default as ActivityLog} from './main_view/analytics/components/ActivityLog';
+export {default as AnalyticsNavigation} from './main_view/analytics/components/Navigation';
+export {default as DocumentsStatistics} from './main_view/analytics/components/DocumentsStatistics';
+export {default as RoomTrend} from './main_view/analytics/components/RoomTrend';
+export {default as EngagementTimelineChart} from './main_view/analytics/components/EngagementTimelineChart';
+export {default as VisitFrequencyChart} from './main_view/analytics/components/VisitFrequencyChart';
