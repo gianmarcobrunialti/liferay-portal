@@ -10,8 +10,10 @@ export {default as RoomsFDSPropsTransformer} from './components/props_transforme
 
 // Main
 
+// TODO Test
+
 export {default as ActivityLog} from './main_view/analytics/components/ActivityLog';
-export {default as AnalyticsNavigation} from './main_view/analytics/components/Navigation';
+export {default as Navigation} from './main_view/analytics/components/Navigation';
 export {default as DocumentsStatistics} from './main_view/analytics/components/DocumentsStatistics';
 export {default as RoomTrend} from './main_view/analytics/components/RoomTrend';
 export {default as EngagementTimelineChart} from './main_view/analytics/components/EngagementTimelineChart';

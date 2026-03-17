@@ -10,7 +10,7 @@ import classNames from 'classnames';
 import {sub} from 'frontend-js-web';
 import React from 'react';
 
-import '../../../../css/components/FDSMostEngagedDocuments.scss';
+import '../../../../css/components/DocumentsStatistics.scss'
 
 const AverageTimeDataRender = ({itemData = []}: any) => {
 	const {totalTimeViewingAsset = 0, totalViews = 0} = itemData;

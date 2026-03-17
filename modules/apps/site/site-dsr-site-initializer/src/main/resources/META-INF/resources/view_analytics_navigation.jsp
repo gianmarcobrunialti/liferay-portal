@@ -8,7 +8,7 @@
 <%@ include file="/init.jsp" %>
 
 <%
-ViewAnalyticsNavigationSectionDisplayContext viewAnalyticsNavigationSectionDisplayContext = (ViewAnalyticsNavigationSectionDisplayContext)request.getAttribute(ViewRoomsSectionDisplayContext.class.getName());
+ViewAnalyticsNavigationSectionDisplayContext viewAnalyticsNavigationSectionDisplayContext = (ViewAnalyticsNavigationSectionDisplayContext)request.getAttribute(ViewAnalyticsNavigationSectionDisplayContext.class.getName());
 %>
 
 <div>

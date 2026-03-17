@@ -7,7 +7,9 @@ import React, {useState} from "react";
 import ClayIcon from '@clayui/icon';
 import DropDown from "@clayui/drop-down";
 import ClayButton from '@clayui/button';
-import '../../../../../../../../../../site-cms-site-initializer/src/main/resources/META-INF/resources/css/RoomTrend.scss';
+
+import '../../../../css/components/RoomTrend.scss';
+
 import {getImage} from "../../../../../../../../../../site-cms-site-initializer/src/main/resources/META-INF/resources/js/common/utils/getImage";
 
 const ROOM_TREND_OPTIONS: Record<string, {
