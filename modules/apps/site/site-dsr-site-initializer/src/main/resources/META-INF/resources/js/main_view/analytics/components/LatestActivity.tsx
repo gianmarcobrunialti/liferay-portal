@@ -4,23 +4,48 @@
  */
 
 import {FrontendDataSet} from '@liferay/frontend-data-set-web';
-import React from 'react';
+import React, {useRef} from 'react';
 
 import AccountSticker from '../../../common/components/AccountSticker';
 
 import './../../../../css/components/LatestActivity.scss';
 import {TLatestActivity} from '../../../common/utils/types';
 import {timestampDataRenderer} from './data_renderers/TimestampDataRenderer';
+import AnalyticsFrame from "./AnalyticsFrame";
+import {BASE_URL} from "../utils/constants";
+import useAnalyticsQuery from "../../../common/hooks/useAnalyticsQuery";
+import ActivityLogQuery from "../queries/ActivityLogQuery";
+import LatestActivityQuery from "../queries/LatestActivityQuery";
 
 const LatestActivity = ({
-	items = [],
 	namespace,
 }: {
-	items: TLatestActivity[];
 	namespace: string;
 }) => {
+	const elementRef = useRef(null);
+
+	const {isLoading, response} = useAnalyticsQuery({
+		element: elementRef.current,
+		query: LatestActivityQuery,
+		variables: {
+			channelId: "808122315193619922",
+			entityType: "INDIVIDUAL",
+			keywords: "",
+			rangeEnd: null,
+			rangeKey: 7,
+			rangeStart: null,
+			page: 1,
+			size: 20
+		}
+	});
+
 	return (
-		<div className="latest-activity-fds">
+		<AnalyticsFrame
+			icon="click"
+			title={Liferay.Language.get('latest-activity')}
+			url={`${BASE_URL}/view-timeline`}
+		>
+		<div className="latest-activity-fds" ref={elementRef}>
 			<FrontendDataSet
 				customDataRenderers={{
 					timestampDataRenderer,
@@ -84,6 +109,7 @@ const LatestActivity = ({
 				]}
 			/>
 		</div>
+		</AnalyticsFrame>
 	);
 };
 

@@ -5,6 +5,13 @@
 	padding-right: 0.5rem;
 }
 
+.analytics-frame {
+	&-icon {
+		background-color: $primary-l3;
+		color: $primary;
+	}
+}
+
 .dsr-container-wrapper {
 	background-color: #fff;
 	flex: 0 0 calc(10 / 12 * 100%);

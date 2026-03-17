@@ -4,10 +4,15 @@
  */
 
 import {FrontendDataSet} from '@liferay/frontend-data-set-web';
-import React from 'react';
+import React, {useRef} from 'react';
+
+import AccountSticker from '../../../common/components/AccountSticker';
 
 import './../../../../css/components/MostActiveVisitors.scss';
-import {visitorSticker} from './cell_renderers/VisitorSticker';
+import AnalyticsFrame from "./AnalyticsFrame";
+import useAnalyticsQuery from "../../../common/hooks/useAnalyticsQuery";
+import ActivityLogQuery from "../queries/ActivityLogQuery";
+import MostActiveVisitorsQuery from "../queries/MostActiveVisitorsQuery";
 
 type TVisitor = {
 	activitiesCount: number;
@@ -17,20 +22,77 @@ type TVisitor = {
 	logoURL: string | undefined;
 };
 
+function VisitorSticker({itemData}: {itemData: TVisitor}) {
+	return (
+		<div className="d-flex inline-item">
+			<AccountSticker
+				logoURL={itemData.logoURL}
+				name={itemData.firstName}
+				shape="user-icon"
+			/>
+
+			<div className="ml-3">
+				<div className="align-items-center font-weight-semi-bold visitors-full-name">
+					<span className="mb-0 mr-1">
+						{Liferay.Language.get(itemData.firstName)}
+					</span>
+
+					<span className="mb-0">
+						{Liferay.Language.get(itemData.lastName)}
+					</span>
+				</div>
+
+				<div className="align-items-center">
+					<span className="mb-0 mr-1">
+						{itemData.activitiesCount}
+					</span>
+
+					<span className="mb-0">
+						{Liferay.Language.get('actions')}
+					</span>
+				</div>
+
+				<p className="email-text mb-0 text-secondary">
+					{Liferay.Language.get(itemData.emailAddress)}
+				</p>
+			</div>
+		</div>
+	);
+}
+
 const MostActiveVisitors = ({
-	items = [],
 	namespace,
 }: {
-	items: TVisitor[];
 	namespace: string;
 }) => {
+	const elementRef = useRef(null);
+
+	const {isLoading, response} = useAnalyticsQuery({
+		element: elementRef.current,
+		query: MostActiveVisitorsQuery,
+		variables: {
+			channelId: "808122315193619922",
+			entityType: "INDIVIDUAL",
+			keywords: "",
+			rangeEnd: null,
+			rangeKey: 7,
+			rangeStart: null,
+			page: 1,
+			size: 20
+		}
+	});
+
 	return (
-		<div className="most-active-visitors-fds">
+		<AnalyticsFrame
+			icon="user"
+			title={Liferay.Language.get('most-active-visitors')}
+		>
+		<div className="most-active-visitors-fds" ref={elementRef}>
 			<FrontendDataSet
 				customRenderers={{
 					tableCell: [
 						{
-							component: visitorSticker,
+							component: VisitorSticker,
 							name: 'visitorSticker',
 							type: 'internal',
 						},
@@ -61,6 +123,7 @@ const MostActiveVisitors = ({
 				]}
 			/>
 		</div>
+		</AnalyticsFrame>
 	);
 };
 

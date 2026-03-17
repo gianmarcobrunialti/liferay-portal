@@ -1,0 +1,34 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2026 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+import React, {Dispatch, SetStateAction} from 'react';
+
+import {AnalyticsFilters, TAnalyticsFilter} from '../types';
+
+interface IProps {
+	additionalProps?: Record<string, any>;
+	filters: TAnalyticsFilter | Dispatch<SetStateAction<TAnalyticsFilter>>;
+	filtersJSONString: string | null;
+	interactable: boolean;
+	persisted: boolean;
+	setValue: (filter: TAnalyticsFilter) => void;
+}
+
+export default function AnalyticsFiltersToolbar(props: IProps) {
+	return props.interactable ? (
+		<div className="d-flex">
+			{Object.entries(props.filters).map(([key, Filter], index) =>
+				Filter.active && key !== AnalyticsFilters.ROOM ? (
+					<Filter.component
+						{...props.additionalProps}
+						key={index}
+						setValue={props.setValue}
+						value={Filter.value}
+					/>
+				) : null
+			)}
+		</div>
+	) : null;
+}

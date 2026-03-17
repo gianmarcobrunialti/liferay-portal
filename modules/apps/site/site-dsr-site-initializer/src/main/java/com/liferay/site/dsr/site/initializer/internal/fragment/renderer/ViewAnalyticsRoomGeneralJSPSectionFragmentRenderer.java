@@ -12,7 +12,6 @@ import com.liferay.object.service.ObjectEntryService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.dsr.site.initializer.internal.display.context.ViewAnalyticsRoomGeneralAnalyticsSectionDisplayContext;
-
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
@@ -32,10 +31,9 @@ public class ViewAnalyticsRoomGeneralJSPSectionFragmentRenderer
 	}
 
 	@Override
-	protected ViewAnalyticsRoomGeneralAnalyticsSectionDisplayContext
-		getDisplayContext(
-			FragmentRendererContext fragmentRendererContext,
-			HttpServletRequest httpServletRequest) {
+	protected ViewAnalyticsRoomGeneralAnalyticsSectionDisplayContext getDisplayContext(
+		FragmentRendererContext fragmentRendererContext,
+		HttpServletRequest httpServletRequest) {
 
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)httpServletRequest.getAttribute(

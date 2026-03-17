@@ -32,10 +32,9 @@ public class ViewAnalyticsRoomTrendJSPSectionFragmentRenderer
 	}
 
 	@Override
-	protected ViewAnalyticsRoomTrendAnalyticsSectionDisplayContext
-		getDisplayContext(
-			FragmentRendererContext fragmentRendererContext,
-			HttpServletRequest httpServletRequest) {
+	protected ViewAnalyticsRoomTrendAnalyticsSectionDisplayContext getDisplayContext(
+		FragmentRendererContext fragmentRendererContext,
+		HttpServletRequest httpServletRequest) {
 
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)httpServletRequest.getAttribute(

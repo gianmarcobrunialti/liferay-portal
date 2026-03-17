@@ -7,6 +7,7 @@ import moment from 'moment';
 import React from 'react';
 
 import '../../../../css/components/EngagementChartTooltip.scss';
+import AnalyticsFrame from "./AnalyticsFrame";
 
 interface IEngagementChartTooltipProps {
 	active?: boolean;
@@ -53,6 +54,7 @@ export default function EngagementChartTooltip({
 	const {date, numberOfVisits, timeSpent} = payload[0].payload;
 
 	return (
+		<AnalyticsFrame>
 		<div className="chart-tooltip-container" data-qa-id="active-tooltip">
 			<p className="chart-tooltip-label mb-1">
 				{formatTooltipDate(date)}
@@ -72,5 +74,6 @@ export default function EngagementChartTooltip({
 				<span className="ml-1">{formatTimeSpent(timeSpent)}</span>
 			</div>
 		</div>
+		</AnalyticsFrame>
 	);
 }

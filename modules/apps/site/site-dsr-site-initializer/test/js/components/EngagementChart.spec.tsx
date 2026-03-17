@@ -8,7 +8,7 @@ import {render} from '@testing-library/react';
 import React from 'react';
 import ResizeObserver from 'resize-observer-polyfill';
 
-import EngagementChart from '../../../src/main/resources/META-INF/resources/js/main_view/analytics/components/EngagementChart';
+import RecentEngagementChart from '../../../src/main/resources/META-INF/resources/js/main_view/analytics/components/RecentEngagementChart';
 import {mockEngagementChartData} from './__mocks__';
 
 global.ResizeObserver = ResizeObserver;
@@ -31,7 +31,7 @@ describe('EngagementTimelineChart component', () => {
 
 	beforeEach(() => {
 		const view = render(
-			<EngagementChart
+			<RecentEngagementChart
 				engagementChartItems={mockEngagementChartData}
 				isLoading={false}
 			/>

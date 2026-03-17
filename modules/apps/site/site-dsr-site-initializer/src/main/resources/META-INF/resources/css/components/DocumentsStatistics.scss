@@ -1,6 +1,11 @@
 .document-statistics-fds {
 	.table-responsive {
-		overflow-x: hidden;
+		margin-bottom: 0;
+
+		.table-list {
+			border-bottom: 0;
+			border-top: 0;
+		}
 	}
 
 	tbody td:last-child,

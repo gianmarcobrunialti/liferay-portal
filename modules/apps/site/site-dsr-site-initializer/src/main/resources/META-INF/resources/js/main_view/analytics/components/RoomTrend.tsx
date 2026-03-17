@@ -10,6 +10,7 @@ import ClayButton from '@clayui/button';
 
 import '../../../../css/components/RoomTrend.scss';
 import RoomService from '../../../common/services/RoomService';
+import AnalyticsFrame from "./AnalyticsFrame";
 
 type TTrendOptions = {
 	color?: string;
@@ -102,7 +103,7 @@ const OPTIONS_KEY = [
 	OPTIONS.RE_IGNITED,
 ];
 
-const RoomTrend = ({roomId}: {roomId: number}) => {
+const RoomTrend = ({roomId = 123}: {roomId: number}) => {
 	const [trendStatus, setTrendStatus] = useState(OPTIONS.COLD);
 
 	const {color, icon, label, percentage, useSpritemap} = trendStatus;
@@ -116,6 +117,7 @@ const RoomTrend = ({roomId}: {roomId: number}) => {
 	return (
 		<>
 			{roomId ? (
+				<AnalyticsFrame>
 				<div className="inline-item inline-item-before room-trend">
 					<div>
 						<div className="mb-1">
@@ -221,6 +223,7 @@ const RoomTrend = ({roomId}: {roomId: number}) => {
 						></img>
 					</div>
 				</div>
+				</AnalyticsFrame>
 			) : null}
 		</>
 	);

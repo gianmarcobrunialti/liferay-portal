@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import React from 'react';
+import React, {useRef} from 'react';
 import {
 	Bar,
 	BarChart,
@@ -19,6 +19,10 @@ import {
 	IFrequencyChartProps,
 } from '../../../common/utils/types';
 import Loader from './Loader';
+import AnalyticsFrame from "./AnalyticsFrame";
+import useAnalyticsQuery from "../../../common/hooks/useAnalyticsQuery";
+import ActivityLogQuery from "../queries/ActivityLogQuery";
+import FrequencyChartQuery from "../queries/FrequencyChartQuery";
 
 const margin = {
 	bottom: 5,
@@ -57,10 +61,24 @@ const formatData = (
 	}));
 };
 
-function FrequencyChart({
-	frequencyChartItems,
-	isLoading = false,
-}: IFrequencyChartProps) {
+function FrequencyChart() {
+	const elementRef = useRef(null);
+
+	const {isLoading, response} = useAnalyticsQuery({
+		element: elementRef.current,
+		query: FrequencyChartQuery,
+		variables: {
+			channelId: "808122315193619922",
+			entityType: "INDIVIDUAL",
+			keywords: "",
+			rangeEnd: null,
+			rangeKey: 7,
+			rangeStart: null,
+			page: 1,
+			size: 20
+		}
+	});
+
 	if (isLoading) {
 		return <Loader />;
 	}
@@ -78,7 +96,11 @@ function FrequencyChart({
 	}
 
 	return (
-		<ResponsiveContainer>
+		<AnalyticsFrame
+			icon="liferay-ac"
+			title={Liferay.Language.get('visits-frequency')}
+		>
+		<ResponsiveContainer ref={elementRef}>
 			<BarChart
 				data={formattedData}
 				height={300}
@@ -129,6 +151,7 @@ function FrequencyChart({
 				<YAxis />
 			</BarChart>
 		</ResponsiveContainer>
+		</AnalyticsFrame>
 	);
 }
 

@@ -7,11 +7,15 @@ package com.liferay.site.dsr.site.initializer.internal.display.context;
 
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.service.ObjectEntryService;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.site.dsr.site.initializer.internal.constants.DSRWebKeys;
 
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 
 import java.util.Collections;
 import java.util.Map;
@@ -35,6 +39,19 @@ public abstract class BaseAnalyticsSectionDisplayContext {
 
 		themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
+	}
+
+	public String getAnalyticsStoreFilters() {
+		HttpSession httpSession = httpServletRequest.getSession();
+
+		String filters = (String)httpSession.getAttribute(
+			DSRWebKeys.DSR_ANALYTICS_STORE_FILTERS);
+
+		if (Validator.isNotNull(filters)) {
+			return filters;
+		}
+
+		return StringPool.BLANK;
 	}
 
 	public Map<String, Object> getProps() {

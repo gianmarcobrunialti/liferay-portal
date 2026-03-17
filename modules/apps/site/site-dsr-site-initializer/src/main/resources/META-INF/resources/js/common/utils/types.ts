@@ -31,6 +31,7 @@ export interface IEngagementChartItem {
 export interface IEngagementChartProps {
 	engagementChartItems?: IEngagementChartItem[] | null;
 	isLoading?: boolean;
+	ref: any;
 }
 
 export interface IFrequencyChartItem {

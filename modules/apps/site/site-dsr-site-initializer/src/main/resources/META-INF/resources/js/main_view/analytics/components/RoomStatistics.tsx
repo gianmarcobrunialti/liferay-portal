@@ -6,7 +6,7 @@
 import ClayIcon from '@clayui/icon';
 import ClayLayout from '@clayui/layout';
 import {sub} from 'frontend-js-web';
-import React from 'react';
+import React, {useRef} from 'react';
 
 import '../../../../css/components/RoomStatistics.scss';
 
@@ -18,6 +18,10 @@ import {
 	IRoomStatisticsProps,
 } from '../../../common/utils/types';
 import Loader from './Loader';
+import AnalyticsFrame from "./AnalyticsFrame";
+import useAnalyticsQuery from "../../../common/hooks/useAnalyticsQuery";
+import ActivityLogQuery from "../queries/ActivityLogQuery";
+import RoomStatisticsQuery from "../queries/RoomStatisticsQuery";
 
 const formatTime = (minutes?: number): string => {
 	if (!minutes) {
@@ -86,7 +90,24 @@ const formatData = (data: IRoomStatistics): IRoomStatisticsItem[] => {
 	];
 };
 
-function RoomStatistics({data, isLoading}: IRoomStatisticsProps) {
+function RoomStatistics() {
+	const elementRef = useRef(null);
+
+	const {isLoading, response} = useAnalyticsQuery({
+		element: elementRef.current,
+		query: RoomStatisticsQuery,
+		variables: {
+			channelId: "808122315193619922",
+			entityType: "INDIVIDUAL",
+			keywords: "",
+			rangeEnd: null,
+			rangeKey: 7,
+			rangeStart: null,
+			page: 1,
+			size: 20
+		}
+	});
+
 	if (isLoading) {
 		return <Loader />;
 	}
@@ -98,6 +119,7 @@ function RoomStatistics({data, isLoading}: IRoomStatisticsProps) {
 	const formattedData = formatData(data);
 
 	return (
+		<AnalyticsFrame>
 		<div className="py-4">
 			<ClayLayout.Row className="align-items-center">
 				{formattedData.map(
@@ -140,6 +162,7 @@ function RoomStatistics({data, isLoading}: IRoomStatisticsProps) {
 				)}
 			</ClayLayout.Row>
 		</div>
+		</AnalyticsFrame>
 	);
 }
 

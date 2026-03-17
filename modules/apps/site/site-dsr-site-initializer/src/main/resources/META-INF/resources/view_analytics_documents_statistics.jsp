@@ -7,10 +7,15 @@
 
 <%@ include file="/init.jsp" %>
 
+<%
+ViewAnalyticsDocumentsStatisticsSectionDisplayContext viewAnalyticsDocumentsStatisticsSectionDisplayContext = (ViewAnalyticsDocumentsStatisticsSectionDisplayContext)request.getAttribute(ViewAnalyticsDocumentsStatisticsSectionDisplayContext.class.getName());
+%>
+
 <div>
 	<div class="custom-empty-state dsr-section">
 		<react:component
-			module="{RoomDocumentsStatistics} from site-dsr-site-initializer"
+			module="{DocumentsStatistics} from site-dsr-site-initializer"
+			props="<%= viewAnalyticsDocumentsStatisticsSectionDisplayContext.getProps() %>"
 		/>
 	</div>
 </div>
