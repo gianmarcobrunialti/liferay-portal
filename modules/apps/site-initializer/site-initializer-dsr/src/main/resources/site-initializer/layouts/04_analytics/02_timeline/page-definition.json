@@ -1,0 +1,36 @@
+{
+	"pageElement": {
+		"pageElements": [
+			{
+				"definition": {
+					"fragment": {
+						"key": "com.liferay.site.dsr.site.initializer.internal.fragment.renderer.ViewAnalyticsNavigationJSPSectionFragmentRenderer"
+					},
+					"fragmentConfig": {},
+					"fragmentFields": [],
+					"indexed": true
+				},
+				"type": "Fragment"
+			},
+			{
+				"definition": {
+					"fragment": {
+						"key": "com.liferay.site.dsr.site.initializer.internal.fragment.renderer.ViewAnalyticsActivityLogJSPSectionFragmentRenderer"
+					},
+					"fragmentConfig": {},
+					"fragmentFields": [],
+					"indexed": true
+				},
+				"type": "Fragment"
+			}
+		],
+		"type": "Root"
+	},
+	"settings": {
+		"colorSchemeName": "01",
+		"masterPage": {
+			"key": "dsr-master"
+		}
+	},
+	"version": 1.1
+}
