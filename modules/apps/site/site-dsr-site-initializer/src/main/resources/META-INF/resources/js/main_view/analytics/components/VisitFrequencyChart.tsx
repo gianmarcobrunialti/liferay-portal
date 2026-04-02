@@ -43,6 +43,8 @@ const mockedData = {
 	],
 };
 
+// TODO REMOVE
+
 const getFrequencyLabel = (type: string): string => {
 	if (type === 'DAILY') {
 		return Liferay.Language.get('daily');

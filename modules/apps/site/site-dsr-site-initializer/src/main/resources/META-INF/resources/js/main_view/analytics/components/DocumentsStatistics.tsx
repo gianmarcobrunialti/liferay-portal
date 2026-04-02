@@ -16,6 +16,8 @@ import useAnalyticsQuery from "../../../common/hooks/useAnalyticsQuery";
 import ActivityLogQuery from "../queries/ActivityLogQuery";
 import DocumentsStatisticsQuery from "../queries/DocumentsStatisticsQuery";
 
+// TODO REMOVE
+
 type TDocumentsStatisticsData = {
 	download: number;
 	lastViewed: string;
