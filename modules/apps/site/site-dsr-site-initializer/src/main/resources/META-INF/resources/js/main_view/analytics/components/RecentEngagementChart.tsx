@@ -3,39 +3,46 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import React, {useRef} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 
 import Loader from './Loader';
 import AnalyticsFrame from "./AnalyticsFrame";
 import {BASE_URL} from "../utils/constants";
-import {EngagementChart} from "../../../index";
 import useAnalyticsQuery from "../../../common/hooks/useAnalyticsQuery";
-import ActivityLogQuery from "../queries/ActivityLogQuery";
 import RecentEngagementChartQuery from "../queries/RecentEngagementChartQuery";
+import EngagementChart from "./EngagementChart";
+import {IEngagementChartItem} from "../../../common/utils/types";
 
 function RecentEngagementChart() {
+	const [data, setData] = useState<IEngagementChartItem[]>([]);
+
 	const elementRef = useRef(null);
 
 	const {isLoading, response} = useAnalyticsQuery({
 		element: elementRef.current,
 		query: RecentEngagementChartQuery,
 		variables: {
-			channelId: "808122315193619922",
-			entityType: "INDIVIDUAL",
-			keywords: "",
-			rangeEnd: null,
-			rangeKey: 7,
-			rangeStart: null,
-			page: 1,
-			size: 20
+			"interval": "D",
+			"devices": "Any",
+			"location": "Any",
+			"rangeEnd": null,
+			"rangeKey": 7,
+			"rangeStart": null,
+			"channelId": "808122315193619922"
 		}
 	});
+
+	useEffect(() => {
+		if (response) {
+			setData(response);
+		}
+	}, [response]);
 
 	if (isLoading) {
 		return <Loader />;
 	}
 
-	if (!engagementChartItems?.length) {
+	if (!data?.length) {
 		return <p>{Liferay.Language.get('no-data-available')}</p>;
 	}
 

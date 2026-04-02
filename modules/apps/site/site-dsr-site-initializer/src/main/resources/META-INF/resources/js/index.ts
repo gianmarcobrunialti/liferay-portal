@@ -13,7 +13,7 @@ export {default as CMSFileSelectorEventHandler} from './document_library/CMSFile
 // Main
 
 export {default as ActivityLog} from './main_view/analytics/components/ActivityLog';
-export {default as DocumentsStatistics} from './main_view/analytics/components/DocumentsStatistics';
+export {default as RoomDocumentsStatistics} from './main_view/analytics/components/RoomDocumentsStatistics';
 export {default as RecentEngagementChart} from './main_view/analytics/components/RecentEngagementChart';
 export {default as TimelineEngagementChart} from './main_view/analytics/components/TimelineEngagementChart';
 export {default as FrequencyChart} from './main_view/analytics/components/FrequencyChart';

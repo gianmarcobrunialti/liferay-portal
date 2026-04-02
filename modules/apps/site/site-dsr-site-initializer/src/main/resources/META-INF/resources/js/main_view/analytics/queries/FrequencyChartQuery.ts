@@ -2,32 +2,12 @@ import {mockFrequencyChartData} from "../../../__mocks__";
 
 export default {
     mock: mockFrequencyChartData,
-    query: `
-query UserSession($channelId: String!, $entityType: EntityType!, $keywords: String, $page: Int!, $rangeEnd: String, $rangeKey: Int, $rangeStart: String, $size: Int!) {
-  eventsByUserSessions(
-    channelId: $channelId
-    entityType: $entityType
-    keywords: $keywords
-    page: $page
-    rangeEnd: $rangeEnd
-    rangeKey: $rangeKey
-    rangeStart: $rangeStart
-    size: $size
-  ) {
-    userSessions {
-      ... on UserSession {
-        events {
-          createDate
-          emailAddressHashed
-          name
-          __typename
-        }
-        __typename
-      }
-      __typename
+    query: `query VisitFrequency($channelId: String!, $rangeKey: Int) {
+    visitFrequency(channelId: $channelId, rangeKey: $rangeKey) {
+        visitFrequency {
+            count
+            name
+        },
+        totalCount
     }
-    totalEvents
-    __typename
-  }
-}
-`};
+}`};

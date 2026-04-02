@@ -29,8 +29,7 @@ export interface IEngagementChartItem {
 }
 
 export interface IEngagementChartProps {
-	engagementChartItems?: IEngagementChartItem[] | null;
-	isLoading?: boolean;
+	data?: IEngagementChartItem[];
 	ref: any;
 }
 

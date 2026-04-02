@@ -14,7 +14,7 @@ ViewAnalyticsEngagementChartAnalyticsSectionDisplayContext viewAnalyticsEngageme
 <div>
 	<div class="custom-empty-state dsr-section">
 		<react:component
-			module="{EngagementChart} from site-dsr-site-initializer"
+			module="{RecentEngagementChart} from site-dsr-site-initializer"
 			props="<%= viewAnalyticsEngagementChartAnalyticsSectionDisplayContext.getProps() %>"
 		/>
 	</div>

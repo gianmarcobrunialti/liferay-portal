@@ -8,14 +8,14 @@
 <%@ include file="/init.jsp" %>
 
 <%
-ViewAnalyticsDocumentsStatisticsSectionDisplayContext viewAnalyticsDocumentsStatisticsSectionDisplayContext = (ViewAnalyticsDocumentsStatisticsSectionDisplayContext)request.getAttribute(ViewAnalyticsDocumentsStatisticsSectionDisplayContext.class.getName());
+ViewAnalyticsDocumentsStatisticsAnalyticsSectionDisplayContext viewAnalyticsDocumentsStatisticsAnalyticsSectionDisplayContext = (ViewAnalyticsDocumentsStatisticsAnalyticsSectionDisplayContext)request.getAttribute(ViewAnalyticsDocumentsStatisticsAnalyticsSectionDisplayContext.class.getName());
 %>
 
 <div>
 	<div class="custom-empty-state dsr-section">
 		<react:component
-			module="{DocumentsStatistics} from site-dsr-site-initializer"
-			props="<%= viewAnalyticsDocumentsStatisticsSectionDisplayContext.getProps() %>"
+			module="{RoomDocumentsStatistics} from site-dsr-site-initializer"
+			props="<%= viewAnalyticsDocumentsStatisticsAnalyticsSectionDisplayContext.getProps() %>"
 		/>
 	</div>
 </div>

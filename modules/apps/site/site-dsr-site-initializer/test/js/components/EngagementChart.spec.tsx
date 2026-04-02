@@ -31,10 +31,7 @@ describe('EngagementTimelineChart component', () => {
 
 	beforeEach(() => {
 		const view = render(
-			<RecentEngagementChart
-				engagementChartItems={mockEngagementChartData}
-				isLoading={false}
-			/>
+			<RecentEngagementChart />
 		);
 
 		container = view.container;

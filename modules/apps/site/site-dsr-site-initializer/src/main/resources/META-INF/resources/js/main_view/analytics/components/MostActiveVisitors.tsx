@@ -4,83 +4,50 @@
  */
 
 import {FrontendDataSet} from '@liferay/frontend-data-set-web';
-import React, {useRef} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 
-import AccountSticker from '../../../common/components/AccountSticker';
+import VisitorStickerRenderer from './cell_renderers/VisitorStickerRenderer';
 
 import './../../../../css/components/MostActiveVisitors.scss';
 import AnalyticsFrame from "./AnalyticsFrame";
 import useAnalyticsQuery from "../../../common/hooks/useAnalyticsQuery";
-import ActivityLogQuery from "../queries/ActivityLogQuery";
 import MostActiveVisitorsQuery from "../queries/MostActiveVisitorsQuery";
-
-type TVisitor = {
-	activitiesCount: number;
-	emailAddress: string;
-	firstName: string;
-	lastName: string;
-	logoURL: string | undefined;
-};
-
-function VisitorSticker({itemData}: {itemData: TVisitor}) {
-	return (
-		<div className="d-flex inline-item">
-			<AccountSticker
-				logoURL={itemData.logoURL}
-				name={itemData.firstName}
-				shape="user-icon"
-			/>
-
-			<div className="ml-3">
-				<div className="align-items-center font-weight-semi-bold visitors-full-name">
-					<span className="mb-0 mr-1">
-						{Liferay.Language.get(itemData.firstName)}
-					</span>
-
-					<span className="mb-0">
-						{Liferay.Language.get(itemData.lastName)}
-					</span>
-				</div>
-
-				<div className="align-items-center">
-					<span className="mb-0 mr-1">
-						{itemData.activitiesCount}
-					</span>
-
-					<span className="mb-0">
-						{Liferay.Language.get('actions')}
-					</span>
-				</div>
-
-				<p className="email-text mb-0 text-secondary">
-					{Liferay.Language.get(itemData.emailAddress)}
-				</p>
-			</div>
-		</div>
-	);
-}
+import {TVisitor} from "../../../common/utils/types";
+import Loader from "./Loader";
 
 const MostActiveVisitors = ({
 	namespace,
 }: {
 	namespace: string;
 }) => {
+	const [data, setData] = useState<TVisitor[]>([]);
+
 	const elementRef = useRef(null);
 
 	const {isLoading, response} = useAnalyticsQuery({
 		element: elementRef.current,
 		query: MostActiveVisitorsQuery,
 		variables: {
-			channelId: "808122315193619922",
-			entityType: "INDIVIDUAL",
-			keywords: "",
-			rangeEnd: null,
-			rangeKey: 7,
-			rangeStart: null,
-			page: 1,
-			size: 20
-		}
+			"channelId": "808122315193619922",
+			"rangeKey": 7,
+			"size": 10,
+			"start": 0
+		},
 	});
+
+	useEffect(() => {
+		if (response) {
+			setData(response);
+		}
+	}, [response]);
+
+	if (isLoading) {
+		return <Loader />;
+	}
+
+	if (!data?.length) {
+		return <p>{Liferay.Language.get('no-data-available')}</p>;
+	}
 
 	return (
 		<AnalyticsFrame
@@ -92,14 +59,14 @@ const MostActiveVisitors = ({
 				customRenderers={{
 					tableCell: [
 						{
-							component: VisitorSticker,
+							component: VisitorStickerRenderer,
 							name: 'visitorSticker',
 							type: 'internal',
 						},
 					],
 				}}
 				id={namespace}
-				items={items}
+				items={data}
 				showManagementBar={false}
 				showPagination={false}
 				showSearch={false}

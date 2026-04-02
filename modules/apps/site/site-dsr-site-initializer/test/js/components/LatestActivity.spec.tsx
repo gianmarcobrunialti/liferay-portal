@@ -9,15 +9,6 @@ import React from 'react';
 
 import LatestActivity from '../../../src/main/resources/META-INF/resources/js/main_view/analytics/components/LatestActivity';
 
-const mockData = [
-	{
-		action: 'created a new document',
-		createDate: '2026-03-26T14:30:00Z',
-		logoURL: 'https://test.com/logo.png',
-		name: 'John Doe',
-	},
-];
-
 const mockLiferayLanguageGet = jest.fn((key: string) => {
 	return key;
 });
@@ -48,7 +39,7 @@ describe('LatestActivity', () => {
 
 	it('renders the component with provided data', () => {
 		const {baseElement} = render(
-			<LatestActivity items={mockData} namespace="test-namespace" />
+			<LatestActivity namespace="test-namespace" />
 		);
 
 		expect(baseElement).toMatchSnapshot();
@@ -58,7 +49,7 @@ describe('LatestActivity', () => {
 	});
 
 	it('renders the correct timestamp representation from moment', () => {
-		render(<LatestActivity items={mockData} namespace="test-namespace" />);
+		render(<LatestActivity namespace="test-namespace" />);
 
 		expect(screen.getByText('2 hours ago')).toBeInTheDocument();
 	});
@@ -74,7 +65,6 @@ describe('LatestActivity', () => {
 
 		render(
 			<LatestActivity
-				items={dataWithoutLogo}
 				namespace="test-namespace"
 			/>
 		);

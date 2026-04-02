@@ -43,7 +43,7 @@ describe('MostActiveVisitors', () => {
 
 	it('renders the component with provided data', () => {
 		const {baseElement} = render(
-			<MostActiveVisitors items={mockData} namespace="test-namespace" />
+			<MostActiveVisitors namespace="test-namespace" />
 		);
 
 		expect(baseElement).toMatchSnapshot();
@@ -68,7 +68,6 @@ describe('MostActiveVisitors', () => {
 
 		render(
 			<MostActiveVisitors
-				items={dataWithoutLogo}
 				namespace="test-namespace"
 			/>
 		);

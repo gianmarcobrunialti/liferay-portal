@@ -4,25 +4,75 @@
  */
 
 import {FrontendDataSet} from '@liferay/frontend-data-set-web';
-import React from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 
-import {TRoomDocumentsStatisticsProps} from '../../../common/utils/types';
-import {AverageTimeDataRenderer} from './data_renderers/AverageTimeDataRenderer';
-import {DocumentTitleDataRenderer} from './data_renderers/DocumentTitleDataRenderer';
-import {LastViewedDataRenderer} from './data_renderers/LastViewedDataRenderer';
-import {UserInvolvedDataRenderer} from './data_renderers/UserInvolvedDataRenderer';
+import {
+	TRoomDocumentsStatistics,
+} from '../../../common/utils/types';
+import {AverageTimeDataRenderer} from './cell_renderers/AverageTimeDataRenderer';
+import {DocumentTitleDataRenderer} from './cell_renderers/DocumentTitleDataRenderer';
+import {LastViewedDataRenderer} from './cell_renderers/LastViewedDataRenderer';
+import {UserInvolvedDataRenderer} from './cell_renderers/UserInvolvedDataRenderer';
 
 import '../../../../css/components/DocumentsStatistics.scss';
+import useAnalyticsQuery from "../../../common/hooks/useAnalyticsQuery";
+import DocumentsStatisticsQuery from "../queries/DocumentsStatisticsQuery";
+import AnalyticsFrame from "./AnalyticsFrame";
+import Loader from "./Loader";
 
 const RoomDocumentsStatistics = ({
-	items = [],
 	namespace,
 }: {
-	items?: TRoomDocumentsStatisticsProps;
 	namespace: string;
 }) => {
+	const [data, setData] = useState<TRoomDocumentsStatistics[]>([]);
+
+	const elementRef = useRef(null);
+
+	const {isLoading, response} = useAnalyticsQuery({
+		element: elementRef.current,
+		query: DocumentsStatisticsQuery,
+		variables: {
+			"channelId": "808122315193619922",
+			"keywords": "",
+			"size": 20,
+			"sort": {
+				"column": "downloadsMetric",
+				"type": "DESC"
+			},
+			"start": 0,
+			"rangeEnd": null,
+			"rangeKey": 7,
+			"rangeStart": null
+		}
+	});
+
+	useEffect(() => {
+		if (response) {
+			setData(response);
+		}
+
+		return () => {};
+	}, [response, setData]);
+
+	if (isLoading) {
+		return <Loader />;
+	}
+
+	if (!data?.length) {
+		return (
+			<p className="text-muted">
+				{Liferay.Language.get('no-data-available')}
+			</p>
+		);
+	}
+
 	return (
-		<div className="document-statistics-fds">
+		<AnalyticsFrame
+			icon="documents-and-media"
+			title={Liferay.Language.get('most-engaged-documents')}
+		>
+		<div className="document-statistics-fds" ref={elementRef}>
 			<FrontendDataSet
 				customDataRenderers={{
 					averageTimeDataRenderer: AverageTimeDataRenderer,
@@ -31,7 +81,7 @@ const RoomDocumentsStatistics = ({
 					userInvolvedDataRenderer: UserInvolvedDataRenderer,
 				}}
 				id={namespace}
-				items={items}
+				items={data}
 				showManagementBar={false}
 				showPagination={false}
 				showSearch={false}
@@ -80,6 +130,7 @@ const RoomDocumentsStatistics = ({
 				]}
 			/>
 		</div>
+		</AnalyticsFrame>
 	);
 };
 

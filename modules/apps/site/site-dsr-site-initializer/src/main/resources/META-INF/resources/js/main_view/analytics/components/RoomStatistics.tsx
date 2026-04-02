@@ -6,7 +6,7 @@
 import ClayIcon from '@clayui/icon';
 import ClayLayout from '@clayui/layout';
 import {sub} from 'frontend-js-web';
-import React, {useRef} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 
 import '../../../../css/components/RoomStatistics.scss';
 
@@ -91,6 +91,8 @@ const formatData = (data: IRoomStatistics): IRoomStatisticsItem[] => {
 };
 
 function RoomStatistics() {
+	const [data, setData] = useState<IRoomStatisticsItem[]>([]);
+
 	const elementRef = useRef(null);
 
 	const {isLoading, response} = useAnalyticsQuery({
@@ -108,6 +110,14 @@ function RoomStatistics() {
 		}
 	});
 
+	useEffect(() => {
+		if (response) {
+			setData(formatData(response));
+		}
+
+		return () => {};
+	}, [response, setData]);
+
 	if (isLoading) {
 		return <Loader />;
 	}
@@ -116,18 +126,16 @@ function RoomStatistics() {
 		return <p>{Liferay.Language.get('no-data-available')}</p>;
 	}
 
-	const formattedData = formatData(data);
-
 	return (
 		<AnalyticsFrame>
 		<div className="py-4">
 			<ClayLayout.Row className="align-items-center">
-				{formattedData.map(
+				{data.map(
 					(
 						roomStatisticsItem: IRoomStatisticsItem,
 						index: number
 					) => {
-						const showBorder = index !== formattedData.length - 1;
+						const showBorder = index !== data.length - 1;
 
 						return (
 							<ClayLayout.Col

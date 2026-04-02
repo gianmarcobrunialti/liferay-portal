@@ -57,7 +57,7 @@ export default function useAnalyticsQuery({
 	},
 	variables: any;
 }) {
-	const isLoading = useState(true);
+	const [isLoading, setIsLoading] = useState(true);
 	const isMounted = useIsMounted();
 	const isVisible = useIsInViewport(element);
 
@@ -66,8 +66,10 @@ export default function useAnalyticsQuery({
 
 	const sendRequest = useCallback(
 		async (filters: TAnalyticsFilter) => {
+			setIsLoading(true);
 			console.log("sendRequest");
 			console.log(settings.checkViewportVisibility, isVisible, variables);
+
 			if (settings.checkViewportVisibility && isVisible) {
 				const {mock, query: queryString} = query;
 
@@ -82,6 +84,8 @@ export default function useAnalyticsQuery({
 
 					console.log(response);
 				}
+
+				setIsLoading(false);
 			}
 		},
 		[filters, isVisible, setResponse, settings, variables]

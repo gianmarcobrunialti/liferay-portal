@@ -21,31 +21,19 @@ import {
     IEngagementChartProps,
 } from '../../../common/utils/types';
 import EngagementChartTooltip from './EngagementChartTooltip';
-import Loader from './Loader';
-import AnalyticsFrame from "./AnalyticsFrame";
-import {BASE_URL} from "../utils/constants";
 
 const formatXAxisDate = (tickItem: string | number): string => {
     return moment(tickItem).format('MMM DD');
 };
 
 function EngagementChart({
-    engagementChartItems,
-    isLoading = false,
+    data,
     ref,
 }: IEngagementChartProps) {
-    if (isLoading) {
-        return <Loader />;
-    }
-
-    if (!engagementChartItems?.length) {
-        return <p>{Liferay.Language.get('no-data-available')}</p>;
-    }
-
     return (
         <ResponsiveContainer ref={ref}>
             <LineChart
-                data={engagementChartItems}
+                data={data}
                 margin={{
                     bottom: 5,
                     left: 0,
@@ -69,7 +57,7 @@ function EngagementChart({
                     </linearGradient>
                 </defs>
 
-                {engagementChartItems.map(
+                {data?.map(
                     (
                         engagementChartItem: IEngagementChartItem,
                         index: number

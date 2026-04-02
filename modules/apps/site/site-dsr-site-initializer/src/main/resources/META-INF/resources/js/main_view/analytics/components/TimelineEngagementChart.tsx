@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import React, {useRef} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 
 import AnalyticsFrame from "./AnalyticsFrame";
 import Loader from "./Loader";
@@ -12,38 +12,48 @@ import useAnalyticsQuery from "../../../common/hooks/useAnalyticsQuery";
 import ActivityLogQuery from "../queries/ActivityLogQuery";
 import TimelineEngagementChartQuery
 	from "../queries/TimelineEngagementChartQuery";
+import {IEngagementChartItem} from "../../../common/utils/types";
 
 function TimelineEngagementChart() {
+	const [data, setData] = useState<IEngagementChartItem[]>([]);
+
 	const elementRef = useRef(null);
 
 	const {isLoading, response} = useAnalyticsQuery({
 		element: elementRef.current,
 		query: TimelineEngagementChartQuery,
 		variables: {
-			channelId: "808122315193619922",
-			entityType: "INDIVIDUAL",
-			keywords: "",
-			rangeEnd: null,
-			rangeKey: 7,
-			rangeStart: null,
-			page: 1,
-			size: 20
+			"interval": "D",
+			"emailAddresses" : ["test@liferay.com"],
+			"devices": "Any",
+			"location": "Any",
+			"rangeEnd": null,
+			"rangeKey": 7,
+			"rangeStart": null,
+			"channelId": "808122315193619922"
 		}
 	});
+
+	useEffect(() => {
+		if (response) {
+			setData(response);
+		}
+	}, [response]);
 
 	if (isLoading) {
 		return <Loader />;
 	}
 
-	if (!engagementChartItems?.length) {
+	if (!data?.length) {
 		return <p>{Liferay.Language.get('no-data-available')}</p>;
 	}
+
 	return (
 		<AnalyticsFrame
 			icon="analytics"
 			title={Liferay.Language.get('engagement-timeline')}
 		>
-			<EngagementChart ref={elementRef} />
+			<EngagementChart data={data} ref={elementRef} />
 		</AnalyticsFrame>
 	);
 }

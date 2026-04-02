@@ -84,7 +84,7 @@ const formatData = (data: IRawDataEntry[]) => {
 	}, {});
 };
 function ActivityLog() {
-	const [activityLogs, setActivityLogs] = useState<TActivityLog>({});
+	const [data, setData] = useState<TActivityLog>({});
 
 	const elementRef = useRef(null);
 
@@ -107,7 +107,7 @@ function ActivityLog() {
 		if (response) {
 			const formattedData = formatData(response);
 
-			setActivityLogs(formattedData);
+			setData(formattedData);
 		}
 
 		return () => {};
@@ -119,7 +119,7 @@ function ActivityLog() {
 			title={Liferay.Language.get('activity-log')}
 		>
 			<div ref={elementRef}>
-				{Object.entries(activityLogs).map(
+				{Object.entries(data).map(
 					([date, userLogs]: [string, IUserLogsEntry[]]) => (
 						<>
 							<div

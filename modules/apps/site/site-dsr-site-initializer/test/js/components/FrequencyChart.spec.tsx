@@ -31,10 +31,7 @@ describe('VisitFrequencyChart component', () => {
 
 	beforeEach(() => {
 		const view = render(
-			<FrequencyChart
-				frequencyChartItems={mockFrequencyChartData}
-				isLoading={false}
-			/>
+			<FrequencyChart />
 		);
 
 		container = view.container;

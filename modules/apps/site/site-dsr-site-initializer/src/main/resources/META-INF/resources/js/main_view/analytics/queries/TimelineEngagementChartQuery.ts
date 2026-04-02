@@ -2,32 +2,34 @@ import {mockEngagementChartData} from "../../../__mocks__";
 
 export default {
     mock: mockEngagementChartData,
-    query: `
-query UserSession($channelId: String!, $entityType: EntityType!, $keywords: String, $page: Int!, $rangeEnd: String, $rangeKey: Int, $rangeStart: String, $size: Int!) {
-  eventsByUserSessions(
-    channelId: $channelId
-    entityType: $entityType
-    keywords: $keywords
-    page: $page
+    query: `query SitesMetricQuery($channelId: String, $emailAddresses: [String], $interval: String!, $rangeEnd: String, $rangeKey: Int, $rangeStart: String) {
+    site(
+        channelId: $channelId
+    emailAddresses: $emailAddresses
+    interval: $interval
     rangeEnd: $rangeEnd
     rangeKey: $rangeKey
     rangeStart: $rangeStart
-    size: $size
-  ) {
-    userSessions {
-      ... on UserSession {
-        events {
-          createDate
-          emailAddressHashed
-          name
-          __typename
+) {
+        sessionsMetric {
+        ...HistogramFragment
+            __typename
         }
         __typename
-      }
-      __typename
     }
-    totalEvents
-    __typename
-  }
 }
-`};
+
+fragment HistogramFragment on Metric {
+    histogram {
+        asymmetricComparison
+        metrics {
+            key
+            value
+            valueKey
+            __typename
+        }
+        total
+        __typename
+    }
+    __typename
+}`};

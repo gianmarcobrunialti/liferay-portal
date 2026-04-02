@@ -4,40 +4,59 @@
  */
 
 import {FrontendDataSet} from '@liferay/frontend-data-set-web';
-import React, {useRef} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 
 import AccountSticker from '../../../common/components/AccountSticker';
 
 import './../../../../css/components/LatestActivity.scss';
 import {TLatestActivity} from '../../../common/utils/types';
-import {timestampDataRenderer} from './data_renderers/TimestampDataRenderer';
+import {TimestampDataRenderer} from './cell_renderers/TimestampDataRenderer';
 import AnalyticsFrame from "./AnalyticsFrame";
 import {BASE_URL} from "../utils/constants";
 import useAnalyticsQuery from "../../../common/hooks/useAnalyticsQuery";
-import ActivityLogQuery from "../queries/ActivityLogQuery";
 import LatestActivityQuery from "../queries/LatestActivityQuery";
+import Loader from "./Loader";
 
 const LatestActivity = ({
 	namespace,
 }: {
 	namespace: string;
 }) => {
+	const [data, setData] = useState<TLatestActivity[]>([]);
+
 	const elementRef = useRef(null);
 
 	const {isLoading, response} = useAnalyticsQuery({
 		element: elementRef.current,
 		query: LatestActivityQuery,
 		variables: {
-			channelId: "808122315193619922",
-			entityType: "INDIVIDUAL",
-			keywords: "",
-			rangeEnd: null,
-			rangeKey: 7,
-			rangeStart: null,
-			page: 1,
-			size: 20
+			"channelId": "808122315193619922",
+			"includeAnonymousUsers": false,
+			"rangeKey": 7,
+			"size": 10,
+			"page": 0
 		}
 	});
+
+	useEffect(() => {
+		if (response) {
+			setData(response);
+		}
+
+		return () => {};
+	}, [response, setData]);
+
+	if (isLoading) {
+		return <Loader />;
+	}
+
+	if (!data?.length) {
+		return (
+			<p className="text-muted">
+				{Liferay.Language.get('no-data-available')}
+			</p>
+		);
+	}
 
 	return (
 		<AnalyticsFrame
@@ -48,7 +67,7 @@ const LatestActivity = ({
 		<div className="latest-activity-fds" ref={elementRef}>
 			<FrontendDataSet
 				customDataRenderers={{
-					timestampDataRenderer,
+					timestampDataRenderer: TimestampDataRenderer,
 				}}
 				customRenderers={{
 					tableCell: [
@@ -76,7 +95,7 @@ const LatestActivity = ({
 					],
 				}}
 				id={namespace}
-				items={items}
+				items={data}
 				showManagementBar={false}
 				showPagination={false}
 				showSearch={false}

@@ -70,7 +70,7 @@ describe('EngagementTimelineChart component', () => {
 
 	beforeEach(() => {
 		const view = render(
-			<TimelineEngagementChart apiData={mockPayload} isLoading={false} />
+			<TimelineEngagementChart  />
 		);
 
 		container = view.container;

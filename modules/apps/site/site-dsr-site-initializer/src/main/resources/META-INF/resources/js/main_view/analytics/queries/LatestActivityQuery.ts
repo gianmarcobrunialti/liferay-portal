@@ -2,32 +2,12 @@ import {mockLatestActivityData} from "../../../__mocks__";
 
 export default {
     mock: mockLatestActivityData,
-    query: `
-query UserSession($channelId: String!, $entityType: EntityType!, $keywords: String, $page: Int!, $rangeEnd: String, $rangeKey: Int, $rangeStart: String, $size: Int!) {
-  eventsByUserSessions(
-    channelId: $channelId
-    entityType: $entityType
-    keywords: $keywords
-    page: $page
-    rangeEnd: $rangeEnd
-    rangeKey: $rangeKey
-    rangeStart: $rangeStart
-    size: $size
-  ) {
-    userSessions {
-      ... on UserSession {
+    query: `query EventQuery($channelId: String!, $includeAnonymousUsers: Boolean, $individualId: String, $keywords: String, $page: Int!, $rangeEnd: String, $rangeKey: Int, $rangeStart: String, $size: Int!) {
+    events(channelId: $channelId, includeAnonymousUsers: $includeAnonymousUsers, individualId: $individualId, keywords: $keywords, page: $page, rangeEnd: $rangeEnd, rangeKey: $rangeKey, rangeStart: $rangeStart, size: $size) {
         events {
-          createDate
-          emailAddressHashed
-          name
-          __typename
+            emailAddressHashed
+            name
+            createDate
         }
-        __typename
-      }
-      __typename
     }
-    totalEvents
-    __typename
-  }
-}
-`};
+}`};

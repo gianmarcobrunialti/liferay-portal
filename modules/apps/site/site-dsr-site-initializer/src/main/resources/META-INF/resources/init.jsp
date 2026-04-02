@@ -45,8 +45,8 @@ page import="com.liferay.site.dsr.site.initializer.internal.display.context.View
 page import="com.liferay.site.dsr.site.initializer.internal.display.context.ViewAnalyticsRoomGeneralSectionDisplayContext" %><%@
 page import="com.liferay.site.dsr.site.initializer.internal.display.context.ViewAnalyticsMostActiveVisitorsSectionDisplayContext" %><%@
 page import="com.liferay.site.dsr.site.initializer.internal.display.context.ViewAnalyticsLatestActivitySectionDisplayContext" %><%@
-page import="com.liferay.site.dsr.site.initializer.internal.display.context.ViewAnalyticsEngagementChartAnalyticsSectionDisplayContext" %><%@
-page import="com.liferay.site.dsr.site.initializer.internal.display.context.ViewAnalyticsDocumentsStatisticsSectionDisplayContext" %><%@
+page import="com.liferay.site.dsr.site.initializer.internal.display.context.ViewAnalyticsEngagementChartAnalyticsSectionDisplayContext" %><%@ page
+	import="com.liferay.site.dsr.site.initializer.internal.display.context.ViewAnalyticsDocumentsStatisticsAnalyticsSectionDisplayContext" %><%@
 page import="com.liferay.site.dsr.site.initializer.internal.display.context.ViewAnalyticsActivityLogDisplayContext" %>
 <%@ page
 	import="com.liferay.site.dsr.site.initializer.internal.display.context.ViewAnalyticsFrequencyChartAnalyticsSectionDisplayContext" %>

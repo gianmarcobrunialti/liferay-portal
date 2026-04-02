@@ -32,7 +32,7 @@ jest.mock('frontend-js-web', () => ({
 describe('RoomStatistics', () => {
 	it('matches snapshot', () => {
 		const {container} = render(
-			<RoomStatistics data={mockRoomStatisticsData} isLoading={false} />
+			<RoomStatistics />
 		);
 
 		expect(container).toMatchSnapshot();
@@ -40,7 +40,7 @@ describe('RoomStatistics', () => {
 
 	it('renders with provided data', () => {
 		const {getByText} = render(
-			<RoomStatistics data={mockRoomStatisticsData} isLoading={false} />
+			<RoomStatistics />
 		);
 
 		expect(getByText('0-hours 45-minutes')).toBeInTheDocument();
@@ -51,7 +51,7 @@ describe('RoomStatistics', () => {
 	});
 
 	it('renders loading state', () => {
-		const {container} = render(<RoomStatistics isLoading={true} />);
+		const {container} = render(<RoomStatistics />);
 
 		expect(
 			container.querySelector('.loading-animation')

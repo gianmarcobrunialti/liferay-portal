@@ -2,32 +2,51 @@ import {mockDocumentsStatisticsData} from "../../../__mocks__";
 
 export default {
     mock: mockDocumentsStatisticsData,
-    query: `
-query UserSession($channelId: String!, $entityType: EntityType!, $keywords: String, $page: Int!, $rangeEnd: String, $rangeKey: Int, $rangeStart: String, $size: Int!) {
-  eventsByUserSessions(
-    channelId: $channelId
-    entityType: $entityType
+    query: `query DocumentsAndMediaList($channelId: String, $keywords: String, $rangeEnd: String, $rangeKey: Int, $rangeStart: String, $size: Int!, $sort: Sort!, $start: Int!) {
+    documents(
+        channelId: $channelId
     keywords: $keywords
-    page: $page
     rangeEnd: $rangeEnd
     rangeKey: $rangeKey
     rangeStart: $rangeStart
     size: $size
-  ) {
-    userSessions {
-      ... on UserSession {
-        events {
-          createDate
-          emailAddressHashed
-          name
-          __typename
+    sort: $sort
+    start: $start
+) {
+        assetMetrics {
+        ... on DocumentMetric {
+                assetId
+                assetTitle
+                commentsMetric {
+                    value
+                    __typename
+                }
+                downloadsMetric {
+                    value
+                    __typename
+                }
+                impressionMadeMetric {
+                    value
+                    __typename
+                }
+                lastViewedMetric {
+                    value
+                    __typename
+                }
+                ratingsMetric {
+                    value
+                    __typename
+                }
+                usersInvolvedMetric {
+                    value
+                    __typename
+                }
+                urls
+                __typename
+            }
+            __typename
         }
+        total
         __typename
-      }
-      __typename
     }
-    totalEvents
-    __typename
-  }
-}
-`};
+}`};

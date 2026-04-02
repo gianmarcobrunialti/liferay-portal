@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import React, {useRef} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
 	Bar,
 	BarChart,
@@ -62,32 +62,34 @@ const formatData = (
 };
 
 function FrequencyChart() {
+	const [data, setData] = useState<IFrequencyChartItem[]>([]);
+
 	const elementRef = useRef(null);
 
 	const {isLoading, response} = useAnalyticsQuery({
 		element: elementRef.current,
 		query: FrequencyChartQuery,
 		variables: {
-			channelId: "808122315193619922",
-			entityType: "INDIVIDUAL",
-			keywords: "",
-			rangeEnd: null,
-			rangeKey: 7,
-			rangeStart: null,
-			page: 1,
-			size: 20
+			"rangeKey": 30,
+			"channelId": "808122315193619922"
 		}
 	});
+
+	useEffect(() => {
+		if (response) {
+			const formattedData = formatData(response);
+
+			setData(formattedData);
+		}
+
+		return () => {};
+	}, [response, setData]);
 
 	if (isLoading) {
 		return <Loader />;
 	}
 
-	const formattedData = formatData(
-		frequencyChartItems as IFrequencyChartItem[]
-	);
-
-	if (!formattedData?.length) {
+	if (!data?.length) {
 		return (
 			<p className="text-muted">
 				{Liferay.Language.get('no-data-available')}
@@ -102,12 +104,12 @@ function FrequencyChart() {
 		>
 		<ResponsiveContainer ref={elementRef}>
 			<BarChart
-				data={formattedData}
+				data={data}
 				height={300}
 				margin={margin}
 				width={600}
 			>
-				{formattedData.map(
+				{data.map(
 					(
 						frequencyChartItem: IFrequencyChartItem,
 						index: number

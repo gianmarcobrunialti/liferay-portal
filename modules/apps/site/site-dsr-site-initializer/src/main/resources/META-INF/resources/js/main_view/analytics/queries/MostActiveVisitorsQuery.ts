@@ -3,31 +3,15 @@ import {mockMostActiveVisitorsData} from "../../../__mocks__";
 export default {
     mock: mockMostActiveVisitorsData,
     query: `
-query UserSession($channelId: String!, $entityType: EntityType!, $keywords: String, $page: Int!, $rangeEnd: String, $rangeKey: Int, $rangeStart: String, $size: Int!) {
-  eventsByUserSessions(
-    channelId: $channelId
-    entityType: $entityType
-    keywords: $keywords
-    page: $page
-    rangeEnd: $rangeEnd
-    rangeKey: $rangeKey
-    rangeStart: $rangeStart
-    size: $size
-  ) {
-    userSessions {
-      ... on UserSession {
-        events {
-          createDate
-          emailAddressHashed
-          name
-          __typename
+    query MostActiveVisitors($channelId: String!, $rangeKey: Int, $size: Int!, $start: Int!) {
+    mostActiveVisitors(channelId: $channelId, rangeKey: $rangeKey, size: $size, start: $start) {
+        mostActiveVisitors {
+            activitiesCount
+            emailAddress
+            firstName
+            id
+            lastName
         }
-        __typename
-      }
-      __typename
+        total
     }
-    totalEvents
-    __typename
-  }
-}
-`};
+}`};

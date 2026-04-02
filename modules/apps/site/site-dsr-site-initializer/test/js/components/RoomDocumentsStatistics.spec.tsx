@@ -76,7 +76,7 @@ describe('RoomDocumentsStatistics', () => {
 
 	it('renders the component with provided data', () => {
 		const {baseElement} = render(
-			<DocumentsStatistics items={mockData} namespace="test-namespace" />
+			<DocumentsStatistics namespace="test-namespace" />
 		);
 
 		expect(baseElement).toMatchSnapshot();
@@ -88,7 +88,7 @@ describe('RoomDocumentsStatistics', () => {
 
 	it('renders the correct average time', () => {
 		render(
-			<DocumentsStatistics items={mockData} namespace="test-namespace" />
+			<DocumentsStatistics namespace="test-namespace" />
 		);
 
 		expect(screen.getByText('1 hour 33 minutes')).toBeInTheDocument();
@@ -96,7 +96,7 @@ describe('RoomDocumentsStatistics', () => {
 
 	it('renders the correct last viewed date', () => {
 		render(
-			<DocumentsStatistics items={mockData} namespace="test-namespace" />
+			<DocumentsStatistics namespace="test-namespace" />
 		);
 
 		expect(screen.getByText('Mar 3, 2026')).toBeInTheDocument();
@@ -104,20 +104,15 @@ describe('RoomDocumentsStatistics', () => {
 
 	it('renders the correct user involved count', () => {
 		render(
-			<DocumentsStatistics items={mockData} namespace="test-namespace" />
+			<DocumentsStatistics namespace="test-namespace" />
 		);
 
 		expect(screen.getByText('4 users')).toBeInTheDocument();
 	});
 
 	it('handles duplicate users in user involved count', () => {
-		const duplicateUserData = [
-			{...mockData[0], userInvolved: ['Sara', 'Sara', 'Mik']},
-		];
-
 		render(
 			<DocumentsStatistics
-				items={duplicateUserData}
 				namespace="test-namespace"
 			/>
 		);
