@@ -24,8 +24,15 @@ function getImage(filename: string) {
 	return `${Liferay.ThemeDisplay.getPortalURL()}${Liferay.ThemeDisplay.getPathContext()}/o/site-dsr-site-initializer/images/${filename}`;
 }
 
-const OPTIONS: Record<string, TTrendOptions> = {
-	COLD: {
+const OPTIONS: TTrendOptions[] = [
+	{
+		color: '#DA1414',
+		icon: 'times-circle-full',
+		label: Liferay.Language.get('closed-lost'),
+		percentage: 0,
+		status: 0,
+	},
+	{
 		color: '#4B9FFF',
 		icon: 'snow',
 		label: Liferay.Language.get('cold'),
@@ -33,29 +40,21 @@ const OPTIONS: Record<string, TTrendOptions> = {
 		status: 1,
 		useSpritemap: true,
 	},
-	CLOSED_LOST: {
-		color: '#DA1414',
-		icon: 'times-circle-full',
-		label: Liferay.Language.get('closed-lost'),
-		percentage: 0,
-		status: 0,
-	},
-	CLOSED_WON: {
-		color: '#AA33FF',
-		icon: 'champion-cup',
-		label: Liferay.Language.get('closed-won'),
-		percentage: 100,
-		status: 8,
+	{
+		icon: 'reload',
+		label: Liferay.Language.get('reignited'),
+		percentage: 25,
+		status: 2,
 		useSpritemap: true,
 	},
-	ENGAGED: {
-		color: '#6CE0CC',
-		icon: 'comments',
-		label: Liferay.Language.get('engaged'),
-		percentage: 62.5,
-		status: 5,
+	{
+		color: '#FFBB00',
+		icon: 'sun',
+		label: Liferay.Language.get('warming-up'),
+		percentage: 37.5,
+		status: 3,
 	},
-	HEATING_UP: {
+	{
 		color: '#FF8133',
 		icon: 'heating',
 		label: Liferay.Language.get('heating-up'),
@@ -63,7 +62,14 @@ const OPTIONS: Record<string, TTrendOptions> = {
 		status: 4,
 		useSpritemap: true,
 	},
-	HOT: {
+	{
+		color: '#6CE0CC',
+		icon: 'comments',
+		label: Liferay.Language.get('engaged'),
+		percentage: 62.5,
+		status: 5,
+	},
+	{
 		color: '#FF4F45',
 		icon: 'hot',
 		label: Liferay.Language.get('hot'),
@@ -71,44 +77,26 @@ const OPTIONS: Record<string, TTrendOptions> = {
 		status: 6,
 		useSpritemap: true,
 	},
-	READY_TO_CLOSE: {
+	{
 		color: '#5ACA75',
 		icon: 'shield-check',
 		label: Liferay.Language.get('ready-to-close'),
 		percentage: 87.5,
 		status: 7,
 	},
-	RE_IGNITED: {
-		icon: 'reload',
-		label: Liferay.Language.get('reignited'),
-		percentage: 25,
-		status: 2,
+	{
+		color: '#AA33FF',
+		icon: 'champion-cup',
+		label: Liferay.Language.get('closed-won'),
+		percentage: 100,
+		status: 8,
 		useSpritemap: true,
 	},
-	WARMING_UP: {
-		color: '#FFBB00',
-		icon: 'sun',
-		label: Liferay.Language.get('warming-up'),
-		percentage: 37.5,
-		status: 3,
-	},
-};
-
-const OPTIONS_KEY = [
-	OPTIONS.COLD,
-	OPTIONS.WARMING_UP,
-	OPTIONS.HEATING_UP,
-	OPTIONS.ENGAGED,
-	OPTIONS.HOT,
-	OPTIONS.READY_TO_CLOSE,
-	OPTIONS.CLOSED_WON,
-	OPTIONS.CLOSED_LOST,
-	OPTIONS.RE_IGNITED,
 ];
 
-const RoomTrend = ({roomId = 38578}: {roomId: number}) => {
+const RoomTrend = ({roomId = 40225}: {roomId: number}) => {
 	const [room, setRoom] = useState<IRoomObjectEntry | null>(null);
-	const [trendStatus, setTrendStatus] = useState(OPTIONS.COLD);
+	const [trendStatus, setTrendStatus] = useState<TTrendOptions>(OPTIONS[1]);
 
 	const {color, icon, label, percentage, useSpritemap} = trendStatus;
 
@@ -122,6 +110,8 @@ const RoomTrend = ({roomId = 38578}: {roomId: number}) => {
 		RoomService.getRoom(roomId)
 			.then((room) => {
 				setRoom(room);
+
+				setTrendStatus(OPTIONS[room.trend]);
 			})
 			.catch(() => {
 				setRoom(null);
@@ -132,8 +122,8 @@ const RoomTrend = ({roomId = 38578}: {roomId: number}) => {
 		<>
 			{room ? (
 				<AnalyticsFrame>
-				<div className="inline-item inline-item-before room-trend">
-					<div>
+					<div className="align-items-center d-flex justify-content-between p-3 room-trend">
+						<div>
 						<div className="mb-1">
 							<p
 								className="font-weight-semi-bold inline-item
@@ -146,15 +136,16 @@ const RoomTrend = ({roomId = 38578}: {roomId: number}) => {
 								symbol="question-circle-full"
 							/>
 						</div>
-						<DropDown
-							closeOnClick
-							defaultValue={room.trend}
-							trigger={
-								<ClayButton
-									className="align-items-center d-flex font-weight-normal justify-content-between px-2 room-trend-button"
-									displayType="secondary"
-								>
-									<span className="align-items-center d-flex flex-grow-1 overflow-hidden">
+
+							<DropDown
+								closeOnClick
+								trigger={
+									<ClayButton
+										className="align-items-center d-flex font-weight-normal justify-content-between px-2 room-trend-button"
+										displayType="secondary"
+									>
+									<span
+										className="align-items-center d-flex flex-grow-1 overflow-hidden">
 										<ClayIcon
 											className="flex-shrink-0 mr-2"
 											color={color}
@@ -163,44 +154,39 @@ const RoomTrend = ({roomId = 38578}: {roomId: number}) => {
 											spritemap={
 												useSpritemap
 													? getImage(
-															'room_trend_icons.svg'
-														)
+														'room_trend_icons.svg'
+													)
 													: undefined
 											}
 										/>
-										<span className="room-trend-button-text text-left text-truncate">
+										<span
+											className="room-trend-button-text text-left text-truncate">
 											{label}
 										</span>
 									</span>
-									<ClayIcon
-										className="flex-shrink-0 ml-2"
-										symbol="caret-double"
-									/>
-								</ClayButton>
-							}
-						>
-							<DropDown.ItemList>
-								{OPTIONS_KEY.map((option, index) => (
-									<DropDown.Item
-										key={index}
-										onClick={() => {
-											updateRoomTrend(
-												roomId,
-												option.status
-											).then(({trend}) => {
-												const updateTrend =
-													OPTIONS_KEY.find(
-														(option) =>
-															option.status ===
-															trend
-													);
-
-												if (updateTrend) {
-													setTrendStatus(updateTrend);
-												}
-											});
-										}}
-									>
+										<ClayIcon
+											className="flex-shrink-0 ml-2"
+											symbol="caret-double"
+										/>
+									</ClayButton>
+								}
+							>
+								<DropDown.ItemList>
+									{OPTIONS.map((option, index) => (
+										<DropDown.Item
+											active={room.trend ===
+													option.status}
+											key={index}
+											onClick={() => {
+												updateRoomTrend(
+													roomId,
+													option.status
+												).then(({trend}) => {
+													setTrendStatus(
+														OPTIONS[trend]);
+												});
+											}}
+										>
 										<span className="mr-4">
 											<ClayIcon
 												color={option.color}
@@ -209,35 +195,38 @@ const RoomTrend = ({roomId = 38578}: {roomId: number}) => {
 												spritemap={
 													option.useSpritemap
 														? getImage(
-																'room_trend_icons.svg'
-															)
+															'room_trend_icons.svg'
+														)
 														: undefined
 												}
 											/>
 										</span>
-										{option.label}
-									</DropDown.Item>
-								))}
-							</DropDown.ItemList>
-						</DropDown>
-					</div>
-					<div className="gauge-container inline-item-after ml-4">
-						<img
-							alt={Liferay.Language.get('room-trend-semicircle')}
-							className="room-trend-semicircle"
-							src={getImage('room_trend_semicircle.svg')}
-						></img>
+											{option.label}
+										</DropDown.Item>
+									))}
+								</DropDown.ItemList>
+							</DropDown>
+						</div>
 
-						<img
-							alt={Liferay.Language.get('room-trend-pointer')}
-							className="room-trend-pointer"
-							src={getImage('room_trend_pointer.svg')}
-							style={{
-								transform: `rotate(${getDegrees(percentage)}deg) translateZ(0)`,
-							}}
-						></img>
+						<div className="gauge-container inline-item-after ml-4">
+							<img
+								alt={Liferay.Language.get(
+									'room-trend-semicircle')}
+								className="room-trend-semicircle"
+								src={getImage('room_trend_semicircle.svg')}
+							></img>
+
+							<img
+								alt={Liferay.Language.get(
+									'room-trend-pointer')}
+								className="room-trend-pointer"
+								src={getImage('room_trend_pointer.svg')}
+								style={{
+									transform: `rotate(${getDegrees(percentage)}deg) translateZ(0)`,
+								}}
+							></img>
+						</div>
 					</div>
-				</div>
 				</AnalyticsFrame>
 			) : null}
 		</>
