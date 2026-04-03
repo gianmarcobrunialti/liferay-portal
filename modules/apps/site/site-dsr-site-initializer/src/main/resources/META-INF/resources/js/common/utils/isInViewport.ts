@@ -8,6 +8,7 @@ export default function isInViewport(
 	{bottomThreshold = 0, topThreshold = 0} = {}
 ) {
 	if (!element) {
+		console.log(element);
 		return false;
 	}
 

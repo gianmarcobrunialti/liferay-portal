@@ -5,7 +5,7 @@
 
 import React from 'react';
 import ClayIcon from "@clayui/icon";
-import {ILogEntry} from "./ActivityLog";
+import {ILogEntry} from "../types/index";
 
 const LogEntry: React.FC<ILogEntry> = (logEntry) => {
     return (

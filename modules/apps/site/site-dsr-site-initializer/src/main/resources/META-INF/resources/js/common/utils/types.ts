@@ -30,7 +30,6 @@ export interface IEngagementChartItem {
 
 export interface IEngagementChartProps {
 	data?: IEngagementChartItem[];
-	ref: any;
 }
 
 export interface IFrequencyChartItem {
@@ -227,5 +226,5 @@ export type TVisitor = {
 	emailAddress: string;
 	firstName: string;
 	lastName: string;
-	logoURL: string | undefined;
+	logoURL?: string;
 };

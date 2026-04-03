@@ -16,11 +16,10 @@ import {IEngagementChartItem} from "../../../common/utils/types";
 
 function TimelineEngagementChart() {
 	const [data, setData] = useState<IEngagementChartItem[]>([]);
-
-	const elementRef = useRef(null);
+	const [element, setElement] = useState<HTMLElement | null>(null);
 
 	const {isLoading, response} = useAnalyticsQuery({
-		element: elementRef.current,
+		element,
 		query: TimelineEngagementChartQuery,
 		variables: {
 			"interval": "D",
@@ -40,20 +39,20 @@ function TimelineEngagementChart() {
 		}
 	}, [response]);
 
-	if (isLoading) {
-		return <Loader />;
-	}
-
-	if (!data?.length) {
-		return <p>{Liferay.Language.get('no-data-available')}</p>;
-	}
-
 	return (
 		<AnalyticsFrame
 			icon="analytics"
 			title={Liferay.Language.get('engagement-timeline')}
 		>
-			<EngagementChart data={data} ref={elementRef} />
+			<div ref={setElement}>
+				{isLoading ? (
+					<Loader />
+				) : !data?.length ? (
+					<p className="text-muted">
+						{Liferay.Language.get('no-data-available')}
+					</p>
+				) : (<EngagementChart data={data} />)}
+			</div>
 		</AnalyticsFrame>
 	);
 }

@@ -111,7 +111,6 @@ export const mockLatestActivityData = [
 	{
 		action: 'created a new document',
 		createDate: '2026-03-26T14:30:00Z',
-		logoURL: 'https://test.com/logo.png',
 		name: 'John Doe',
 	},
 ];
@@ -130,7 +129,6 @@ export const mockMostActiveVisitorsData = [
 		emailAddress: 'john.doe@liferay.com',
 		firstName: 'John',
 		lastName: 'Doe',
-		logoURL: 'https://test.com/logo.png',
 	},
 ];
 

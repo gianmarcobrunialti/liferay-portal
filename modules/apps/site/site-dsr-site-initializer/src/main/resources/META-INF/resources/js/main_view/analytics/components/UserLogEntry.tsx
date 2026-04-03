@@ -5,7 +5,7 @@
 
 import React from 'react';
 import AccountSticker from "../../../common/components/AccountSticker";
-import {ILogEntry, IUserLogsEntry} from "./ActivityLog";
+import {ILogEntry, IUserLogsEntry} from "../types/index";
 import LogEntry from "./LogEntry";
 
 const UserLogEntry: React.FC<IUserLogsEntry> = (userLogsEntry) => {

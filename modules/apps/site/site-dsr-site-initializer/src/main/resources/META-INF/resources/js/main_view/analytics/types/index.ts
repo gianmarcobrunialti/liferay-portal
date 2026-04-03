@@ -22,6 +22,36 @@ export enum DateRangePreset {
 	LAST_YEAR = 'last-year',
 }
 
+export type TTrendOptions = {
+	color?: string;
+	icon: string;
+	label: string;
+	percentage: number;
+	status: number;
+	useSpritemap?: boolean;
+};
+
+export interface ILogEntry extends IActivityLogEntry {
+	icon: string;
+	time: string;
+}
+
+export interface IUserLogsEntry {
+	logs: ILogEntry[];
+	userName: string;
+}
+
+export type TActivityLog = Record<string, IUserLogsEntry[]>;
+
+export interface IActivityLogEntry {
+	createDate: number;
+	description?: string;
+	label?: string;
+	title: string;
+	type: string;
+	userName: string;
+}
+
 export interface IAnalyticsFilter {
 	active: boolean;
 	component: React.ComponentType<any>;

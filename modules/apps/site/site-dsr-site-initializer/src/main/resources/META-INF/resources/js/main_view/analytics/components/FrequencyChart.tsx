@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
 	Bar,
 	BarChart,
@@ -16,12 +16,10 @@ import {
 
 import {
 	IFrequencyChartItem,
-	IFrequencyChartProps,
 } from '../../../common/utils/types';
 import Loader from './Loader';
 import AnalyticsFrame from "./AnalyticsFrame";
 import useAnalyticsQuery from "../../../common/hooks/useAnalyticsQuery";
-import ActivityLogQuery from "../queries/ActivityLogQuery";
 import FrequencyChartQuery from "../queries/FrequencyChartQuery";
 
 const margin = {
@@ -63,11 +61,10 @@ const formatData = (
 
 function FrequencyChart() {
 	const [data, setData] = useState<IFrequencyChartItem[]>([]);
-
-	const elementRef = useRef(null);
+	const [element, setElement] = useState<HTMLElement | null>(null);
 
 	const {isLoading, response} = useAnalyticsQuery({
-		element: elementRef.current,
+		element,
 		query: FrequencyChartQuery,
 		variables: {
 			"rangeKey": 30,
@@ -85,74 +82,69 @@ function FrequencyChart() {
 		return () => {};
 	}, [response, setData]);
 
-	if (isLoading) {
-		return <Loader />;
-	}
-
-	if (!data?.length) {
-		return (
-			<p className="text-muted">
-				{Liferay.Language.get('no-data-available')}
-			</p>
-		);
-	}
-
 	return (
 		<AnalyticsFrame
 			icon="liferay-ac"
 			title={Liferay.Language.get('visits-frequency')}
 		>
-		<ResponsiveContainer ref={elementRef}>
-			<BarChart
-				data={data}
-				height={300}
-				margin={margin}
-				width={600}
-			>
-				{data.map(
-					(
-						frequencyChartItem: IFrequencyChartItem,
-						index: number
-					) => {
-						return (
-							<ReferenceLine
-								key={`bg-strip-${index}`}
-								stroke="#E5F1FF"
-								strokeOpacity={0.3}
-								strokeWidth={60}
-								x={frequencyChartItem.frequencyType}
-							/>
-						);
-					}
-				)}
+			<div ref={setElement}>
+				{isLoading ? (
+					<Loader />
+				) : !data?.length ? (
+					<p className="text-muted">
+						{Liferay.Language.get('no-data-available')}
+					</p>
+				) : (
+				<ResponsiveContainer aspect={2} width="100%">
+					<BarChart
+						data={data}
+						margin={margin}
+					>
+						{data.map(
+							(
+								frequencyChartItem: IFrequencyChartItem,
+								index: number
+							) => {
+								return (
+									<ReferenceLine
+										key={`bg-strip-${index}`}
+										stroke="#E5F1FF"
+										strokeOpacity={0.3}
+										strokeWidth={60}
+										x={frequencyChartItem.frequencyType}
+									/>
+								);
+							}
+						)}
 
-				<CartesianGrid
-					stroke="#ccc"
-					strokeDasharray="5 5"
-					vertical={(props: any) => (
-						<line
-							key={props.key}
-							stroke="none"
-							x1={props.x1}
-							x2={props.x2}
-							y1={props.y1}
-							y2={props.y2}
+						<CartesianGrid
+							stroke="#ccc"
+							strokeDasharray="5 5"
+							vertical={(props: any) => (
+								<line
+									key={props.key}
+									stroke="none"
+									x1={props.x1}
+									x2={props.x2}
+									y1={props.y1}
+									y2={props.y2}
+								/>
+							)}
 						/>
-					)}
-				/>
 
-				<Bar
-					barSize={60}
-					dataKey="visitCount"
-					fill="#97C5FF"
-					radius={[4, 4, 0, 0]}
-				/>
+						<Bar
+							barSize={60}
+							dataKey="visitCount"
+							fill="#97C5FF"
+							radius={[4, 4, 0, 0]}
+						/>
 
-				<XAxis dataKey="frequencyType" />
+						<XAxis dataKey="frequencyType" />
 
-				<YAxis />
-			</BarChart>
-		</ResponsiveContainer>
+						<YAxis />
+					</BarChart>
+				</ResponsiveContainer>)}
+			</div>
 		</AnalyticsFrame>
 	);
 }

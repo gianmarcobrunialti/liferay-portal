@@ -74,6 +74,7 @@ export default function useAnalyticsQuery({
 				const {mock, query: queryString} = query;
 
 				if (settings.useMock) {
+					console.log("mock: ", mock);
 					setResponse(mock);
 				}
 				else {
@@ -90,6 +91,12 @@ export default function useAnalyticsQuery({
 		},
 		[filters, isVisible, setResponse, settings, variables]
 	);
+
+	useEffect(() => {
+		if (isVisible && !response) {
+			sendRequest(filters as TAnalyticsFilter);
+		}
+	}, [filters, isVisible, response, sendRequest]);
 
 	useEffect(() => {
 		if (isMounted()) {

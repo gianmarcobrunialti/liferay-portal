@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import ClayIcon from '@clayui/icon';
 import DropDown from '@clayui/drop-down';
 import ClayButton from '@clayui/button';
@@ -11,14 +11,8 @@ import ClayButton from '@clayui/button';
 import '../../../../css/components/RoomTrend.scss';
 import RoomService from '../../../common/services/RoomService';
 import AnalyticsFrame from "./AnalyticsFrame";
-
-type TTrendOptions = {
-	color?: string;
-	icon: string;
-	label: string;
-	percentage: number;
-	useSpritemap?: boolean;
-};
+import {TTrendOptions} from "../types";
+import {IRoomObjectEntry} from "../../../common/utils/types";
 
 function getDegrees(percentage: number) {
 	const clampedPercentage = Math.max(0, Math.min(100, percentage));
@@ -35,59 +29,68 @@ const OPTIONS: Record<string, TTrendOptions> = {
 		color: '#4B9FFF',
 		icon: 'snow',
 		label: Liferay.Language.get('cold'),
-		percentage: 5,
+		percentage: 12.5,
+		status: 1,
 		useSpritemap: true,
 	},
 	CLOSED_LOST: {
 		color: '#DA1414',
 		icon: 'times-circle-full',
 		label: Liferay.Language.get('closed-lost'),
-		percentage: 15,
+		percentage: 0,
+		status: 0,
 	},
 	CLOSED_WON: {
 		color: '#AA33FF',
 		icon: 'champion-cup',
 		label: Liferay.Language.get('closed-won'),
-		percentage: 70,
+		percentage: 100,
+		status: 8,
 		useSpritemap: true,
 	},
 	ENGAGED: {
 		color: '#6CE0CC',
 		icon: 'comments',
 		label: Liferay.Language.get('engaged'),
-		percentage: 55,
+		percentage: 62.5,
+		status: 5,
 	},
 	HEATING_UP: {
 		color: '#FF8133',
 		icon: 'heating',
 		label: Liferay.Language.get('heating-up'),
-		percentage: 45,
+		percentage: 50,
+		status: 4,
 		useSpritemap: true,
 	},
 	HOT: {
 		color: '#FF4F45',
 		icon: 'hot',
 		label: Liferay.Language.get('hot'),
-		percentage: 95,
+		percentage: 75,
+		status: 6,
 		useSpritemap: true,
 	},
 	READY_TO_CLOSE: {
 		color: '#5ACA75',
 		icon: 'shield-check',
 		label: Liferay.Language.get('ready-to-close'),
-		percentage: 80,
+		percentage: 87.5,
+		status: 7,
 	},
 	RE_IGNITED: {
 		icon: 'reload',
 		label: Liferay.Language.get('reignited'),
 		percentage: 25,
+		status: 2,
 		useSpritemap: true,
 	},
 	WARMING_UP: {
 		color: '#FFBB00',
 		icon: 'sun',
 		label: Liferay.Language.get('warming-up'),
-		percentage: 35,
+		percentage: 37.5,
+		status: 3,
 	},
 };
 
@@ -103,7 +106,8 @@ const OPTIONS_KEY = [
 	OPTIONS.RE_IGNITED,
 ];
 
-const RoomTrend = ({roomId = 123}: {roomId: number}) => {
+const RoomTrend = ({roomId = 38578}: {roomId: number}) => {
+	const [room, setRoom] = useState<IRoomObjectEntry | null>(null);
 	const [trendStatus, setTrendStatus] = useState(OPTIONS.COLD);
 
 	const {color, icon, label, percentage, useSpritemap} = trendStatus;
@@ -114,9 +118,19 @@ const RoomTrend = ({roomId = 123}: {roomId: number}) => {
 		});
 	}, []);
 
+	useEffect(() => {
+		RoomService.getRoom(roomId)
+			.then((room) => {
+				setRoom(room);
+			})
+			.catch(() => {
+				setRoom(null);
+			});
+	}, []);
+
 	return (
 		<>
-			{roomId ? (
+			{room ? (
 				<AnalyticsFrame>
 				<div className="inline-item inline-item-before room-trend">
 					<div>
@@ -134,6 +148,7 @@ const RoomTrend = ({roomId = 123}: {roomId: number}) => {
 						</div>
 						<DropDown
 							closeOnClick
+							defaultValue={room.trend}
 							trigger={
 								<ClayButton
 									className="align-items-center d-flex font-weight-normal justify-content-between px-2 room-trend-button"
@@ -171,12 +186,12 @@ const RoomTrend = ({roomId = 123}: {roomId: number}) => {
 										onClick={() => {
 											updateRoomTrend(
 												roomId,
-												option.percentage
+												option.status
 											).then(({trend}) => {
 												const updateTrend =
 													OPTIONS_KEY.find(
 														(option) =>
-															option.percentage ===
+															option.status ===
 															trend
 													);
 

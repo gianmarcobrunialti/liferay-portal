@@ -28,10 +28,9 @@ const formatXAxisDate = (tickItem: string | number): string => {
 
 function EngagementChart({
     data,
-    ref,
 }: IEngagementChartProps) {
     return (
-        <ResponsiveContainer ref={ref}>
+        <ResponsiveContainer aspect={2} width="100%">
             <LineChart
                 data={data}
                 margin={{

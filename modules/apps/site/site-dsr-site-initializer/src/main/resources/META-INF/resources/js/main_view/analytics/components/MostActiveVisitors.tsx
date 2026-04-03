@@ -21,11 +21,10 @@ const MostActiveVisitors = ({
 	namespace: string;
 }) => {
 	const [data, setData] = useState<TVisitor[]>([]);
-
-	const elementRef = useRef(null);
+	const [element, setElement] = useState<HTMLElement | null>(null);
 
 	const {isLoading, response} = useAnalyticsQuery({
-		element: elementRef.current,
+		element,
 		query: MostActiveVisitorsQuery,
 		variables: {
 			"channelId": "808122315193619922",
@@ -41,55 +40,56 @@ const MostActiveVisitors = ({
 		}
 	}, [response]);
 
-	if (isLoading) {
-		return <Loader />;
-	}
-
-	if (!data?.length) {
-		return <p>{Liferay.Language.get('no-data-available')}</p>;
-	}
-
 	return (
 		<AnalyticsFrame
 			icon="user"
 			title={Liferay.Language.get('most-active-visitors')}
 		>
-		<div className="most-active-visitors-fds" ref={elementRef}>
-			<FrontendDataSet
-				customRenderers={{
-					tableCell: [
-						{
-							component: VisitorStickerRenderer,
-							name: 'visitorSticker',
-							type: 'internal',
-						},
-					],
-				}}
-				id={namespace}
-				items={data}
-				showManagementBar={false}
-				showPagination={false}
-				showSearch={false}
-				showSelectAll={false}
-				views={[
-					{
-						contentRenderer: 'table',
-						label: Liferay.Language.get('table'),
-						name: 'table',
-						schema: {
-							fields: [
+			<div ref={setElement}>
+				{isLoading ? (
+					<Loader />
+				) : !data?.length ? (
+					<p className="text-muted">
+						{Liferay.Language.get('no-data-available')}
+					</p>
+				) : (
+				<div className="most-active-visitors-fds">
+					<FrontendDataSet
+						customRenderers={{
+							tableCell: [
 								{
-									contentRenderer: 'visitorSticker',
-									fieldName: 'title',
-									label: '',
+									component: VisitorStickerRenderer,
+									name: 'visitorSticker',
+									type: 'internal',
 								},
 							],
-						},
-						thumbnail: 'table',
-					},
-				]}
-			/>
-		</div>
+						}}
+						id={namespace}
+						items={data}
+						showManagementBar={false}
+						showPagination={false}
+						showSearch={false}
+						showSelectAll={false}
+						views={[
+							{
+								contentRenderer: 'table',
+								label: Liferay.Language.get('table'),
+								name: 'table',
+								schema: {
+									fields: [
+										{
+											contentRenderer: 'visitorSticker',
+											fieldName: 'title',
+											label: '',
+										},
+									],
+								},
+								thumbnail: 'table',
+							},
+						]}
+					/>
+				</div>)}
+			</div>
 		</AnalyticsFrame>
 	);
 };

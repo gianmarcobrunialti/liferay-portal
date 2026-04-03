@@ -23,11 +23,10 @@ const LatestActivity = ({
 	namespace: string;
 }) => {
 	const [data, setData] = useState<TLatestActivity[]>([]);
-
-	const elementRef = useRef(null);
+	const [element, setElement] = useState<HTMLElement | null>(null);
 
 	const {isLoading, response} = useAnalyticsQuery({
-		element: elementRef.current,
+		element,
 		query: LatestActivityQuery,
 		variables: {
 			"channelId": "808122315193619922",
@@ -46,88 +45,85 @@ const LatestActivity = ({
 		return () => {};
 	}, [response, setData]);
 
-	if (isLoading) {
-		return <Loader />;
-	}
-
-	if (!data?.length) {
-		return (
-			<p className="text-muted">
-				{Liferay.Language.get('no-data-available')}
-			</p>
-		);
-	}
-
 	return (
 		<AnalyticsFrame
 			icon="click"
 			title={Liferay.Language.get('latest-activity')}
 			url={`${BASE_URL}/view-timeline`}
 		>
-		<div className="latest-activity-fds" ref={elementRef}>
-			<FrontendDataSet
-				customDataRenderers={{
-					timestampDataRenderer: TimestampDataRenderer,
-				}}
-				customRenderers={{
-					tableCell: [
-						{
-							component: ({
-								itemData,
-							}: {
-								itemData: TLatestActivity;
-							}) => (
-								<div className="d-flex inline-item">
-									<AccountSticker
-										logoURL={itemData.logoURL}
-										name={itemData.name}
-										shape="user-icon"
-									/>
+			<div ref={setElement}>
+				{isLoading ? (
+					<Loader />
+				) : !data?.length ? (
+					<p className="text-muted">
+						{Liferay.Language.get('no-data-available')}
+					</p>
+				) : (
+				<div className="latest-activity-fds">
+					<FrontendDataSet
+						customDataRenderers={{
+							timestampDataRenderer: TimestampDataRenderer,
+						}}
+						customRenderers={{
+							tableCell: [
+								{
+									component: ({
+										itemData,
+									}: {
+										itemData: TLatestActivity;
+									}) => (
+										<div className="d-flex inline-item">
+											<AccountSticker
+												logoURL={itemData.logoURL}
+												name={itemData.name}
+												shape="user-icon"
+											/>
 
-									<p className="font-weight-semi-bold inline-item-after mb-0">
-										{Liferay.Language.get(itemData.name)}
-									</p>
-								</div>
-							),
-							name: 'userLatestActivity',
-							type: 'internal',
-						},
-					],
-				}}
-				id={namespace}
-				items={data}
-				showManagementBar={false}
-				showPagination={false}
-				showSearch={false}
-				showSelectAll={false}
-				views={[
-					{
-						contentRenderer: 'table',
-						label: Liferay.Language.get('table'),
-						name: 'table',
-						schema: {
-							fields: [
-								{
-									contentRenderer: 'userLatestActivity',
-									fieldName: 'name',
-									label: `${Liferay.Language.get('name')}`,
-								},
-								{
-									fieldName: 'action',
-									label: `${Liferay.Language.get('action')}`,
-								},
-								{
-									contentRenderer: 'timestampDataRenderer',
-									fieldName: 'createDate',
-									label: `${Liferay.Language.get('timestamp')}`,
+											<p className="font-weight-semi-bold inline-item-after mb-0">
+												{Liferay.Language.get(itemData.name)}
+											</p>
+										</div>
+									),
+									name: 'userLatestActivity',
+									type: 'internal',
 								},
 							],
-						},
-						thumbnail: 'table',
-					},
-				]}
-			/>
-		</div>
+						}}
+						id={namespace}
+						items={data}
+						showManagementBar={false}
+						showPagination={false}
+						showSearch={false}
+						showSelectAll={false}
+						views={[
+							{
+								contentRenderer: 'table',
+								label: Liferay.Language.get('table'),
+								name: 'table',
+								schema: {
+									fields: [
+										{
+											contentRenderer: 'userLatestActivity',
+											fieldName: 'name',
+											label: `${Liferay.Language.get('name')}`,
+										},
+										{
+											fieldName: 'action',
+											label: `${Liferay.Language.get('action')}`,
+										},
+										{
+											contentRenderer: 'timestampDataRenderer',
+											fieldName: 'createDate',
+											label: `${Liferay.Language.get('timestamp')}`,
+										},
+									],
+								},
+								thumbnail: 'table',
+							},
+						]}
+					/>
+				</div>)}
+			</div>
 		</AnalyticsFrame>
 	);
 };

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 
 import Loader from './Loader';
 import AnalyticsFrame from "./AnalyticsFrame";
@@ -15,11 +15,10 @@ import {IEngagementChartItem} from "../../../common/utils/types";
 
 function RecentEngagementChart() {
 	const [data, setData] = useState<IEngagementChartItem[]>([]);
-
-	const elementRef = useRef(null);
+	const [element, setElement] = useState<HTMLElement | null>(null);
 
 	const {isLoading, response} = useAnalyticsQuery({
-		element: elementRef.current,
+		element,
 		query: RecentEngagementChartQuery,
 		variables: {
 			"interval": "D",
@@ -36,24 +35,26 @@ function RecentEngagementChart() {
 		if (response) {
 			setData(response);
 		}
+
+		return () => {};
 	}, [response]);
 
-	if (isLoading) {
-		return <Loader />;
-	}
-
-	if (!data?.length) {
-		return <p>{Liferay.Language.get('no-data-available')}</p>;
-	}
-
 	return (
-	<AnalyticsFrame
-		icon="analytics"
-		title={Liferay.Language.get('recent-engagement')}
-		url={`${BASE_URL}/view-timeline`}
-	>
-		<EngagementChart ref={elementRef} />
-	</AnalyticsFrame>
+		<AnalyticsFrame
+			icon="analytics"
+			title={Liferay.Language.get('recent-engagement')}
+			url={`${BASE_URL}/view-timeline`}
+		>
+			<div ref={setElement}>
+				{isLoading ? (
+					<Loader />
+				) : !data?.length ? (
+					<p className="text-muted">
+						{Liferay.Language.get('no-data-available')}
+					</p>
+				) : (<EngagementChart data={data} />)}
+			</div>
+		</AnalyticsFrame>
 	);
 }
 

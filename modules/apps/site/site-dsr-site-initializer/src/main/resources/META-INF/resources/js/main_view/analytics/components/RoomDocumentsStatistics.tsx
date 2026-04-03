@@ -26,11 +26,10 @@ const RoomDocumentsStatistics = ({
 	namespace: string;
 }) => {
 	const [data, setData] = useState<TRoomDocumentsStatistics[]>([]);
-
-	const elementRef = useRef(null);
+	const [element, setElement] = useState<HTMLElement | null>(null);
 
 	const {isLoading, response} = useAnalyticsQuery({
-		element: elementRef.current,
+		element,
 		query: DocumentsStatisticsQuery,
 		variables: {
 			"channelId": "808122315193619922",
@@ -55,81 +54,78 @@ const RoomDocumentsStatistics = ({
 		return () => {};
 	}, [response, setData]);
 
-	if (isLoading) {
-		return <Loader />;
-	}
-
-	if (!data?.length) {
-		return (
-			<p className="text-muted">
-				{Liferay.Language.get('no-data-available')}
-			</p>
-		);
-	}
-
 	return (
 		<AnalyticsFrame
 			icon="documents-and-media"
 			title={Liferay.Language.get('most-engaged-documents')}
 		>
-		<div className="document-statistics-fds" ref={elementRef}>
-			<FrontendDataSet
-				customDataRenderers={{
-					averageTimeDataRenderer: AverageTimeDataRenderer,
-					documentNameDataRenderer: DocumentTitleDataRenderer,
-					lastViewedDataRenderer: LastViewedDataRenderer,
-					userInvolvedDataRenderer: UserInvolvedDataRenderer,
-				}}
-				id={namespace}
-				items={data}
-				showManagementBar={false}
-				showPagination={false}
-				showSearch={false}
-				showSelectAll={false}
-				views={[
-					{
-						contentRenderer: 'table',
-						label: Liferay.Language.get('table'),
-						name: 'table',
-						schema: {
-							fields: [
-								{
-									contentRenderer: 'documentNameDataRenderer',
-									fieldName: 'title',
-									label: Liferay.Language.get('title'),
+			<div ref={setElement}>
+				{isLoading ? (
+					<Loader />
+				) : !data?.length ? (
+					<p className="text-muted">
+						{Liferay.Language.get('no-data-available')}
+					</p>
+				) : (
+				<div className="document-statistics-fds">
+					<FrontendDataSet
+						customDataRenderers={{
+							averageTimeDataRenderer: AverageTimeDataRenderer,
+							documentNameDataRenderer: DocumentTitleDataRenderer,
+							lastViewedDataRenderer: LastViewedDataRenderer,
+							userInvolvedDataRenderer: UserInvolvedDataRenderer,
+						}}
+						id={namespace}
+						items={data}
+						showManagementBar={false}
+						showPagination={false}
+						showSearch={false}
+						showSelectAll={false}
+						views={[
+							{
+								contentRenderer: 'table',
+								label: Liferay.Language.get('table'),
+								name: 'table',
+								schema: {
+									fields: [
+										{
+											contentRenderer: 'documentNameDataRenderer',
+											fieldName: 'title',
+											label: Liferay.Language.get('title'),
+										},
+										{
+											fieldName: 'totalViews',
+											label: Liferay.Language.get('total-views'),
+										},
+										{
+											contentRenderer: 'lastViewedDataRenderer',
+											fieldName: 'lastViewed',
+											label: Liferay.Language.get('last-viewed'),
+										},
+										{
+											fieldName: 'download',
+											label: Liferay.Language.get('download'),
+										},
+										{
+											contentRenderer: 'averageTimeDataRenderer',
+											fieldName: 'averageTime',
+											label: Liferay.Language.get('average-time'),
+										},
+										{
+											contentRenderer: 'userInvolvedDataRenderer',
+											fieldName: 'userInvolved',
+											label: Liferay.Language.get(
+												'user-involved'
+											),
+										},
+									],
 								},
-								{
-									fieldName: 'totalViews',
-									label: Liferay.Language.get('total-views'),
-								},
-								{
-									contentRenderer: 'lastViewedDataRenderer',
-									fieldName: 'lastViewed',
-									label: Liferay.Language.get('last-viewed'),
-								},
-								{
-									fieldName: 'download',
-									label: Liferay.Language.get('download'),
-								},
-								{
-									contentRenderer: 'averageTimeDataRenderer',
-									fieldName: 'averageTime',
-									label: Liferay.Language.get('average-time'),
-								},
-								{
-									contentRenderer: 'userInvolvedDataRenderer',
-									fieldName: 'userInvolved',
-									label: Liferay.Language.get(
-										'user-involved'
-									),
-								},
-							],
-						},
-						thumbnail: 'table',
-					},
-				]}
-			/>
-		</div>
+								thumbnail: 'table',
+							},
+						]}
+					/>
+				</div>)}
+			</div>
 		</AnalyticsFrame>
 	);
 };

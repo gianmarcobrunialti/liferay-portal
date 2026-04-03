@@ -2,15 +2,21 @@
  * SPDX-FileCopyrightText: (c) 2026 Liferay, Inc. https://liferay.com
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
-import ClayIcon from '@clayui/icon';
 import {sub} from 'frontend-js-web';
 import React, {useEffect, useRef, useState} from 'react';
-import AccountSticker from "../../../common/components/AccountSticker";
 import useAnalyticsQuery from "../../../common/hooks/useAnalyticsQuery";
 import './../../../../css/components/ActivityLog.scss';
 import AnalyticsFrame from "./AnalyticsFrame";
 import ActivityLogQuery from "../queries/ActivityLogQuery";
 import UserLogEntry from "./UserLogEntry";
+import {
+	IActivityLogEntry,
+	ILogEntry,
+	IUserLogsEntry,
+	TActivityLog
+} from "../types";
+import Loader from "./Loader";
+
 export const TYPES = [
 	{
 		icon: 'comments',
@@ -28,36 +34,25 @@ export const TYPES = [
 		label: Liferay.Language.get('viewed-a-x'),
 	},
 ];
-export interface ILogEntry extends IRawDataEntry {
-	icon: string;
-	time: string;
-}
-export interface IUserLogsEntry {
-	logs: ILogEntry[];
-	userName: string;
-}
-export type TActivityLog = Record<string, IUserLogsEntry[]>;
-export interface IRawDataEntry {
-	createDate: number;
-	description?: string;
-	label?: string;
-	title: string;
-	type: string;
-	userName: string;
-}
-const formatData = (data: IRawDataEntry[]) => {
-	return data.reduce((activityLog: TActivityLog, item: IRawDataEntry) => {
+
+const formatData = (data: IActivityLogEntry[]) => {
+	return data.reduce((activityLog: TActivityLog, item: IActivityLogEntry) => {
 		const date = new Date(item.createDate);
+
 		const dateKey = date.toISOString().split('T')[0];
+
 		const timeString = date.toLocaleTimeString('en-US', {
 			hour: 'numeric',
 			hour12: true,
 			minute: '2-digit',
 		});
+
 		if (!activityLog[dateKey]) {
 			activityLog[dateKey] = [];
 		}
+
 		const type = TYPES.find((type) => type.key === item.type);
+
 		const logEntry: ILogEntry = {
 			...item,
 			icon: type ? type.icon : '',
@@ -69,8 +64,11 @@ const formatData = (data: IRawDataEntry[]) => {
 				: '',
 			time: timeString,
 		};
+
 		const dayGroup = activityLog[dateKey];
+
 		const lastUserBlock = dayGroup[dayGroup.length - 1];
+
 		if (lastUserBlock && lastUserBlock.userName === item.userName) {
 			lastUserBlock.logs.push(logEntry);
 		}
@@ -80,16 +78,17 @@ const formatData = (data: IRawDataEntry[]) => {
 				userName: item.userName,
 			});
 		}
+
 		return activityLog;
 	}, {});
 };
+
 function ActivityLog() {
 	const [data, setData] = useState<TActivityLog>({});
-
-	const elementRef = useRef(null);
+	const [element, setElement] = useState<HTMLElement | null>(null);
 
 	const {isLoading, response} = useAnalyticsQuery({
-		element: elementRef.current,
+		element,
 		query: ActivityLogQuery,
 		variables: {
 			channelId: "808122315193619922",
@@ -104,6 +103,7 @@ function ActivityLog() {
 	});
 
 	useEffect(() => {
+		console.log("response: ", response);
 		if (response) {
 			const formattedData = formatData(response);
 
@@ -118,12 +118,17 @@ function ActivityLog() {
 			icon="box-container"
 			title={Liferay.Language.get('activity-log')}
 		>
-			<div ref={elementRef}>
-				{Object.entries(data).map(
+			<div ref={setElement}>
+				{isLoading ? (
+					<Loader />
+				) : Object.keys(data).length === 0 ? (
+					<p className="text-muted">
+						{Liferay.Language.get('no-data-available')}
+					</p>
+				) : (Object.entries(data).map(
 					([date, userLogs]: [string, IUserLogsEntry[]]) => (
 						<>
-							<div
-								className="activity-logs-date fw-600 mb-3 px-3 py-2 text-secondary">
+							<div className="activity-logs-date fw-600 mb-3 px-3 py-2 text-secondary">
 								{date}
 							</div>
 
@@ -135,9 +140,10 @@ function ActivityLog() {
 							)}
 						</>
 					)
-				)}
+				))}
 			</div>
 		</AnalyticsFrame>
 	);
 }
+
 export default ActivityLog;

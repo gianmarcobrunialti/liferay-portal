@@ -92,11 +92,10 @@ const formatData = (data: IRoomStatistics): IRoomStatisticsItem[] => {
 
 function RoomStatistics() {
 	const [data, setData] = useState<IRoomStatisticsItem[]>([]);
-
-	const elementRef = useRef(null);
+	const [element, setElement] = useState<HTMLElement | null>(null);
 
 	const {isLoading, response} = useAnalyticsQuery({
-		element: elementRef.current,
+		element,
 		query: RoomStatisticsQuery,
 		variables: {
 			channelId: "808122315193619922",
@@ -118,58 +117,59 @@ function RoomStatistics() {
 		return () => {};
 	}, [response, setData]);
 
-	if (isLoading) {
-		return <Loader />;
-	}
-
-	if (!data) {
-		return <p>{Liferay.Language.get('no-data-available')}</p>;
-	}
-
 	return (
 		<AnalyticsFrame>
-		<div className="py-4">
-			<ClayLayout.Row className="align-items-center">
-				{data.map(
-					(
-						roomStatisticsItem: IRoomStatisticsItem,
-						index: number
-					) => {
-						const showBorder = index !== data.length - 1;
+			<div ref={setElement}>
+				{isLoading ? (
+					<Loader />
+				) : !data?.length ? (
+					<p className="text-muted">
+						{Liferay.Language.get('no-data-available')}
+					</p>
+				) : (
+				<div className="py-4">
+					<ClayLayout.Row className="align-items-center">
+						{data.map(
+							(
+								roomStatisticsItem: IRoomStatisticsItem,
+								index: number
+							) => {
+								const showBorder = index !== data.length - 1;
 
-						return (
-							<ClayLayout.Col
-								className={`${showBorder ? 'border-right' : ''} pl-5`}
-								key={roomStatisticsItem.id}
-								size={2}
-							>
-								<div>
-									<span className="font-weight-semi-bold mb-0 mr-2 room-statistics-label text-secondary">
-										{roomStatisticsItem.label}
-									</span>
+								return (
+									<ClayLayout.Col
+										className={`${showBorder ? 'border-right' : ''} pl-5`}
+										key={roomStatisticsItem.id}
+										size={2}
+									>
+										<div>
+											<span className="font-weight-semi-bold mb-0 mr-2 room-statistics-label text-secondary">
+												{roomStatisticsItem.label}
+											</span>
 
-									<ClayIcon
-										className="text-secondary"
-										symbol="question-circle"
-									/>
-								</div>
+											<ClayIcon
+												className="text-secondary"
+												symbol="question-circle"
+											/>
+										</div>
 
-								<div>
-									<ClayIcon
-										className={roomStatisticsItem.className}
-										symbol={roomStatisticsItem.icon}
-									/>
+										<div>
+											<ClayIcon
+												className={roomStatisticsItem.className}
+												symbol={roomStatisticsItem.icon}
+											/>
 
-									<span className="font-weight-semi-bold ml-2 room-statistics-text">
-										{roomStatisticsItem.value}
-									</span>
-								</div>
-							</ClayLayout.Col>
-						);
-					}
-				)}
-			</ClayLayout.Row>
-		</div>
+											<span className="font-weight-semi-bold ml-2 room-statistics-text">
+												{roomStatisticsItem.value}
+											</span>
+										</div>
+									</ClayLayout.Col>
+								);
+							}
+						)}
+					</ClayLayout.Row>
+				</div>)}
+			</div>
 		</AnalyticsFrame>
 	);
 }

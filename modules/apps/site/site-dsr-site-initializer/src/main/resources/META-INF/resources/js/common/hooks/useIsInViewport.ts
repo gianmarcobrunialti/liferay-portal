@@ -8,7 +8,7 @@ import React, {useEffect, useState} from 'react';
 import isInViewport from '../utils/isInViewport';
 
 export default function useIsInViewport(element: HTMLElement | null) {
-	const [visible, setVisible] = useState(false);
+	/*const [visible, setVisible] = useState(false);
 
 	useEffect(() => {
 		const onScroll = () => setVisible(isInViewport(element));
@@ -21,6 +21,24 @@ export default function useIsInViewport(element: HTMLElement | null) {
 			window.removeEventListener('scroll', onScroll);
 		};
 	}, [element, setVisible]);
+
+	return visible;*/
+
+	const [visible, setVisible] = useState(false);
+
+	useEffect(() => {
+		if (!element) {
+			return;
+		}
+
+		const observer = new IntersectionObserver(([entry]) => {
+			setVisible(entry.isIntersecting);
+		});
+
+		observer.observe(element);
+
+		return () => observer.disconnect();
+	}, [element]);
 
 	return visible;
 }
