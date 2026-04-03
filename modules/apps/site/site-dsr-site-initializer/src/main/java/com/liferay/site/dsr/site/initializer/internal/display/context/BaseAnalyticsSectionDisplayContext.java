@@ -6,9 +6,17 @@
 package com.liferay.site.dsr.site.initializer.internal.display.context;
 
 import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.model.ObjectEntry;
+import com.liferay.object.service.ObjectEntryLocalServiceUtil;
 import com.liferay.object.service.ObjectEntryService;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.dsr.site.initializer.internal.constants.DSRWebKeys;
@@ -54,7 +62,34 @@ public abstract class BaseAnalyticsSectionDisplayContext {
 		return StringPool.BLANK;
 	}
 
-	public Map<String, Object> getProps() {
+	public long getRoomId() throws Exception {
+		String analyticsStoreFilters = getAnalyticsStoreFilters();
+
+		JSONObject jsonObject =
+			JSONFactoryUtil.createJSONObject(analyticsStoreFilters);
+
+		if (JSONUtil.isEmpty(jsonObject)) {
+			return 38581;
+		}
+
+		JSONObject roomJSONObject = jsonObject.getJSONObject("room");
+
+		if (JSONUtil.isEmpty(roomJSONObject)) {
+			return 38581;
+		}
+
+		ObjectEntry objectEntry = ObjectEntryLocalServiceUtil.fetchObjectEntry(
+			GetterUtil.getLong(roomJSONObject.getString("value")),
+			objectDefinition.getObjectDefinitionId());
+
+		if (objectEntry == null) {
+			return 38581;
+		}
+
+		return objectEntry.getObjectEntryId();
+	}
+
+	public Map<String, Object> getProps() throws Exception {
 		return Collections.emptyMap();
 	}
 

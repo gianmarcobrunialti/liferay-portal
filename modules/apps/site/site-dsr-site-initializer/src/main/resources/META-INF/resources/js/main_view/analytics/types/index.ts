@@ -55,7 +55,7 @@ export interface IActivityLogEntry {
 export interface IAnalyticsFilter {
 	active: boolean;
 	component: React.ComponentType<any>;
-	value: TDateRangeAnalyticsFilterValue | string[] | null;
+	value: TDateRangeAnalyticsFilterValue | TRoomAnalyticsFilterValue | string[];
 }
 
 export interface IAnalyticsFilterProps {
@@ -80,4 +80,9 @@ export type TDateRangeAnalyticsFilterValue = {
 	from: string;
 	preset?: string;
 	to: string;
+};
+
+export type TRoomAnalyticsFilterValue = {
+	channelId: string;
+	roomId: number;
 };

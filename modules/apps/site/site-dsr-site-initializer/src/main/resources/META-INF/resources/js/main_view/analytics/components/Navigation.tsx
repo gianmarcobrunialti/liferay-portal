@@ -25,7 +25,7 @@ interface IProps {
 		interactable: boolean;
 		persisted: boolean;
 	};
-	room: any;
+	roomId: number;
 }
 
 
@@ -33,6 +33,7 @@ export default function Navigation({
 	activeTab,
 	filterSettings,
 	filtersJSONString,
+	roomId,
 }: IProps) {
 	const [filters, setFilters] = useAnalyticsFilters(
 		filtersJSONString,
@@ -77,6 +78,7 @@ export default function Navigation({
 					/>
 
 					<RoomAnalyticsFilter
+						roomId={roomId}
 						setValue={setValue}
 						value={filters[AnalyticsFilters.ROOM].value}
 					/>

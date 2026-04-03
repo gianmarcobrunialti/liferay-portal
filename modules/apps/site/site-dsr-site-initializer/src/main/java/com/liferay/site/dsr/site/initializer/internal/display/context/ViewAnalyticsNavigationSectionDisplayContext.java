@@ -65,7 +65,7 @@ public class ViewAnalyticsNavigationSectionDisplayContext
 	}
 
 	@Override
-	public Map<String, Object> getProps() {
+	public Map<String, Object> getProps() throws Exception {
 		return HashMapBuilder.<String, Object>putAll(
 			super.getProps()
 		).put(
@@ -75,7 +75,7 @@ public class ViewAnalyticsNavigationSectionDisplayContext
 		).put(
 			"filtersJSONString", getAnalyticsStoreFilters()
 		).put(
-			"room", ""
+			"roomId", getRoomId()
 		).build();
 	}
 

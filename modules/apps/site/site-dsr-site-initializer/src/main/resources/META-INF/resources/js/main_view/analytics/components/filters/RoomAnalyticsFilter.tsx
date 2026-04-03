@@ -3,31 +3,43 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 
-import {IAnalyticsFilterProps} from '../../types';
+import {
+	IAnalyticsFilterProps,
+	TDateRangeAnalyticsFilterValue
+} from '../../types';
 import {ClaySelect} from "@clayui/form";
+import {IRoom, IRoomObjectEntry} from "../../../../common/utils/types";
+import RoomService from "../../../../common/services/RoomService";
 
 export default function RoomAnalyticsFilter({
 	setValue,
 	value,
 	...otherProps
 }: IAnalyticsFilterProps) {
-	const rooms = [
-		{
-			id: 12345,
-			name: 'test1',
-		},
-		{
-			id: 67890,
-			name: 'test2',
-		},
-	];
+	const [rooms, setRooms] = useState<IRoomObjectEntry[]>([]);
+
+	useEffect(() => {
+		RoomService.getRooms().then((rooms) => {
+			setRooms(rooms as IRoomObjectEntry[]);
+		}).catch(() => {
+			setRooms([]);
+		})
+	}, []);
 
 	function handleSelectChange(event: any) {
-		const value = Number(event.currentTarget.value);
+		const {id: roomId = 0, siteId: channelId = ""} = event.target.value;
 
-		window.location.reload();
+		setValue(
+			{
+				...value,
+				value: {
+					channelId,
+					roomId
+				}
+			}
+		);
 	}
 
 	return (
@@ -42,7 +54,8 @@ export default function RoomAnalyticsFilter({
 				<ClaySelect.Option
 					key={room.id}
 					label={`${room.name}`}
-					value={room.id}
+					selected={otherProps.roomId === room.id}
+					value={room}
 				/>
 			))}
 		</ClaySelect>

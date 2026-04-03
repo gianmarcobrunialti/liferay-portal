@@ -13,6 +13,7 @@ import RoomService from '../../../common/services/RoomService';
 import AnalyticsFrame from "./AnalyticsFrame";
 import {TTrendOptions} from "../types";
 import {IRoomObjectEntry} from "../../../common/utils/types";
+import useAnalyticsFilters from "../../../common/hooks/useAnalyticsFilters";
 
 function getDegrees(percentage: number) {
 	const clampedPercentage = Math.max(0, Math.min(100, percentage));
@@ -94,7 +95,7 @@ const OPTIONS: TTrendOptions[] = [
 	},
 ];
 
-const RoomTrend = ({roomId = 40225}: {roomId: number}) => {
+const RoomTrend = () => {
 	const [room, setRoom] = useState<IRoomObjectEntry | null>(null);
 	const [trendStatus, setTrendStatus] = useState<TTrendOptions>(OPTIONS[1]);
 
@@ -105,6 +106,9 @@ const RoomTrend = ({roomId = 40225}: {roomId: number}) => {
 			trend: trend,
 		});
 	}, []);
+
+	//TODO Gian
+	useAnalyticsFilters();
 
 	useEffect(() => {
 		RoomService.getRoom(roomId)

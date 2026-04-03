@@ -53,7 +53,10 @@ const DEFAULT_FILTERS: TAnalyticsFilter = {
 	[AnalyticsFilters.ROOM]: {
 		active: true,
 		component: RoomAnalyticsFilter,
-		value: null,
+		value: {
+			channelId: "",
+			roomId: 0,
+		},
 	},
 };
 
