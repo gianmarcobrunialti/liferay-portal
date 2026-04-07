@@ -25,7 +25,6 @@ interface IProps {
 		interactable: boolean;
 		persisted: boolean;
 	};
-	roomId: number;
 }
 
 
@@ -33,33 +32,11 @@ export default function Navigation({
 	activeTab,
 	filterSettings,
 	filtersJSONString,
-	roomId,
 }: IProps) {
-	const [filters, setFilters] = useAnalyticsFilters(
+	const [filters, setFilter] = useAnalyticsFilters(
 		filtersJSONString,
 		filterSettings.persisted
 	);
-
-	const setValue = useCallback(
-		(filter: TAnalyticsFilter) => {
-
-			// @ts-ignore
-
-			setFilters(
-				(filters: TAnalyticsFilter) =>
-					({
-						...filters,
-						...filter,
-					}) as TAnalyticsFilter
-			);
-		},
-		[setFilters]
-	);
-
-	useEffect(() => {
-		console.log(filters);
-		Liferay.fire('dsr-filters-updated', {filters});
-	}, [filters]);
 
 	console.log(activeTab, filtersJSONString, filterSettings);
 
@@ -78,9 +55,8 @@ export default function Navigation({
 					/>
 
 					<RoomAnalyticsFilter
-						roomId={roomId}
-						setValue={setValue}
-						value={filters[AnalyticsFilters.ROOM].value}
+						filter={filters[AnalyticsFilters.ROOM]}
+						setValue={setFilter}
 					/>
 				</div>
 
@@ -114,7 +90,7 @@ export default function Navigation({
 					{...filterSettings}
 					filters={filters}
 					filtersJSONString={filtersJSONString}
-					setValue={setValue}
+					setValue={setFilter}
 				/>
 			)}
 		</>

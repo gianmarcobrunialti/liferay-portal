@@ -3,47 +3,71 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import React, {useEffect, useState} from 'react';
+import React, {ChangeEvent, useCallback, useEffect, useState} from 'react';
 
 import {
-	IAnalyticsFilterProps,
-	TDateRangeAnalyticsFilterValue
+	AnalyticsFilters,
+	IAnalyticsRoomFilter, TRoomAnalyticsFilterValue,
 } from '../../types';
 import {ClaySelect} from "@clayui/form";
-import {IRoom, IRoomObjectEntry} from "../../../../common/utils/types";
+import {IRoomObjectEntry} from "../../../../common/utils/types";
 import RoomService from "../../../../common/services/RoomService";
 
+interface IProps {
+	setValue: any;
+	filter: IAnalyticsRoomFilter;
+}
+
 export default function RoomAnalyticsFilter({
+	filter,
 	setValue,
-	value,
-	...otherProps
-}: IAnalyticsFilterProps) {
+}: IProps) {
 	const [rooms, setRooms] = useState<IRoomObjectEntry[]>([]);
 
-	useEffect(() => {
-		RoomService.getRooms().then((rooms) => {
-			setRooms(rooms as IRoomObjectEntry[]);
-		}).catch(() => {
-			setRooms([]);
-		})
-	}, []);
+	const getRooms = useCallback(async () => {
+		try {
+			const {items: rooms} = await RoomService.getRooms();
 
-	function handleSelectChange(event: any) {
-		const {id: roomId = 0, siteId: channelId = ""} = event.target.value;
+			setRooms(rooms);
+		} catch(_ignore) {
+			console.error('Unable to fetch Rooms.');
+		}
+	}, [setRooms]);
+
+	const onChange = useCallback((event: any) => {
+		event.preventDefault();
+
+		const  {value: roomId = null} = event.target;
+
+		let value: TRoomAnalyticsFilterValue = {
+			channelId: '',
+			room: null,
+		};
+
+		const room = rooms.find(
+			({id}) => roomId === id.toString());
+
+		if (room) {
+			value = {
+				channelId: room.siteId.toString(),
+				room,
+			};
+		}
 
 		setValue(
-			{
-				...value,
-				value: {
-					channelId,
-					roomId
-				}
+			{[AnalyticsFilters.ROOM] : {
+				...filter,
+				value,
 			}
-		);
-	}
+		});
+	}, [rooms, setValue]);
+
+	useEffect(() => {
+		getRooms();
+	}, [getRooms]);
 
 	return (
-		<ClaySelect name="roomSelect" onChange={handleSelectChange}>
+		<ClaySelect name="roomSelect" onChange={onChange}>
 			<ClaySelect.Option
 				aria-label={Liferay.Language.get('all-rooms')}
 				label={Liferay.Language.get('all-rooms')}
@@ -54,8 +78,8 @@ export default function RoomAnalyticsFilter({
 				<ClaySelect.Option
 					key={room.id}
 					label={`${room.name}`}
-					selected={otherProps.roomId === room.id}
-					value={room}
+					selected={filter?.value?.room?.id === room.id}
+					value={room.id}
 				/>
 			))}
 		</ClaySelect>

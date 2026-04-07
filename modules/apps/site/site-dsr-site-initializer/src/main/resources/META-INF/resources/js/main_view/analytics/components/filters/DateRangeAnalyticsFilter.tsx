@@ -8,19 +8,22 @@ import {ClayInput, ClaySelect} from '@clayui/form';
 import ClayForm from '@clayui/form/src/Form';
 import React, {ChangeEvent, useCallback, useState} from 'react';
 
-import {DateRangePreset, TDateRangeAnalyticsFilterValue} from '../../types';
+import {
+	AnalyticsFilters,
+	DateRangePreset, IAnalyticsDateRangeFilter,
+	TAnalyticsFilter,
+	TDateRangeAnalyticsFilterValue
+} from '../../types';
 import {DATE_RANGE_PRESETS} from '../../utils';
 
 interface IProps {
 	setValue: any;
-	value: TDateRangeAnalyticsFilterValue;
-	[k: string]: any;
+	filter: IAnalyticsDateRangeFilter;
 }
 
 export default function DateRangeAnalyticsFilter({
 	setValue: setDateRange,
-	value: dateRange,
-	...otherProps
+	filter: dateRangeFilter,
 }: IProps) {
 	const changePreset = useCallback(
 		(event: ChangeEvent<HTMLSelectElement>) => {
@@ -29,9 +32,14 @@ export default function DateRangeAnalyticsFilter({
 			const preset = event.target.value as DateRangePreset;
 
 			setDateRange({
-				preset,
-				...DATE_RANGE_PRESETS[preset],
-			} as TDateRangeAnalyticsFilterValue);
+				[AnalyticsFilters.DATE_RANGE]: {
+					...dateRangeFilter,
+					value: {
+						preset,
+						...DATE_RANGE_PRESETS[preset],
+					},
+				}
+			});
 		},
 		[setDateRange]
 	);
@@ -42,10 +50,15 @@ export default function DateRangeAnalyticsFilter({
 			const [from, to] = value.split(' - ');
 
 			setDateRange({
-				from: new Date(from).toString(),
-				preset: DateRangePreset.CUSTOM_RANGE,
-				to: new Date(to).toString(),
-			} as TDateRangeAnalyticsFilterValue);
+				[AnalyticsFilters.DATE_RANGE]: {
+					...dateRangeFilter,
+					value: {
+						from: new Date(from).toString(),
+						preset: DateRangePreset.CUSTOM_RANGE,
+						to: new Date(to).toString(),
+					}
+				}
+			});
 		},
 		[setDateRange]
 	);
@@ -56,7 +69,7 @@ export default function DateRangeAnalyticsFilter({
 				<ClayInput.GroupItem prepend shrink>
 					<ClaySelect
 						onChange={changePreset}
-						value={dateRange.preset}
+						value={dateRangeFilter?.value?.preset}
 					>
 						{Object.keys(DATE_RANGE_PRESETS).map((key) => (
 							<ClaySelect.Option value={key}>
@@ -73,12 +86,10 @@ export default function DateRangeAnalyticsFilter({
 						placeholder="YYYY-MM-DD - YYYY-MM-DD"
 						range
 						time={false}
-						value={`${dateRange?.from} - ${dateRange?.to}`}
+						value={`${dateRangeFilter?.value?.from} - ${dateRangeFilter?.value?.to}`}
 						years={{
 							end: new Date().getFullYear(),
-							start: new Date(
-								otherProps.dateCreated
-							).getFullYear(),
+							start: new Date('1969-12-01T00:00:00.000Z').getFullYear(),
 						}}
 					/>
 				</ClayInput.GroupItem>

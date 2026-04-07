@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import {IRoomObjectEntry} from "../../../common/utils/types";
 
 export enum AnalyticsFilters {
 	DATE_RANGE = 'dateRange',
@@ -58,9 +59,21 @@ export interface IAnalyticsFilter {
 	value: TDateRangeAnalyticsFilterValue | TRoomAnalyticsFilterValue | string[];
 }
 
+export interface IAnalyticsDateRangeFilter extends IAnalyticsFilter {
+	value: TDateRangeAnalyticsFilterValue;
+}
+
+export interface IAnalyticsRoomFilter extends IAnalyticsFilter {
+	value: TRoomAnalyticsFilterValue;
+}
+
+export interface IAnalyticsUserFilter extends IAnalyticsFilter {
+	value: string[];
+}
+
 export interface IAnalyticsFilterProps {
 	setValue: any;
-	value: TAnalyticsFilterValue;
+	filter: IAnalyticsFilter;
 	[k: string]: any;
 }
 
@@ -84,5 +97,5 @@ export type TDateRangeAnalyticsFilterValue = {
 
 export type TRoomAnalyticsFilterValue = {
 	channelId: string;
-	roomId: number;
+	room: IRoomObjectEntry | null;
 };

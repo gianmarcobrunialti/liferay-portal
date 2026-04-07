@@ -17,16 +17,39 @@ export default function useAnalyticsFilters(
 		toFilters(filtersJSONString)
 	);
 
-	const storeFilters = useCallback(
-		async () => AnalyticsService.storeFilters(toStoredFilters(filters)),
-		[filters]
+	const setFilter = useCallback(
+		(filter: TAnalyticsFilter) => {
+			setFilters((filters) => {
+				const filterName = Object.keys(filter)[0];
+
+				const updatedFilterValue = JSON.stringify(filter[filterName]);
+				const filterValue = JSON.stringify(filters[filterName]);
+
+				if (filterValue !== updatedFilterValue) {
+					return {
+						...filters,
+						filter,
+					};
+				}
+
+				return filters;
+			});
+		},
+		[setFilters]
 	);
 
 	useEffect(() => {
-		if (persisted) {
-			storeFilters();
-		}
-	}, [persisted, storeFilters]);
+		const shouldStore =
+			persisted
+				? () => AnalyticsService.storeFilters(toStoredFilters(filters))
+				: () => Promise.resolve();
 
-	return [filters, setFilters];
+		shouldStore()
+			.then(() => {
+				console.log(filters);
+				Liferay.fire('dsr-filters-updated', {filters});
+			});
+	}, [filters, persisted]);
+
+	return [filters, setFilter];
 }

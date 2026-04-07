@@ -128,8 +128,8 @@ async function getRoom(id: number): Promise<IRoomObjectEntry> {
 	throw new Error(error);
 }
 
-async function getRooms(): Promise<IRoomObjectEntry[]> {
-	const {data, error} = await ApiHelper.get<IRoomObjectEntry[]>(
+async function getRooms(): Promise<{items: IRoomObjectEntry[]}> {
+	const {data, error} = await ApiHelper.get<{items: IRoomObjectEntry[]}>(
 		`${BASE_PATH}`
 	);
 

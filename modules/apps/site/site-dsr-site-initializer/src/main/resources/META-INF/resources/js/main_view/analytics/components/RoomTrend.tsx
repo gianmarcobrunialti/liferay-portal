@@ -11,7 +11,12 @@ import ClayButton from '@clayui/button';
 import '../../../../css/components/RoomTrend.scss';
 import RoomService from '../../../common/services/RoomService';
 import AnalyticsFrame from "./AnalyticsFrame";
-import {TTrendOptions} from "../types";
+import {
+	AnalyticsFilters,
+	TAnalyticsFilter,
+	TRoomAnalyticsFilterValue,
+	TTrendOptions
+} from "../types";
 import {IRoomObjectEntry} from "../../../common/utils/types";
 import useAnalyticsFilters from "../../../common/hooks/useAnalyticsFilters";
 
@@ -107,19 +112,18 @@ const RoomTrend = () => {
 		});
 	}, []);
 
-	//TODO Gian
-	useAnalyticsFilters();
-
 	useEffect(() => {
-		RoomService.getRoom(roomId)
-			.then((room) => {
-				setRoom(room);
+		const doSetRoom = ({filters}: {filters: TAnalyticsFilter}) => {
+			const {room} = filters[AnalyticsFilters.ROOM]?.value as TRoomAnalyticsFilterValue;
 
-				setTrendStatus(OPTIONS[room.trend]);
-			})
-			.catch(() => {
-				setRoom(null);
-			});
+			setRoom(room);
+		};
+
+		Liferay.on('dsr-filters-updated', doSetRoom)
+
+		return () => {
+			Liferay.detach('dsr-filters-updated', doSetRoom);
+		};
 	}, []);
 
 	return (
@@ -183,7 +187,7 @@ const RoomTrend = () => {
 											key={index}
 											onClick={() => {
 												updateRoomTrend(
-													roomId,
+													room.id,
 													option.status
 												).then(({trend}) => {
 													setTrendStatus(

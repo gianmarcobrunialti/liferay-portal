@@ -62,34 +62,7 @@ public abstract class BaseAnalyticsSectionDisplayContext {
 		return StringPool.BLANK;
 	}
 
-	public long getRoomId() throws Exception {
-		String analyticsStoreFilters = getAnalyticsStoreFilters();
-
-		JSONObject jsonObject =
-			JSONFactoryUtil.createJSONObject(analyticsStoreFilters);
-
-		if (JSONUtil.isEmpty(jsonObject)) {
-			return 38581;
-		}
-
-		JSONObject roomJSONObject = jsonObject.getJSONObject("room");
-
-		if (JSONUtil.isEmpty(roomJSONObject)) {
-			return 38581;
-		}
-
-		ObjectEntry objectEntry = ObjectEntryLocalServiceUtil.fetchObjectEntry(
-			GetterUtil.getLong(roomJSONObject.getString("value")),
-			objectDefinition.getObjectDefinitionId());
-
-		if (objectEntry == null) {
-			return 38581;
-		}
-
-		return objectEntry.getObjectEntryId();
-	}
-
-	public Map<String, Object> getProps() throws Exception {
+	public Map<String, Object> getProps() {
 		return Collections.emptyMap();
 	}
 

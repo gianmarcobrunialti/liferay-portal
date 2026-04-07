@@ -19,13 +19,13 @@ interface IProps {
 export default function AnalyticsFiltersToolbar(props: IProps) {
 	return props.interactable ? (
 		<div className="d-flex">
-			{Object.entries(props.filters).map(([key, Filter], index) =>
-				Filter.active && key !== AnalyticsFilters.ROOM ? (
-					<Filter.component
+			{Object.entries(props.filters).map(([key, filter], index) =>
+				filter.active && key !== AnalyticsFilters.ROOM ? (
+					<filter.component
 						{...props.additionalProps}
+						filter={filter}
 						key={index}
 						setValue={props.setValue}
-						value={Filter.value}
 					/>
 				) : null
 			)}

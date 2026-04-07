@@ -9,7 +9,7 @@ import {IAnalyticsFilterProps} from '../../types';
 
 export default function UserAnalyticsFilter({
 	setValue,
-	value,
+	filter,
 	...otherProps
 }: IAnalyticsFilterProps) {
 	return <></>;

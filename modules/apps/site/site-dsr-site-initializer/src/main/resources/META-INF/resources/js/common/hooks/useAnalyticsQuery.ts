@@ -67,10 +67,10 @@ export default function useAnalyticsQuery({
 	const sendRequest = useCallback(
 		async (filters: TAnalyticsFilter) => {
 			setIsLoading(true);
-			console.log("sendRequest");
 			console.log(settings.checkViewportVisibility, isVisible, variables);
 
 			if (settings.checkViewportVisibility && isVisible) {
+				console.log("sendRequest");
 				const {mock, query: queryString} = query;
 
 				if (settings.useMock) {
