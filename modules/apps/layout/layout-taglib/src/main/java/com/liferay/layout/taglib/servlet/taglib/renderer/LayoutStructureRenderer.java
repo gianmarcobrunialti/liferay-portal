@@ -60,6 +60,7 @@ import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructureItemUtil;
 import com.liferay.layout.util.structure.RowStyledLayoutStructureItem;
+import com.liferay.layout.util.structure.StyledLayoutStructureItem;
 import com.liferay.layout.util.structure.collection.EmptyCollectionOptions;
 import com.liferay.petra.io.unsync.UnsyncStringWriter;
 import com.liferay.petra.string.StringBundler;
@@ -107,6 +108,7 @@ import java.util.Set;
 
 /**
  * @author Mikel Lorza
+ * @author Gianmarco Brunialti Masera
  */
 public class LayoutStructureRenderer {
 
@@ -266,6 +268,21 @@ public class LayoutStructureRenderer {
 		}
 
 		return false;
+	}
+
+	private boolean _isHiddenItem(LayoutStructureItem layoutStructureItem) {
+		if (Objects.equals(
+				_renderLayoutStructureDisplayContext.getLayoutMode(),
+				Constants.EDIT)) {
+
+			return false;
+		}
+
+		if (!(layoutStructureItem instanceof StyledLayoutStructureItem)) {
+			return false;
+		}
+
+		return ((StyledLayoutStructureItem)layoutStructureItem).isHidden();
 	}
 
 	private void _renderCol(
@@ -1722,7 +1739,9 @@ public class LayoutStructureRenderer {
 			LayoutStructureItem layoutStructureItem =
 				_layoutStructure.getLayoutStructureItem(childrenItemId);
 
-			if (hiddenItemIds.contains(childrenItemId)) {
+			if (hiddenItemIds.contains(childrenItemId) ||
+				_isHiddenItem(layoutStructureItem)) {
+
 				continue;
 			}
 

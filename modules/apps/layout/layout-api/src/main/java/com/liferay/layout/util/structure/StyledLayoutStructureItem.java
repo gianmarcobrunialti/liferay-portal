@@ -36,6 +36,7 @@ import java.util.Set;
 
 /**
  * @author Pavel Savinov
+ * @author Gianmarco Brunialti Masera
  */
 public abstract class StyledLayoutStructureItem extends LayoutStructureItem {
 
@@ -109,6 +110,8 @@ public abstract class StyledLayoutStructureItem extends LayoutStructureItem {
 		).put(
 			"customCSS", _customCSS
 		).put(
+			"hidden", _hidden
+		).put(
 			"name", _name
 		).put(
 			"styles", stylesJSONObject
@@ -137,6 +140,10 @@ public abstract class StyledLayoutStructureItem extends LayoutStructureItem {
 
 	public String getName() {
 		return _name;
+	}
+
+	public boolean isHidden() {
+		return _hidden;
 	}
 
 	public String getStyledCssClasses() {
@@ -168,6 +175,10 @@ public abstract class StyledLayoutStructureItem extends LayoutStructureItem {
 		_customCSSViewports.put(viewportSizeId, customCSS);
 	}
 
+	public void setHidden(boolean hidden) {
+		_hidden = hidden;
+	}
+
 	public void setName(String name) {
 		_name = name;
 	}
@@ -185,6 +196,10 @@ public abstract class StyledLayoutStructureItem extends LayoutStructureItem {
 
 		if (itemConfigJSONObject.has("customCSS")) {
 			setCustomCSS(itemConfigJSONObject.getString("customCSS"));
+		}
+
+		if (itemConfigJSONObject.has("hidden")) {
+			setHidden(itemConfigJSONObject.getBoolean("hidden"));
 		}
 
 		if (itemConfigJSONObject.has("name")) {
@@ -425,6 +440,7 @@ public abstract class StyledLayoutStructureItem extends LayoutStructureItem {
 	private Set<String> _cssClasses;
 	private String _customCSS;
 	private final Map<String, String> _customCSSViewports = new HashMap<>();
+	private boolean _hidden;
 	private String _name;
 
 }
