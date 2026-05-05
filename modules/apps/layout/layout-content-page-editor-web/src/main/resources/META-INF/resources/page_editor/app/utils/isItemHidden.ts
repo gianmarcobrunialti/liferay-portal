@@ -5,12 +5,11 @@
 
 import {LayoutData, LayoutDataItem} from '../../types/layout_data/LayoutData';
 import {ViewportSize} from '../config/constants/viewportSizes';
-import {getResponsiveConfig} from '../js-index';
 
 export function isItemHidden(
 	layoutData: LayoutData,
 	itemId: LayoutDataItem['itemId'],
-	selectedViewportSize: ViewportSize,
+	_selectedViewportSize?: ViewportSize,
 	options = {recursive: false}
 ): boolean {
 	const item = layoutData?.items[itemId];
@@ -19,22 +18,17 @@ export function isItemHidden(
 		return false;
 	}
 
-	const responsiveConfig = getResponsiveConfig(
-		item.config,
-		selectedViewportSize
-	);
-
 	if (options.recursive) {
 		return (
-			responsiveConfig.styles.display === 'none' ||
+			item.config?.hidden === true ||
 			isItemHidden(
 				layoutData,
 				item.parentId,
-				selectedViewportSize,
+				_selectedViewportSize,
 				options
 			)
 		);
 	}
 
-	return responsiveConfig.styles.display === 'none';
+	return item.config?.hidden === true;
 }
