@@ -60,11 +60,13 @@ import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructureItemUtil;
 import com.liferay.layout.util.structure.RowStyledLayoutStructureItem;
+import com.liferay.layout.util.structure.StyledLayoutStructureItem;
 import com.liferay.layout.util.structure.collection.EmptyCollectionOptions;
 import com.liferay.petra.io.unsync.UnsyncStringWriter;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.petra.string.StringUtil;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
@@ -107,6 +109,7 @@ import java.util.Set;
 
 /**
  * @author Mikel Lorza
+ * @author Gianmarco Brunialti Masera
  */
 public class LayoutStructureRenderer {
 
@@ -266,6 +269,33 @@ public class LayoutStructureRenderer {
 		}
 
 		return false;
+	}
+
+	private boolean _isHiddenByDisplayStyle(
+		LayoutStructureItem layoutStructureItem) {
+
+		if (Objects.equals(
+				_renderLayoutStructureDisplayContext.getLayoutMode(),
+				Constants.EDIT)) {
+
+			return false;
+		}
+
+		if (!(layoutStructureItem instanceof StyledLayoutStructureItem)) {
+			return false;
+		}
+
+		StyledLayoutStructureItem styledLayoutStructureItem =
+			(StyledLayoutStructureItem)layoutStructureItem;
+
+		JSONObject stylesJSONObject =
+			styledLayoutStructureItem.getStylesJSONObject();
+
+		if (stylesJSONObject == null) {
+			return false;
+		}
+
+		return Objects.equals(stylesJSONObject.getString("display"), "none");
 	}
 
 	private void _renderCol(
@@ -1722,7 +1752,9 @@ public class LayoutStructureRenderer {
 			LayoutStructureItem layoutStructureItem =
 				_layoutStructure.getLayoutStructureItem(childrenItemId);
 
-			if (hiddenItemIds.contains(childrenItemId)) {
+			if (hiddenItemIds.contains(childrenItemId) ||
+				_isHiddenByDisplayStyle(layoutStructureItem)) {
+
 				continue;
 			}
 
