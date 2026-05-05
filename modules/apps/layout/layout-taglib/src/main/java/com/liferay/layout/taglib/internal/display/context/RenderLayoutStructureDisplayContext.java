@@ -78,6 +78,7 @@ import com.liferay.segments.context.RequestContextMapper;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -85,6 +86,7 @@ import java.util.Set;
 
 /**
  * @author Rubén Pulido
+ * @author Gianmarco Brunialti Masera
  */
 public class RenderLayoutStructureDisplayContext {
 
@@ -396,10 +398,36 @@ public class RenderLayoutStructureDisplayContext {
 	}
 
 	public Set<String> getHiddenItemIds() {
+		if (_hiddenItemIds != null) {
+			return _hiddenItemIds;
+		}
+
 		LayoutStructureRulesHelper.LayoutStructureRulesResult
 			layoutStructureRulesResult = getLayoutStructureRulesResult();
 
-		return layoutStructureRulesResult.getHiddenItemIds();
+		Set<String> hiddenItemIds = layoutStructureRulesResult.getHiddenItemIds();
+
+		if (Objects.equals(getLayoutMode(), Constants.EDIT)) {
+			_hiddenItemIds = hiddenItemIds;
+
+			return _hiddenItemIds;
+		}
+
+		Set<String> displayHiddenItemIds = _getDisplayHiddenItemIds();
+
+		if (displayHiddenItemIds.isEmpty()) {
+			_hiddenItemIds = hiddenItemIds;
+
+			return _hiddenItemIds;
+		}
+
+		Set<String> mergedHiddenItemIds = new HashSet<>(hiddenItemIds);
+
+		mergedHiddenItemIds.addAll(displayHiddenItemIds);
+
+		_hiddenItemIds = mergedHiddenItemIds;
+
+		return _hiddenItemIds;
 	}
 
 	public InfoForm getInfoForm(
@@ -735,6 +763,34 @@ public class RenderLayoutStructureDisplayContext {
 		}
 
 		return false;
+	}
+
+	private Set<String> _getDisplayHiddenItemIds() {
+		Set<String> displayHiddenItemIds = new HashSet<>();
+
+		for (LayoutStructureItem layoutStructureItem :
+				_layoutStructure.getLayoutStructureItems()) {
+
+			if (!(layoutStructureItem instanceof StyledLayoutStructureItem)) {
+				continue;
+			}
+
+			StyledLayoutStructureItem styledLayoutStructureItem =
+				(StyledLayoutStructureItem)layoutStructureItem;
+
+			JSONObject stylesJSONObject =
+				styledLayoutStructureItem.getStylesJSONObject();
+
+			if ((stylesJSONObject == null) ||
+				!Objects.equals(stylesJSONObject.getString("display"), "none")) {
+
+				continue;
+			}
+
+			displayHiddenItemIds.add(styledLayoutStructureItem.getItemId());
+		}
+
+		return displayHiddenItemIds;
 	}
 
 	private String _getBackgroundImage(JSONObject jsonObject) {
@@ -1207,6 +1263,7 @@ public class RenderLayoutStructureDisplayContext {
 	private static final Log _log = LogFactoryUtil.getLog(
 		RenderLayoutStructureDisplayContext.class);
 
+	private Set<String> _hiddenItemIds;
 	private final HttpServletRequest _httpServletRequest;
 	private final LayoutStructure _layoutStructure;
 	private LayoutStructureRulesHelper.LayoutStructureRulesResult
