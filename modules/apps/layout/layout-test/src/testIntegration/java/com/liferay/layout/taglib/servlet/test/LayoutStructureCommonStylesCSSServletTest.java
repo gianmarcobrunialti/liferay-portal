@@ -100,6 +100,26 @@ public class LayoutStructureCommonStylesCSSServletTest {
 	}
 
 	@Test
+	public void testDoesNotRenderDesktopDisplayNone() throws Exception {
+		_layoutPageTemplateStructureLocalService.
+			updateLayoutPageTemplateStructureData(
+				TestPropsValues.getUserId(), _group.getGroupId(),
+				_layout.getPlid(),
+				_read("layout_structure_with_display_none.json"));
+
+		MockHttpServletResponse mockHttpServletResponse =
+			new MockHttpServletResponse();
+
+		_servlet.service(_getHttpServletRequest(), mockHttpServletResponse);
+
+		Assert.assertEquals(
+			_normalize(mockHttpServletResponse.getContentAsString()),
+			_normalize(
+				COMMON_CSS_STYLE +
+					_read("expected_style_with_display_none.css")));
+	}
+
+	@Test
 	public void testRenderCommonStyles() throws Exception {
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(

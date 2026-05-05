@@ -1,0 +1,9 @@
+.lfr-layout-structure-item-z896587a-c659-43f5-9e22 {
+	margin-top: var(--spacer-1, 0.25rem) !important;
+}
+
+@media screen and (max-width: 575px) {
+	.lfr-layout-structure-item-z896587a-c659-43f5-9e22 {
+		display: none !important;
+	}
+}

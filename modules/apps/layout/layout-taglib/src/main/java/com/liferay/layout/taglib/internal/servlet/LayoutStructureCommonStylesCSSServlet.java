@@ -482,6 +482,13 @@ public class LayoutStructureCommonStylesCSSServlet extends HttpServlet {
 			return false;
 		}
 
+		if (Objects.equals(viewportSize, ViewportSize.DESKTOP) &&
+			Objects.equals(styleName, "display") &&
+			Objects.equals(value, "none")) {
+
+			return false;
+		}
+
 		if (!(styledLayoutStructureItem instanceof
 				ContainerStyledLayoutStructureItem)) {
 
