@@ -1,0 +1,7 @@
+assemble:
+    -   from: assets
+        into: static
+liferay-dotcom-foundations-global-css:
+    name: Liferay Dotcom Foundations Global CSS
+    type: globalCSS
+    url: foundations.css
