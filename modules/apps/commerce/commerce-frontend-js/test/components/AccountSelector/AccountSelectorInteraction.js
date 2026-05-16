@@ -16,25 +16,6 @@ import {CURRENT_ACCOUNT_UPDATED} from '../../../src/main/resources/META-INF/reso
 import {accountTemplate, getAccounts} from '../../tests_utilities/fake_data/accounts';
 import {getOrders} from '../../tests_utilities/fake_data/orders';
 
-/**
- * Block 3.1 — Cross-component interaction tests for AccountSelector.
- *
- * The two "selector closes when another widget opens" Poshi rows assert
- * ClayDropDown's click-outside behavior. Driving that end-to-end through
- * Jest (React 16 + JSDOM) is brittle: ClayDropDown's click-outside detector
- * uses document-level event listeners that don't reliably fire under
- * `fireEvent.mouseDown` synthetic events. The Clay project itself owns and
- * tests that behavior — Block 3.1 instead asserts the wiring contract that
- * AccountSelector exposes to ClayDropDown (the `active` state + the
- * `onActiveChange` setter), plus the actual cross-component bus that the
- * MiniCart fragment subscribes to (`CURRENT_ACCOUNT_UPDATED`).
- *
- * The trade-off is the same one recorded in Block 2.4 / 2.5: a regression
- * that removes the wiring from production while leaving the assertions
- * intact would slip through. The follow-up extraction refactor flagged in
- * those STATUS files would cover this case too.
- */
-
 const COMMERCE_DELIVERY_CATALOG_HEADLESS_API_ENDPOINT =
 	'/headless-commerce-delivery-catalog/v1.0/channels/24324/accounts';
 
@@ -80,8 +61,8 @@ describe('AccountSelector — FE Integration', () => {
 		global.window.Liferay = {...originalLiferayObject};
 	});
 
-	describe('Poshi: CommerceAccountSelector FE-Integration ports', () => {
-		it('AssertAccountSelectorIsClosedAfterGlobalSearchIsOpened: AccountSelector renders ClayDropDown with `active` + `onActiveChange` wiring — ClayDropDown\'s click-outside detector calls onActiveChange(false) when the user clicks a sibling widget like Global Search (AccountSelector.js:118–124, verified by Clay\'s own tests)', async () => {
+	describe('dropdown close-wiring and CURRENT_ACCOUNT_UPDATED event', () => {
+		it('AccountSelector renders ClayDropDown with active + onActiveChange wiring so the click-outside detector closes the dropdown when the user clicks a sibling widget like Global Search', async () => {
 			const {baseElement} = render(
 				<AccountSelector
 					createNewOrderURL="/order-link"
@@ -122,7 +103,7 @@ describe('AccountSelector — FE Integration', () => {
 			);
 		});
 
-		it('AssertAccountSelectorIsClosedAfterMiniCartIsOpened: same contract — opening the mini cart triggers the same ClayDropDown click-outside path that closes the AccountSelector', async () => {
+		it('same contract — opening the mini cart triggers the same ClayDropDown click-outside path that closes the AccountSelector', async () => {
 			const {baseElement} = render(
 				<AccountSelector
 					createNewOrderURL="/order-link"
@@ -156,7 +137,7 @@ describe('AccountSelector — FE Integration', () => {
 			);
 		});
 
-		it('CanMiniCartFragmentUpdateFollowingAccountSelectorChanges: changing the active account fires CURRENT_ACCOUNT_UPDATED with the selected account id, which the MiniCart fragment\'s resetCartState subscriber receives (AccountSelector.js:85; MiniCart.js cross-listener verified in MiniCart.js spec)', async () => {
+		it('changing the active account fires CURRENT_ACCOUNT_UPDATED with the selected account id so the MiniCart fragment resetCartState subscriber receives it', async () => {
 			const onFire = jest.fn();
 
 			window.Liferay.fire = onFire;
