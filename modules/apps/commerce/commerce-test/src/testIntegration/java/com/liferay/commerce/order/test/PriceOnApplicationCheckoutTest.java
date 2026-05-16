@@ -41,31 +41,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-/**
- * Java integration coverage for the price-on-application (POA) checkout-block
- * invariant behind the {@code CommercePriceOnApplication.testcase} Poshi
- * suite (Block 5.5 of the Shopping Experience migration plan).
- *
- * Of the 2 Integration-classified Poshi rows, the checkout-block invariant is
- * ported here directly:
- *
- * <ul>
- * <li>{@code CanPreventPriceOnApplicationProductBeDirectlyCheckoutTogether
- *     WithANormalProduct} (COMMERCE-11687) &rarr;
- *     {@link #testCheckoutThrowsWhenAnOrderItemIsMarkedPriceOnApplication}
- *     and {@link #testCheckoutSucceedsWhenNoOrderItemIsMarkedPriceOnApplication}.
- *     </li>
- * </ul>
- *
- * The second Integration row,
- * {@code CanPriceListPriceOverrideSkuPriceOnApplicationSet} (COMMERCE-11728),
- * is reclassified to {@code Delete} (deferred-P6): it exercises the
- * price-list priority resolution which is the scope of
- * {@code CommerceProductPriceCalculationV2Test} et al., not an
- * order-engine concern. See the block STATUS file for the rationale.
- *
- * @author Gianmarco Brunialti
- */
 @RunWith(Arquillian.class)
 public class PriceOnApplicationCheckoutTest {
 
@@ -135,12 +110,6 @@ public class PriceOnApplicationCheckoutTest {
 	@Test
 	public void testCheckoutThrowsWhenAnOrderItemIsMarkedPriceOnApplication()
 		throws Exception {
-
-		// Poshi:
-		// CanPreventPriceOnApplicationProductBeDirectlyCheckoutTogetherWith
-		// ANormalProduct. The Poshi added a mix of normal + POA items; the
-		// service-level invariant is independent of mix-vs-single — one POA
-		// item is sufficient to block the checkout transition.
 
 		//
 
