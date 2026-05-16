@@ -239,8 +239,8 @@ describe('MiniCart tests_utilities', () => {
 	describe('getCorrectedQuantity', () => {
 		const SKU = 'SKU-001';
 
-		describe('Poshi: CommerceQuickAddToCart Unit ports', () => {
-			it('CannotAddSKUWithAllowedQuantitiesWhenTheyAreHigherThanMaximumQuantity: returns 0 when maxOrderQuantity is below the lowest allowed value', () => {
+		describe('quick-add quantity-correction rules', () => {
+			it('returns 0 when maxOrderQuantity is below the lowest allowed value', () => {
 				const productConfiguration = mockProductConfiguration({
 					allowedOrderQuantities: [10, 20, 30],
 					maxOrderQuantity: 5,
@@ -251,7 +251,7 @@ describe('MiniCart tests_utilities', () => {
 				).toBe(0);
 			});
 
-			it('CannotAddSKUWithAllowedQuantitiesWhenTheyAreLowerThanMinimumQuantity: returns 0 when minOrderQuantity is above the highest allowed value', () => {
+			it('returns 0 when minOrderQuantity is above the highest allowed value', () => {
 				const productConfiguration = mockProductConfiguration({
 					allowedOrderQuantities: [1, 2, 3],
 					minOrderQuantity: 5,
@@ -262,7 +262,7 @@ describe('MiniCart tests_utilities', () => {
 				).toBe(0);
 			});
 
-			it('CannotAddSKUWithAllowedQuantitiesWhichAreNotMultiples: returns 0 when no allowed quantity is a multiple of multipleOrderQuantity', () => {
+			it('returns 0 when no allowed quantity is a multiple of multipleOrderQuantity', () => {
 				const productConfiguration = mockProductConfiguration({
 					allowedOrderQuantities: [1, 5, 10],
 					multipleOrderQuantity: 3,
@@ -273,7 +273,7 @@ describe('MiniCart tests_utilities', () => {
 				).toBe(0);
 			});
 
-			it('CannotAddSKUWithMultipleQuantityWhenItIsHigherThanMaximumQuantity: returns 0 when multipleOrderQuantity exceeds maxOrderQuantity', () => {
+			it('returns 0 when multipleOrderQuantity exceeds maxOrderQuantity', () => {
 				const productConfiguration = mockProductConfiguration({
 					maxOrderQuantity: 5,
 					multipleOrderQuantity: 10,
@@ -284,7 +284,7 @@ describe('MiniCart tests_utilities', () => {
 				).toBe(0);
 			});
 
-			it('CanAddToCartProductWithPriceList: returns a positive quantity for a SKU whose configuration is unconstrained (price-list pricing does not affect quantity validation)', () => {
+			it('returns a positive quantity for a SKU whose configuration is unconstrained (price-list pricing does not affect quantity validation)', () => {
 				const productConfiguration = mockProductConfiguration({
 					maxOrderQuantity: 50,
 					minOrderQuantity: 1,
@@ -296,7 +296,7 @@ describe('MiniCart tests_utilities', () => {
 				).toBeGreaterThan(0);
 			});
 
-			it('CanAddToCartProductWithPromotion: returns a positive quantity for an unconstrained SKU regardless of any promotional pricing applied upstream', () => {
+			it('returns a positive quantity for an unconstrained SKU regardless of any promotional pricing applied upstream', () => {
 				const productConfiguration = mockProductConfiguration({
 					maxOrderQuantity: 50,
 					minOrderQuantity: 1,
@@ -308,7 +308,7 @@ describe('MiniCart tests_utilities', () => {
 				).toBeGreaterThan(0);
 			});
 
-			it('CanUseQuickAddToCartWhenOneProductHasExpiredSKU: an expired-SKU configuration still yields a positive default quantity — purchasability filtering happens upstream of getCorrectedQuantity', () => {
+			it('an expired-SKU configuration still yields a positive default quantity — purchasability filtering happens upstream of getCorrectedQuantity', () => {
 				const productConfiguration = mockProductConfiguration({
 					maxOrderQuantity: 50,
 					minOrderQuantity: 1,
@@ -320,7 +320,7 @@ describe('MiniCart tests_utilities', () => {
 				).toBeGreaterThan(0);
 			});
 
-			it('CanUseQuickAddToCartWhenOneProductHasNoSKU: an empty cartItems list is a valid input — the function returns the configured min', () => {
+			it('an empty cartItems list is a valid input — the function returns the configured min', () => {
 				const productConfiguration = mockProductConfiguration({
 					maxOrderQuantity: 50,
 					minOrderQuantity: 1,
