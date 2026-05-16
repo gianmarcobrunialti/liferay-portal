@@ -17,6 +17,14 @@ import {
 	REMOVAL_TIMEOUT,
 } from '../../../src/main/resources/META-INF/resources/components/mini_cart/util/constants';
 import {CART_PRODUCT_QUANTITY_CHANGED} from '../../../src/main/resources/META-INF/resources/utilities/eventsDefinitions';
+import {
+	mockCartItem,
+	mockCartItemWithBulkPrice,
+	mockCartItemWithDiscount,
+	mockCartItemWithDiscountLevels,
+	mockCartItemWithPromotion,
+	mockCartItemWithTierPrice,
+} from '../fixtures/cartFixtures';
 
 jest.mock(
 	'../../../src/main/resources/META-INF/resources/ServiceProvider/index',
@@ -339,6 +347,193 @@ describe('MiniCart Item', () => {
 					jest.advanceTimersByTime(REMOVAL_CANCELING_TIMEOUT);
 				});
 			});
+		});
+	});
+
+	describe('Poshi: CommerceMiniCart Unit ports', () => {
+		const renderWithItem = (item, contextOverrides = {}) =>
+			render(
+				<MiniCartContext.Provider
+					value={{...BASE_CONTEXT_MOCK, ...contextOverrides}}
+				>
+					<CartItem {...item} updateCartItem={jest.fn()} />
+				</MiniCartContext.Provider>
+			);
+
+		it('ViewMiniCartItemDetails: renders the item name, SKU, list price, and quantity selector', () => {
+			const item = mockCartItem({
+				name: 'Sample Product',
+				quantity: 3,
+				sku: 'SKU-VISIBLE',
+			});
+
+			const {container, getByRole, getByText} = renderWithItem(item);
+
+			expect(getByText('Sample Product')).toBeInTheDocument();
+			expect(getByText('SKU-VISIBLE')).toBeInTheDocument();
+
+			const priceWrapper = container.querySelector(
+				`${COMPONENT_SELECTOR}-price`
+			);
+
+			expect(priceWrapper).toHaveTextContent(item.price.priceFormatted);
+			expect(getByRole('spinbutton').value).toBe('3');
+			expect(
+				container.querySelector(`${COMPONENT_SELECTOR}-actions button`)
+			).toBeInTheDocument();
+		});
+
+		it('ViewMiniCartItemWithDiscount: renders the list price, the discount percentage, and the final price', () => {
+			const item = mockCartItemWithDiscount();
+
+			const {container} = renderWithItem(item);
+
+			const priceWrapper = container.querySelector(
+				`${COMPONENT_SELECTOR}-price`
+			);
+
+			expect(priceWrapper).toBeInTheDocument();
+
+			const listPrice = priceWrapper.querySelector(
+				'.price-value-inactive'
+			);
+			const discountPercentage = priceWrapper.querySelector(
+				'.price-value-percentage'
+			);
+			const finalPrice = priceWrapper.querySelector(
+				'.price-value-final'
+			);
+
+			expect(listPrice).toHaveTextContent(item.price.priceFormatted);
+			expect(discountPercentage).toHaveTextContent(
+				item.price.discountPercentage
+			);
+			expect(finalPrice).toHaveTextContent(item.price.finalPriceFormatted);
+		});
+
+		it('ViewMiniCartItemWithDiscountLevels: renders one percentage per non-zero level when displayDiscountLevels is true', () => {
+			const item = mockCartItemWithDiscountLevels();
+
+			const {container} = renderWithItem(item, {
+				displayDiscountLevels: true,
+			});
+
+			const priceWrapper = container.querySelector(
+				`${COMPONENT_SELECTOR}-price`
+			);
+			const levelSpans = priceWrapper.querySelectorAll(
+				'.price-value-percentages'
+			);
+
+			expect(levelSpans.length).toBeGreaterThan(1);
+		});
+
+		it('ViewMiniCartItemWithPromotion: renders the promo price next to the list price', () => {
+			const item = mockCartItemWithPromotion();
+
+			const {container} = renderWithItem(item);
+
+			const priceWrapper = container.querySelector(
+				`${COMPONENT_SELECTOR}-price`
+			);
+
+			expect(priceWrapper).toBeInTheDocument();
+			expect(
+				priceWrapper.querySelector('.price-value-promo')
+			).toHaveTextContent(item.price.promoPriceFormatted);
+		});
+
+		it('ViewMiniCartItemWithTierPrice: renders the tier-discounted final price when quantity reaches the tier', () => {
+			const item = mockCartItemWithTierPrice();
+
+			const {container, getByRole} = renderWithItem(item);
+
+			const priceWrapper = container.querySelector(
+				`${COMPONENT_SELECTOR}-price`
+			);
+
+			expect(priceWrapper).toBeInTheDocument();
+			expect(
+				priceWrapper.querySelector('.price-value-promo')
+			).toHaveTextContent(item.price.promoPriceFormatted);
+			expect(getByRole('spinbutton').value).toBe(String(item.quantity));
+		});
+
+		it('ViewMiniCartItemWithBulkPrice: renders the bulk-discounted price and reflects the bulk multipleQuantity in the quantity input step', () => {
+			const item = mockCartItemWithBulkPrice();
+
+			const {container, getByRole} = renderWithItem(item);
+
+			const priceWrapper = container.querySelector(
+				`${COMPONENT_SELECTOR}-price`
+			);
+			const quantityInput = getByRole('spinbutton');
+
+			expect(
+				priceWrapper.querySelector('.price-value-promo')
+			).toHaveTextContent(item.price.promoPriceFormatted);
+			expect(quantityInput.step).toBe(String(item.settings.multipleQuantity));
+		});
+
+		it('RemoveSingleCartItemFromMiniCart: clicking the delete button removes the item from the cart via the API', async () => {
+			const item = mockCartItem({id: 4242, skuId: 8484});
+
+			const {container} = renderWithItem(item);
+
+			const CartItemDeleteButton = container.querySelector(
+				`${COMPONENT_SELECTOR}-actions button`
+			);
+
+			await act(async () => {
+				fireEvent.click(CartItemDeleteButton);
+			});
+
+			await act(async () => {
+				jest.advanceTimersByTime(
+					REMOVAL_ANIMATION_MS +
+						REMOVAL_CANCELING_TIMEOUT +
+						REMOVAL_TIMEOUT
+				);
+			});
+
+			await waitFor(() => {
+				expect(CartResource.deleteItemById).toHaveBeenCalledWith(
+					item.id
+				);
+			});
+
+			expect(window.Liferay.fire).toHaveBeenCalledWith(
+				CART_PRODUCT_QUANTITY_CHANGED,
+				{quantity: 0, skuId: item.skuId}
+			);
+		});
+
+		it('EditCartItemQuantityFromMiniCart: typing a new quantity triggers the debounced update-item API call', async () => {
+			jest.useRealTimers();
+
+			const item = mockCartItem({
+				id: 5252,
+				quantity: 1,
+				settings: {maxQuantity: 100, minQuantity: 1, multipleQuantity: 1},
+			});
+
+			const {getByRole} = renderWithItem(item);
+
+			const quantityInput = getByRole('spinbutton');
+
+			fireEvent.change(quantityInput, {target: {value: '4'}});
+
+			await waitFor(
+				() => {
+					expect(CartResource.updateItemById).toHaveBeenCalledWith(
+						item.id,
+						{quantity: 4}
+					);
+				},
+				{timeout: 2000}
+			);
+
+			jest.useFakeTimers();
 		});
 	});
 });

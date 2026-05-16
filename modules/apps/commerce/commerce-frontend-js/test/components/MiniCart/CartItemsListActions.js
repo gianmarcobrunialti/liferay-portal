@@ -381,4 +381,78 @@ describe('MiniCart Items List Actions', () => {
 			});
 		});
 	});
+
+	describe('Poshi: CommerceMiniCart Unit ports', () => {
+		const POPULATED_CART_CONTEXT = {
+			...BASE_CONTEXT_MOCK,
+			cartState: {
+				...BASE_CONTEXT_MOCK.cartState,
+				summary: {itemsCount: 3},
+			},
+		};
+
+		it('RemoveAllItemsFromMiniCart: clicking remove-all then "yes" empties the cart via the API and fires the quantity-changed event with skuId=ALL', async () => {
+			const {container, getByText} = render(
+				<MiniCartContext.Provider value={POPULATED_CART_CONTEXT}>
+					<CartItemsListActions />
+				</MiniCartContext.Provider>
+			);
+
+			const [, removeAllItemsButton] = container.querySelectorAll(
+				`${COMPONENT_SELECTOR}-actions .action`
+			);
+
+			await act(async () => {
+				fireEvent.click(removeAllItemsButton);
+			});
+
+			await act(async () => {
+				fireEvent.click(getByText('yes'));
+			});
+
+			await waitFor(() => {
+				expect(CartResource.updateCartById).toHaveBeenCalledWith(
+					POPULATED_CART_CONTEXT.cartState.id,
+					{cartItems: []}
+				);
+			});
+
+			expect(window.Liferay.fire).toHaveBeenCalledWith(
+				CART_PRODUCT_QUANTITY_CHANGED,
+				{quantity: 0, skuId: ALL}
+			);
+		});
+
+		it('RemoveAllItemsFromMiniCart: clicking remove-all then "no" leaves the cart unchanged and re-hides the confirmation prompt', async () => {
+			const {container, getByText} = render(
+				<MiniCartContext.Provider value={POPULATED_CART_CONTEXT}>
+					<CartItemsListActions />
+				</MiniCartContext.Provider>
+			);
+
+			const [, removeAllItemsButton] = container.querySelectorAll(
+				`${COMPONENT_SELECTOR}-actions .action`
+			);
+
+			await act(async () => {
+				fireEvent.click(removeAllItemsButton);
+			});
+
+			await act(async () => {
+				fireEvent.click(getByText('no'));
+			});
+
+			await waitFor(() => {
+				const ConfirmationPromptElement = container.querySelector(
+					'.confirmation-prompt'
+				);
+
+				expect(
+					ConfirmationPromptElement.classList.contains('hide')
+				).toBe(true);
+			});
+
+			expect(CartResource.updateCartById).not.toHaveBeenCalled();
+		});
+	});
 });
