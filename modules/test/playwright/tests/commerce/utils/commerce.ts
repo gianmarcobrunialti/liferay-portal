@@ -659,6 +659,42 @@ export async function miniumSetUp(
 	);
 }
 
+export async function createProductWithSku(
+	apiHelpers: DataApiHelpers,
+	catalogId: number,
+	options?: {
+		price?: number;
+		productName?: string;
+		skuName?: string;
+	}
+) {
+	const productName = options?.productName || `Product-${getRandomString()}`;
+	const skuName = options?.skuName || `Sku-${getRandomString()}`;
+	const price = options?.price ?? 50;
+
+	const product = await apiHelpers.headlessCommerceAdminCatalog.postProduct({
+		catalogId,
+		name: {en_US: productName},
+		skus: [
+			{
+				cost: 0,
+				price,
+				published: true,
+				purchasable: true,
+				sku: skuName,
+			},
+		],
+	});
+
+	const productSkus = await apiHelpers.headlessCommerceAdminCatalog
+		.getProduct(product.productId)
+		.then((p) => {
+			return p.skus;
+		});
+
+	return {product, sku: productSkus[0]};
+}
+
 export async function createAccountWithBuyerUser(
 	apiHelpers: DataApiHelpers,
 	siteId: number | string,
