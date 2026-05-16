@@ -544,6 +544,49 @@ describe('Price', () => {
 			);
 		});
 
+		it('when the SKU price carries priceOnApplication=true, Price renders the .price-on-application label instead of any list/promo/discount/final price values', () => {
+			const price = {
+				discount: 0,
+				discountFormatted: '$ 0.00',
+				discountPercentage: '0.00',
+				finalPrice: 0,
+				finalPriceFormatted: '$ 0.00',
+				priceOnApplication: true,
+				promoPrice: 0,
+				promoPriceFormatted: '$ 0.00',
+			};
+
+			const {container} = render(
+				<Price
+					{...BASE_PROPS}
+					price={{...BASE_PRICE_PROPS, ...price}}
+				/>
+			);
+
+			const priceOnApplicationLabel = container.querySelector(
+				'.price-on-application.price-value'
+			);
+
+			expect(priceOnApplicationLabel).toBeInTheDocument();
+
+			expect(window.Liferay.Language.get).toHaveBeenCalledWith(
+				'list-price'
+			);
+			expect(window.Liferay.Language.get).toHaveBeenCalledWith(
+				'price-on-application'
+			);
+
+			expect(
+				container.querySelector('.price-value-promo')
+			).not.toBeInTheDocument();
+			expect(
+				container.querySelector('.price-value-discount')
+			).not.toBeInTheDocument();
+			expect(
+				container.querySelector('.price-value-final')
+			).not.toBeInTheDocument();
+		});
+
 		it(`updates the price via event listener on namespaced '${CP_INSTANCE_CHANGED}'`, async () => {
 			const namespace = 'someNamespace_';
 
