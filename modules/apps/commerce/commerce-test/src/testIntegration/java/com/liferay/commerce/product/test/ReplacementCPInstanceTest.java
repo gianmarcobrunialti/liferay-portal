@@ -41,24 +41,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-/**
- * Java integration coverage for the discontinued-SKU replacement resolution
- * behind the {@code CommerceQuickAddToCart} and
- * {@code CPCommerceProductReplacements} Poshi suites (Block 5.4 of the
- * Shopping Experience migration plan).
- *
- * The 5 Integration-classified Poshi rows reduce to coverage of one underlying
- * invariant: {@link CPInstanceHelper#fetchFirstAvailableReplacementCPInstance(
- * long, long, long, long)} returns the configured replacement
- * {@link CPInstance} when the original is discontinued and unavailable, and
- * returns {@code null} when no replacement is needed. The discount / promotion
- * / price-on-application Poshi rows are reclassified to {@code Delete} (covered
- * transitively by this test plus the existing pricing-test suites in
- * {@code commerce-test}'s {@code price} and {@code pricing} packages); the
- * cross-catalog row is exercised here directly.
- *
- * @author Gianmarco Brunialti
- */
 @RunWith(Arquillian.class)
 public class ReplacementCPInstanceTest {
 
@@ -105,8 +87,6 @@ public class ReplacementCPInstanceTest {
 	@Test
 	public void testFetchReplacementResolvesAcrossCatalogs() throws Exception {
 
-		// Poshi: ReplacementCanBeSetBetweenDifferentCatalogs
-
 		CommerceCatalog otherCommerceCatalog =
 			_commerceCatalogLocalService.addCommerceCatalog(
 				null, RandomTestUtil.randomString(),
@@ -136,11 +116,6 @@ public class ReplacementCPInstanceTest {
 	@Test
 	public void testFetchReplacementWhenOriginalIsDiscontinuedAndUnavailable()
 		throws Exception {
-
-		// Poshi: CanDiscontinuedSKUBeReplaced (the resolution half; the UI
-		// assertions about the "Replacement" label and the info tooltip are
-		// frontend concerns and stay with the Playwright suite of this
-		// component, not this Java IT block).
 
 		CPInstance replacementCPInstance = CPTestUtil.addCPInstanceFromCatalog(
 			_commerceCatalog.getGroupId());
