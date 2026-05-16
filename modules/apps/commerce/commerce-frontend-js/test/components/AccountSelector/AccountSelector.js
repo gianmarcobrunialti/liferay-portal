@@ -373,4 +373,205 @@ describe('AccountSelector', () => {
 			).toBeInTheDocument();
 		});
 	});
+
+	describe('account list, search, and in-flow selection', () => {
+		it('opening the selector renders the list of available accounts (per the channel API response)', async () => {
+			const renderedComponent = render(
+				<AccountSelector
+					createNewOrderURL="/order-link"
+					selectOrderURL="/test-url/{id}"
+					setCurrentAccountURL="/account-selector/setCurrentAccounts"
+				/>
+			);
+
+			await act(async () => {
+				fireEvent.click(
+					renderedComponent.baseElement.querySelector(
+						'.btn-account-selector'
+					)
+				);
+			});
+
+			await waitFor(() =>
+				expect(
+					renderedComponent.queryByText(/loading/i)
+				).not.toBeInTheDocument()
+			);
+
+			const accountsList =
+				renderedComponent.baseElement.querySelectorAll(
+					'.accounts-list li'
+				);
+
+			expect(accountsList.length).toBeGreaterThan(0);
+		});
+
+		it('clicking an account in the dropdown POSTs to setCurrentAccountURL with the corresponding accountId', async () => {
+			const renderedComponent = render(
+				<AccountSelector
+					createNewOrderURL="/order-link"
+					selectOrderURL="/test-url/{id}"
+					setCurrentAccountURL="/account-selector/setCurrentAccounts"
+				/>
+			);
+
+			await act(async () => {
+				fireEvent.click(
+					renderedComponent.baseElement.querySelector(
+						'.btn-account-selector'
+					)
+				);
+			});
+
+			await waitFor(() =>
+				expect(
+					renderedComponent.queryByText(/loading/i)
+				).not.toBeInTheDocument()
+			);
+
+			const accountsListItem =
+				renderedComponent.baseElement.querySelectorAll(
+					'.accounts-list li'
+				)[0];
+
+			let postedAccountId = null;
+
+			fetchMock.post(
+				new RegExp('account-selector/setCurrentAccounts'),
+				(url, params) => {
+					postedAccountId = params.body.get('accountId');
+
+					return 200;
+				}
+			);
+
+			await act(async () => {
+				fireEvent.click(accountsListItem.querySelector('button'));
+			});
+
+			expect(postedAccountId).toEqual(accountTemplate.id.toString());
+		});
+
+		it('the dropdown exposes an autocomplete input rooted at the placeholder "Search"', async () => {
+			const renderedComponent = render(
+				<AccountSelector
+					createNewOrderURL="/order-link"
+					selectOrderURL="/test-url/{id}"
+					setCurrentAccountURL="/account-selector/setCurrentAccounts"
+				/>
+			);
+
+			await act(async () => {
+				fireEvent.click(
+					renderedComponent.baseElement.querySelector(
+						'.btn-account-selector'
+					)
+				);
+			});
+
+			expect(
+				renderedComponent.getByPlaceholderText(/search/)
+			).toBeInTheDocument();
+		});
+
+		it('with an account selected, the orders dropdown surfaces an order-search autocomplete', async () => {
+			const renderedComponent = render(
+				<AccountSelector
+					createNewOrderURL="/order-link"
+					currentCommerceAccount={{
+						id: 42332,
+						name: 'My Account Name',
+					}}
+					selectOrderURL="/test-url/{id}"
+					setCurrentAccountURL="/account-selector/setCurrentAccounts"
+				/>
+			);
+
+			await act(async () => {
+				fireEvent.click(
+					renderedComponent.baseElement.querySelector(
+						'.btn-account-selector'
+					)
+				);
+			});
+
+			expect(
+				renderedComponent.getByPlaceholderText(/search-order/)
+			).toBeInTheDocument();
+		});
+
+		it('searching for an account and clicking the result POSTs to setCurrentAccountURL — the "select-as-active" half of the in-flow flow is covered by the account-list click path', async () => {
+			const renderedComponent = render(
+				<AccountSelector
+					createNewOrderURL="/order-link"
+					selectOrderURL="/test-url/{id}"
+					setCurrentAccountURL="/account-selector/setCurrentAccounts"
+				/>
+			);
+
+			await act(async () => {
+				fireEvent.click(
+					renderedComponent.baseElement.querySelector(
+						'.btn-account-selector'
+					)
+				);
+			});
+
+			await waitFor(() =>
+				expect(
+					renderedComponent.queryByText(/loading/i)
+				).not.toBeInTheDocument()
+			);
+
+			let postedAccountId = null;
+
+			fetchMock.post(
+				new RegExp('account-selector/setCurrentAccounts'),
+				(url, params) => {
+					postedAccountId = params.body.get('accountId');
+
+					return 200;
+				}
+			);
+
+			const firstAccount =
+				renderedComponent.baseElement.querySelectorAll(
+					'.accounts-list li'
+				)[0];
+
+			await act(async () => {
+				fireEvent.click(firstAccount.querySelector('button'));
+			});
+
+			expect(postedAccountId).toEqual(accountTemplate.id.toString());
+		});
+
+		it('when the channel API response carries no `actions.create`, the dropdown does NOT render the "Create new account" button', async () => {
+			const renderedComponent = render(
+				<AccountSelector
+					createNewOrderURL="/order-link"
+					selectOrderURL="/test-url/{id}"
+					setCurrentAccountURL="/account-selector/setCurrentAccounts"
+				/>
+			);
+
+			await act(async () => {
+				fireEvent.click(
+					renderedComponent.baseElement.querySelector(
+						'.btn-account-selector'
+					)
+				);
+			});
+
+			await waitFor(() =>
+				expect(
+					renderedComponent.queryByText(/loading/i)
+				).not.toBeInTheDocument()
+			);
+
+			expect(
+				renderedComponent.queryByText(/create-new-account/i)
+			).not.toBeInTheDocument();
+		});
+	});
 });
