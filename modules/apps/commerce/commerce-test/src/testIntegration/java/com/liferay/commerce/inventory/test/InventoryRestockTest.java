@@ -59,31 +59,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-/**
- * Java integration coverage for the inventory book → consume → cancel
- * transitions previously exercised by {@code CPCommerceInventory.testcase}
- * (Poshi → Java conversion, Block 5.2 of the Shopping Experience migration
- * plan).
- *
- * Of the 6 source Poshi Integration rows, the 4 that map cleanly to service
- * invariants land here:
- *
- * <ul>
- * <li>{@code CanInventoryQuantitiesAreUpdatedCorrectly} →
- *     {@link #testBookedQuantityIsDeductedFromAvailableStock} +
- *     {@link #testConsumeBookedQuantityDoesNotRestoreAvailableStock}</li>
- * <li>{@code CanRestockInventoryByDeletingTheOrder} →
- *     {@link #testDeleteOrderRestocksBookedQuantity}</li>
- * <li>{@code CanChangeLogUpdatedAfterCancelledOrder} →
- *     {@link #testOrderDeletionCreatesInventoryAuditRecord}</li>
- * </ul>
- *
- * The 2 remaining rows ({@code CanRestockInventoryByDeletingTheShipment} +
- * the SKU/UOM variants) are deferred to a P6 audit pass — see
- * {@code STATUS-2026-05-16-block-5.2.md} for the rationale.
- *
- * @author Gianmarco Brunialti
- */
 @RunWith(Arquillian.class)
 public class InventoryRestockTest {
 
@@ -153,7 +128,6 @@ public class InventoryRestockTest {
 	public void testBookedQuantityIsDeductedFromAvailableStock()
 		throws Exception {
 
-		// Poshi: CanInventoryQuantitiesAreUpdatedCorrectly (booking half)
 		// Given: 3 warehouses with 1 unit each (total available = 3)
 
 		_addWarehousesWithStock(3, BigDecimal.ONE);
@@ -175,8 +149,6 @@ public class InventoryRestockTest {
 	@Test
 	public void testConsumeBookedQuantityDoesNotRestoreAvailableStock()
 		throws Exception {
-
-		// Poshi: CanInventoryQuantitiesAreUpdatedCorrectly (shipment half)
 
 		_addWarehousesWithStock(3, BigDecimal.ONE);
 
@@ -214,8 +186,6 @@ public class InventoryRestockTest {
 	@Test
 	public void testDeleteOrderRestocksBookedQuantity() throws Exception {
 
-		// Poshi: CanRestockInventoryByDeletingTheOrder
-
 		_addWarehousesWithStock(3, BigDecimal.ONE);
 
 		CommerceOrder commerceOrder = _addOrderWithBookedQuantity(
@@ -239,8 +209,6 @@ public class InventoryRestockTest {
 	@Test
 	public void testOrderDeletionCreatesInventoryAuditRecord()
 		throws Exception {
-
-		// Poshi: CanChangeLogUpdatedAfterCancelledOrder
 
 		_addWarehousesWithStock(3, BigDecimal.ONE);
 
