@@ -544,7 +544,7 @@ describe('Price', () => {
 			);
 		});
 
-		it('Poshi: CommercePriceOnApplication Unit port — CanViewPriceOnApplicationLabelOnStoreFront: when the SKU price carries priceOnApplication=true, Price renders the .price-on-application label instead of any list/promo/discount/final price values (Price.js:40, :146–154)', () => {
+		it('when the SKU price carries priceOnApplication=true, Price renders the .price-on-application label instead of any list/promo/discount/final price values', () => {
 			const price = {
 				discount: 0,
 				discountFormatted: '$ 0.00',
