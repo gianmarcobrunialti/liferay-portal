@@ -56,30 +56,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-/**
- * Java integration coverage for the quantity-constraint validation behind the
- * {@code CommerceOrderImporterProductConfigurations.testcase} Poshi suite
- * (Block 5.3 of the Shopping Experience migration plan).
- *
- * All 8 source Poshi rows reduce to one underlying invariant: when a product
- * has min/max/multiple/allowed order-quantity constraints configured on its
- * {@code CPDefinitionInventory}, the
- * {@link CommerceOrderValidatorRegistry#validate(Locale, CommerceOrder,
- * CPInstance, String, BigDecimal, boolean)} call returns a non-empty result
- * list with a specific localized message for each violation. The Poshi suite
- * exercised the same validator chain through the order-importer UI flow
- * (\"import from another order\"), which wraps the validator and surfaces
- * results as per-row import errors.
- *
- * The 8 Poshi rows fold into 5 test methods covering one violation each plus
- * the OK path. The cross-product cases
- * ({@code CanAssertInvalidQuantityNotImportedWhen[Min|Max]Is[Higher|Lower]ThanMultiple})
- * are covered by the underlying single-constraint tests because the validator
- * short-circuits on the first failing rule in min &rarr; max &rarr; allowed
- * &rarr; multiple order (see {@code DefaultCommerceOrderValidatorImpl}).
- *
- * @author Gianmarco Brunialti
- */
 @RunWith(Arquillian.class)
 public class OrderImporterTest {
 
@@ -169,13 +145,6 @@ public class OrderImporterTest {
 	@Test
 	public void testAcceptsValidQuantity() throws Exception {
 
-		// Poshi: CanImportValidMinimumQuantity (valid case),
-		// CanImportValidMaximumQuantity (valid case),
-		// CanImportValidMultipleQuantity (valid case),
-		// CanImportValidAllowedQuantity (valid case),
-		// the OK assertions inside each
-		// CanAssertInvalidQuantityNotImportedWhen... test.
-
 		_configureInventory(
 			BigDecimal.valueOf(2), BigDecimal.valueOf(20), null,
 			BigDecimal.valueOf(2));
@@ -186,12 +155,6 @@ public class OrderImporterTest {
 	@Test
 	public void testRejectsAboveMaxOrderQuantity() throws Exception {
 
-		// Poshi: CanImportValidMaximumQuantity (invalid case) +
-		// CanAssertInvalidQuantityNotImportedWhenMaximumIsHigherThanMultiple
-		// (the 12-unit case) +
-		// CanAssertInvalidQuantityNotImportedWhenMaximumIsLowerThanMultiple
-		// (the 10-unit case).
-
 		_configureInventory(
 			CPDefinitionInventoryConstants.DEFAULT_MIN_ORDER_QUANTITY,
 			BigDecimal.valueOf(5), null, BigDecimal.ONE);
@@ -201,12 +164,6 @@ public class OrderImporterTest {
 
 	@Test
 	public void testRejectsBelowMinOrderQuantity() throws Exception {
-
-		// Poshi: CanImportValidMinimumQuantity (invalid case) +
-		// CanAssertInvalidQuantityNotImportedWhenMinimumIsHigherThanMultiple
-		// (the 4-unit case) +
-		// CanAssertInvalidQuantityNotImportedWhenMinimumIsLowerThanMultiple
-		// (the 2-unit case).
 
 		_configureInventory(
 			BigDecimal.valueOf(5),
@@ -219,8 +176,6 @@ public class OrderImporterTest {
 	@Test
 	public void testRejectsDisallowedQuantity() throws Exception {
 
-		// Poshi: CanImportValidAllowedQuantity (the 4-unit case).
-
 		_configureInventory(
 			CPDefinitionInventoryConstants.DEFAULT_MIN_ORDER_QUANTITY,
 			CPDefinitionInventoryConstants.DEFAULT_MAX_ORDER_QUANTITY,
@@ -231,10 +186,6 @@ public class OrderImporterTest {
 
 	@Test
 	public void testRejectsQuantityNotMatchingMultiple() throws Exception {
-
-		// Poshi: CanImportValidMultipleQuantity (the 4-unit case) plus the
-		// multiple-violation halves of the cross-product min/max-vs-multiple
-		// suites.
 
 		_configureInventory(
 			CPDefinitionInventoryConstants.DEFAULT_MIN_ORDER_QUANTITY,
