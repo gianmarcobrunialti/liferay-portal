@@ -36,27 +36,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-/**
- * Java integration coverage for the Minium + Speedwell site initializers
- * behind the {@code CommerceAccelerators.testcase} Poshi rows
- * {@code InitializeNewMiniumSite} and {@code InitializeNewSpeedwellSite}
- * (Block 5.7 of the Shopping Experience migration plan).
- *
- * Each Poshi test fired the accelerator (a UI-triggered call into the
- * matching {@link SiteInitializer}) and verified the end-state through the
- * admin UI: channel currency + site-type, catalog currency + language +
- * name, product count, option name, specification label + group lists. The
- * service-level invariant is identical:
- * {@link SiteInitializer#initialize(long)} executed against a fresh group
- * produces a {@link CommerceChannel} with the documented site-type plus a
- * {@link CommerceCatalog} on the same group; the populated content
- * (products, options, specifications) is exercised transitively. The IT
- * stops at channel + catalog assertions to keep the runtime focused; the
- * detailed per-resource assertions belong to the per-resource ITs in the
- * commerce-product-test / commerce-pricing-test modules.
- *
- * @author Gianmarco Brunialti
- */
 @RunWith(Arquillian.class)
 public class CommerceSiteInitializerTest {
 
@@ -90,8 +69,6 @@ public class CommerceSiteInitializerTest {
 	public void testMiniumSiteInitializerProducesB2BChannelAndCatalog()
 		throws Exception {
 
-		// Poshi: InitializeNewMiniumSite.
-
 		_initialize("minium-initializer");
 
 		CommerceChannel commerceChannel =
@@ -120,8 +97,6 @@ public class CommerceSiteInitializerTest {
 	@Test
 	public void testSpeedwellSiteInitializerProducesB2CChannelAndCatalog()
 		throws Exception {
-
-		// Poshi: InitializeNewSpeedwellSite.
 
 		_initialize("speedwell-initializer");
 
