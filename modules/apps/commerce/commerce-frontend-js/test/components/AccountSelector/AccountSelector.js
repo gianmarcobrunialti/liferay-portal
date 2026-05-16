@@ -374,8 +374,8 @@ describe('AccountSelector', () => {
 		});
 	});
 
-	describe('Poshi: CommerceAccountSelector Unit ports', () => {
-		it('ViewAccountSelectorDropdownAccountsList: opening the selector renders the list of available accounts (per the channel API response)', async () => {
+	describe('account list, search, and in-flow selection', () => {
+		it('opening the selector renders the list of available accounts (per the channel API response)', async () => {
 			const renderedComponent = render(
 				<AccountSelector
 					createNewOrderURL="/order-link"
@@ -406,7 +406,7 @@ describe('AccountSelector', () => {
 			expect(accountsList.length).toBeGreaterThan(0);
 		});
 
-		it('ChangeActiveAccountFromAccountsList: clicking an account in the dropdown POSTs to setCurrentAccountURL with the corresponding accountId', async () => {
+		it('clicking an account in the dropdown POSTs to setCurrentAccountURL with the corresponding accountId', async () => {
 			const renderedComponent = render(
 				<AccountSelector
 					createNewOrderURL="/order-link"
@@ -452,7 +452,7 @@ describe('AccountSelector', () => {
 			expect(postedAccountId).toEqual(accountTemplate.id.toString());
 		});
 
-		it('SearchForAnAccountAndSelectItAsActive: the dropdown exposes an autocomplete input rooted at the placeholder "Search"', async () => {
+		it('the dropdown exposes an autocomplete input rooted at the placeholder "Search"', async () => {
 			const renderedComponent = render(
 				<AccountSelector
 					createNewOrderURL="/order-link"
@@ -474,7 +474,7 @@ describe('AccountSelector', () => {
 			).toBeInTheDocument();
 		});
 
-		it('SearchForAnOrderAndSelectItAsActive: with an account selected, the orders dropdown surfaces an order-search autocomplete', async () => {
+		it('with an account selected, the orders dropdown surfaces an order-search autocomplete', async () => {
 			const renderedComponent = render(
 				<AccountSelector
 					createNewOrderURL="/order-link"
@@ -500,7 +500,7 @@ describe('AccountSelector', () => {
 			).toBeInTheDocument();
 		});
 
-		it('CanSearchForAnInFlowAccountAndSelectItAsActive: searching for an account and clicking the result POSTs to setCurrentAccountURL — the "select-as-active" half of the in-flow flow is covered by the account-list click path', async () => {
+		it('searching for an account and clicking the result POSTs to setCurrentAccountURL — the "select-as-active" half of the in-flow flow is covered by the account-list click path', async () => {
 			const renderedComponent = render(
 				<AccountSelector
 					createNewOrderURL="/order-link"
@@ -546,7 +546,7 @@ describe('AccountSelector', () => {
 			expect(postedAccountId).toEqual(accountTemplate.id.toString());
 		});
 
-		it('CannotCreateAccountInFlowWithoutPermissions: when the channel API response carries no `actions.create`, the dropdown does NOT render the "Create new account" button (AccountsListView.js:133)', async () => {
+		it('when the channel API response carries no `actions.create`, the dropdown does NOT render the "Create new account" button', async () => {
 			const renderedComponent = render(
 				<AccountSelector
 					createNewOrderURL="/order-link"

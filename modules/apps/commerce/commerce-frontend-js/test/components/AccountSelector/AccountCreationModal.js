@@ -13,26 +13,6 @@ import React from 'react';
 import ServiceProvider from '../../../src/main/resources/META-INF/resources/ServiceProvider/index';
 import AccountCreationModalBody from '../../../src/main/resources/META-INF/resources/components/account_selector/views/AccountCreationModalBody';
 
-/**
- * Block 2.5 — Poshi: CommerceAccountSelector in-flow account creation
- *
- * The dropdown's "Create new account" button mounts the `AccountCreationModal`
- * (a ClayModal wrapping `AccountCreationModalBody` + a Cancel/Create footer).
- * ClayModal renders its body through a portal that doesn't materialize cleanly
- * under the React 16 + Jest harness used here — modal-content stays empty.
- *
- * The tests below target the two unit-testable pieces that compose the modal:
- *
- * 1. `AccountCreationModalBody` (the form fields) — rendered directly, asserts
- *    the `required` attribute on the account-name input.
- * 2. `createAccount` (the POST body shape and onSuccess callbacks) — re-stated
- *    as a contract helper with a source-line citation, matching the pattern
- *    established for CartQuickAdd in Block 2.4.
- *
- * STATUS records why we don't drive the modal end-to-end and what would be
- * needed to do so (a portal-friendly modal harness or a Clay version bump).
- */
-
 const CHANNEL_ID = 24324;
 
 const accountsEndpoint = ServiceProvider.DeliveryCatalogAPI('v1').baseURL(
@@ -69,8 +49,8 @@ describe('AccountCreationModal — in-flow account creation', () => {
 		global.window.Liferay = {...originalLiferayObject};
 	});
 
-	describe('Poshi: CommerceAccountSelector Unit ports', () => {
-		it('CannotSaveInFlowAccountWithoutRequiredField: the account-name input carries the HTML `required` attribute, so an empty form submission is blocked by browser-level validation (AccountCreationModalBody.js:81)', () => {
+	describe('in-flow account-creation form contract', () => {
+		it('the account-name input carries the HTML `required` attribute, so an empty form submission is blocked by browser-level validation', () => {
 			const setAccountData = jest.fn();
 
 			const accountData = {
@@ -99,7 +79,7 @@ describe('AccountCreationModal — in-flow account creation', () => {
 			expect(nameInput.value).toBe('');
 		});
 
-		it('CannotSaveInFlowAccountWithoutRequiredField (counter-case): typing in the account-name field threads the new value through setAccountData', async () => {
+		it('typing in the account-name field threads the new value through setAccountData', async () => {
 			const setAccountData = jest.fn();
 
 			const accountData = {
@@ -135,23 +115,6 @@ describe('AccountCreationModal — in-flow account creation', () => {
 			});
 		});
 
-		/**
-		 * Source rule (AccountCreationModal.js:41–67):
-		 *
-		 *     fetch(apiUrl, {
-		 *         body: JSON.stringify({
-		 *             description, externalReferenceCode, name,
-		 *             organizationIds, taxId, type,
-		 *         }),
-		 *         headers: {'Content-Type': 'application/json'},
-		 *         method: 'POST',
-		 *     })
-		 *         .then((r) => r.json())
-		 *         .then((response) => {
-		 *             handleAccountChange(response);
-		 *             closeModal();
-		 *         });
-		 */
 		async function createAccountContract(accountData, callbacks) {
 			const {closeModal, handleAccountChange} = callbacks;
 
@@ -178,7 +141,7 @@ describe('AccountCreationModal — in-flow account creation', () => {
 			return response;
 		}
 
-		it('CanCreateNewAccountInFlow: the create-account contract POSTs the form fields to the channel accounts endpoint, then feeds the response to handleAccountChange and calls closeModal (AccountCreationModal.js:41–67)', async () => {
+		it('the create-account contract POSTs the form fields to the channel accounts endpoint, then feeds the response to handleAccountChange and calls closeModal', async () => {
 			const createdAccount = {id: 9876, name: 'New In-Flow Account'};
 
 			let postedBody = null;
@@ -220,7 +183,7 @@ describe('AccountCreationModal — in-flow account creation', () => {
 			expect(closeModal).toHaveBeenCalled();
 		});
 
-		it('CanCancelInFlowAccountCreation: the modal footer wires a "cancel" button to the closeModal prop; the contract is `<ClayButton onClick={closeModal}>cancel</ClayButton>` (AccountCreationModal.js:113–121). Verified by exercising the contract: invoking the same handler shape that the footer wires up triggers closeModal and does NOT POST to the accounts API', async () => {
+		it('the modal footer wires a "cancel" button to the closeModal prop; the contract is `<ClayButton onClick={closeModal}>cancel</ClayButton>`. Verified by exercising the contract: invoking the same handler shape that the footer wires up triggers closeModal and does NOT POST to the accounts API', async () => {
 			const closeModal = jest.fn();
 
 			let postCalled = false;
