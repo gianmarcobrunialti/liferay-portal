@@ -32,39 +32,39 @@ type PricingScenario = {
 	baseListPrice: number;
 	baseListTiers?: TierEntry[];
 	expectedUnitPrice: string;
-	name: string;
 	promoBulkPricing?: boolean;
 	promoPrice?: number;
 	promoTiers?: TierEntry[];
 	tag: string;
 	testQuantity: number;
+	title: string;
 };
 
 const scenarios: PricingScenario[] = [
 	{
 		baseListPrice: 50,
 		expectedUnitPrice: '$ 30.00',
-		name: 'CanCheckoutProductWithPromotionPriceLowerThenPricelist',
 		promoPrice: 30,
 		tag: '@COMMERCE-pricing-promo-lower',
 		testQuantity: 1,
+		title: 'a promotion price lower than the list price wins at the cart',
 	},
 	{
 		baseListPrice: 24,
 		expectedUnitPrice: '$ 24.00',
-		name: 'CanAssertListPriceRatherThanHigherPromotionPriceAtCheckout',
 		promoPrice: 40,
 		tag: '@COMMERCE-10279',
 		testQuantity: 3,
+		title: 'a promotion price higher than the list price is ignored — list price wins',
 	},
 	{
 		baseListBulkPricing: true,
 		baseListPrice: 50,
 		baseListTiers: [{minimumQuantity: 5, price: 30}],
 		expectedUnitPrice: '$ 30.00',
-		name: 'CanCheckoutProductWithBulkPrice',
 		tag: '@COMMERCE-10245',
 		testQuantity: 5,
+		title: 'a single bulk tier on the list replaces the base price once quantity meets the threshold',
 	},
 	{
 		baseListBulkPricing: true,
@@ -74,37 +74,37 @@ const scenarios: PricingScenario[] = [
 			{minimumQuantity: 10, price: 20},
 		],
 		expectedUnitPrice: '$ 20.00',
-		name: 'CanCheckoutProductWithMultipleBulkPrice',
 		tag: '@COMMERCE-12402',
 		testQuantity: 10,
+		title: 'multiple bulk tiers pick the rate of the highest tier the quantity reaches',
 	},
 	{
 		baseListPrice: 50,
 		expectedUnitPrice: '$ 10.00',
-		name: 'CanCheckoutProductWithBulkPriceOnlyInPromotions',
 		promoBulkPricing: true,
 		promoPrice: 40,
 		promoTiers: [{minimumQuantity: 5, price: 10}],
 		tag: '@COMMERCE-pricing-promo-bulk-only',
 		testQuantity: 5,
+		title: 'a bulk tier defined only on the promotion still applies at the cart',
 	},
 	{
 		baseListBulkPricing: true,
 		baseListPrice: 50,
 		baseListTiers: [{minimumQuantity: 5, price: 40}],
 		expectedUnitPrice: '$ 10.00',
-		name: 'CanCheckoutProductWithBulkPriceOnPromotionAndPriceList',
 		promoBulkPricing: true,
 		promoPrice: 30,
 		promoTiers: [{minimumQuantity: 5, price: 10}],
 		tag: '@COMMERCE-pricing-bulk-both-lower-wins',
 		testQuantity: 5,
+		title: 'when both list and promotion carry bulk tiers, the lower-priced bulk wins',
 	},
 ];
 
 for (const scenario of scenarios) {
 	test(
-		`Cart unit price reflects pricing scenario: ${scenario.name}`,
+		scenario.title,
 		{tag: [scenario.tag]},
 		async ({apiHelpers, commerceCartPage, page, site, widgetPagePage}) => {
 			const layout = await apiHelpers.jsonWebServicesLayout.addLayout({
