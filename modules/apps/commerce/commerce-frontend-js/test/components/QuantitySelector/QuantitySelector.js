@@ -54,8 +54,8 @@ describe('Quantity Selector', () => {
 		).not.toBeInTheDocument();
 	});
 
-	describe('Poshi: CommerceMiniCart Unit ports', () => {
-		it('AssertOnlyAllowedQuantitiesAreSelectableInMiniCartItem: renders exactly the allowed quantities as <option> values', () => {
+	describe('product-configuration quantity rules', () => {
+		it('renders exactly the allowed quantities as <option> values', () => {
 			const allowedQuantities = [1, 4, 5, 7, 11];
 
 			const {container} = render(
@@ -74,7 +74,7 @@ describe('Quantity Selector', () => {
 			});
 		});
 
-		it('AssertSelectableQuantitiesInMiniCartItemStartFromMinimumQuantitySet: input.min reflects the minimum order quantity', () => {
+		it('input.min reflects the minimum order quantity', () => {
 			const {container} = render(
 				<QuantitySelector {...defaultProps} min={4} step={1} />
 			);
@@ -84,7 +84,7 @@ describe('Quantity Selector', () => {
 			expect(input.min).toBe('4');
 		});
 
-		it('AssertQuantityInMiniCartItemCanBeSelectedUpToAMaximumQuantitySet: input.max reflects the maximum order quantity and the callback reports the max error past it', () => {
+		it('input.max reflects the maximum order quantity and the callback reports the max error past it', () => {
 			const onUpdate = jest.fn();
 
 			const {container} = render(
@@ -107,7 +107,7 @@ describe('Quantity Selector', () => {
 			});
 		});
 
-		it('AssertOnlyMultipleValuesAreSelectableQuantitiesInMiniCartItem: the callback reports the multiple error for non-step values', () => {
+		it('the callback reports the multiple error for non-step values', () => {
 			const onUpdate = jest.fn();
 
 			const {container} = render(
@@ -133,7 +133,7 @@ describe('Quantity Selector', () => {
 			});
 		});
 
-		it('ViewFirstSelectableQuantityInMiniCartItemWhenMinimumOrderQuantityIsLowerThanMultipleOrderQuantity: input.min is rounded up to the next step boundary when min < step', () => {
+		it('input.min is rounded up to the next step boundary when min < step', () => {
 			const {container} = render(
 				<QuantitySelector
 					{...defaultProps}

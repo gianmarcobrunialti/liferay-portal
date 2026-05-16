@@ -350,7 +350,7 @@ describe('MiniCart Item', () => {
 		});
 	});
 
-	describe('Poshi: CommerceMiniCart Unit ports', () => {
+	describe('with various price shapes and item interactions', () => {
 		const renderWithItem = (item, contextOverrides = {}) =>
 			render(
 				<MiniCartContext.Provider
@@ -360,7 +360,7 @@ describe('MiniCart Item', () => {
 				</MiniCartContext.Provider>
 			);
 
-		it('ViewMiniCartItemDetails: renders the item name, SKU, list price, and quantity selector', () => {
+		it('renders the item name, SKU, list price, and quantity selector', () => {
 			const item = mockCartItem({
 				name: 'Sample Product',
 				quantity: 3,
@@ -383,7 +383,7 @@ describe('MiniCart Item', () => {
 			).toBeInTheDocument();
 		});
 
-		it('ViewMiniCartItemWithDiscount: renders the list price, the discount percentage, and the final price', () => {
+		it('renders the list price, the discount percentage, and the final price', () => {
 			const item = mockCartItemWithDiscount();
 
 			const {container} = renderWithItem(item);
@@ -411,7 +411,7 @@ describe('MiniCart Item', () => {
 			expect(finalPrice).toHaveTextContent(item.price.finalPriceFormatted);
 		});
 
-		it('ViewMiniCartItemWithDiscountLevels: renders one percentage per non-zero level when displayDiscountLevels is true', () => {
+		it('renders one percentage per non-zero level when displayDiscountLevels is true', () => {
 			const item = mockCartItemWithDiscountLevels();
 
 			const {container} = renderWithItem(item, {
@@ -428,7 +428,7 @@ describe('MiniCart Item', () => {
 			expect(levelSpans.length).toBeGreaterThan(1);
 		});
 
-		it('ViewMiniCartItemWithPromotion: renders the promo price next to the list price', () => {
+		it('renders the promo price next to the list price', () => {
 			const item = mockCartItemWithPromotion();
 
 			const {container} = renderWithItem(item);
@@ -443,7 +443,7 @@ describe('MiniCart Item', () => {
 			).toHaveTextContent(item.price.promoPriceFormatted);
 		});
 
-		it('ViewMiniCartItemWithTierPrice: renders the tier-discounted final price when quantity reaches the tier', () => {
+		it('renders the tier-discounted final price when quantity reaches the tier', () => {
 			const item = mockCartItemWithTierPrice();
 
 			const {container, getByRole} = renderWithItem(item);
@@ -459,7 +459,7 @@ describe('MiniCart Item', () => {
 			expect(getByRole('spinbutton').value).toBe(String(item.quantity));
 		});
 
-		it('ViewMiniCartItemWithBulkPrice: renders the bulk-discounted price and reflects the bulk multipleQuantity in the quantity input step', () => {
+		it('renders the bulk-discounted price and reflects the bulk multipleQuantity in the quantity input step', () => {
 			const item = mockCartItemWithBulkPrice();
 
 			const {container, getByRole} = renderWithItem(item);
@@ -475,7 +475,7 @@ describe('MiniCart Item', () => {
 			expect(quantityInput.step).toBe(String(item.settings.multipleQuantity));
 		});
 
-		it('RemoveSingleCartItemFromMiniCart: clicking the delete button removes the item from the cart via the API', async () => {
+		it('clicking the delete button removes the item from the cart via the API', async () => {
 			const item = mockCartItem({id: 4242, skuId: 8484});
 
 			const {container} = renderWithItem(item);
@@ -508,7 +508,7 @@ describe('MiniCart Item', () => {
 			);
 		});
 
-		it('EditCartItemQuantityFromMiniCart: typing a new quantity triggers the debounced update-item API call', async () => {
+		it('typing a new quantity triggers the debounced update-item API call', async () => {
 			jest.useRealTimers();
 
 			const item = mockCartItem({

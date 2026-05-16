@@ -190,8 +190,8 @@ describe('MiniCart tests_utilities', () => {
 			]);
 		});
 
-		describe('Poshi: CommerceMiniCart Unit ports', () => {
-			it('ViewMiniCartItemWithDiscountToSubtotal: surfaces the subtotal discount value in the subtotal-discount row', () => {
+		describe('discount-to-subtotal and discount-to-total rows', () => {
+			it('surfaces the subtotal discount value in the subtotal-discount row', () => {
 				const rows = summaryDataMapper({
 					...SUMMARY_SAMPLE,
 					subtotalDiscountValue: 25.0,
@@ -209,7 +209,7 @@ describe('MiniCart tests_utilities', () => {
 				expect(totalRow.value).toBe('$ 1,833.50');
 			});
 
-			it('ViewMiniCartItemWithDiscountToTotal: surfaces the order-level discount value in the order-discount row', () => {
+			it('surfaces the order-level discount value in the order-discount row', () => {
 				const rows = summaryDataMapper({
 					...SUMMARY_SAMPLE,
 					total: 1758.5,

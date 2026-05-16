@@ -382,7 +382,7 @@ describe('MiniCart Items List Actions', () => {
 		});
 	});
 
-	describe('Poshi: CommerceMiniCart Unit ports', () => {
+	describe('remove-all interactions', () => {
 		const POPULATED_CART_CONTEXT = {
 			...BASE_CONTEXT_MOCK,
 			cartState: {
@@ -391,7 +391,7 @@ describe('MiniCart Items List Actions', () => {
 			},
 		};
 
-		it('RemoveAllItemsFromMiniCart: clicking remove-all then "yes" empties the cart via the API and fires the quantity-changed event with skuId=ALL', async () => {
+		it('clicking remove-all then "yes" empties the cart via the API and fires the quantity-changed event with skuId=ALL', async () => {
 			const {container, getByText} = render(
 				<MiniCartContext.Provider value={POPULATED_CART_CONTEXT}>
 					<CartItemsListActions />
@@ -423,7 +423,7 @@ describe('MiniCart Items List Actions', () => {
 			);
 		});
 
-		it('RemoveAllItemsFromMiniCart: clicking remove-all then "no" leaves the cart unchanged and re-hides the confirmation prompt', async () => {
+		it('clicking remove-all then "no" leaves the cart unchanged and re-hides the confirmation prompt', async () => {
 			const {container, getByText} = render(
 				<MiniCartContext.Provider value={POPULATED_CART_CONTEXT}>
 					<CartItemsListActions />
