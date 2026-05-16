@@ -355,7 +355,7 @@ describe('Add to Cart', () => {
 		});
 	});
 
-	describe('Poshi: CommerceProductDetails Unit ports', () => {
+	describe('product-details stock, quantity, and multi-SKU validation', () => {
 		// eslint-disable-next-line @typescript-eslint/no-var-requires
 		const {
 			mockProduct,
@@ -364,7 +364,7 @@ describe('Add to Cart', () => {
 		} = require('../fixtures/productFixtures');
 
 		describe('Stock and purchasability', () => {
-			it('AssertProductCanBeAddedToCartFromProductDetailsIfBackOrderIsEnabled: stockQuantity=0 + backOrderAllowed=true → button is enabled (back-order overrides empty stock)', () => {
+			it('stockQuantity=0 + backOrderAllowed=true → button is enabled (back-order overrides empty stock)', () => {
 				const addToCart = render(
 					<AddToCart
 						{...mockProduct({
@@ -381,7 +381,7 @@ describe('Add to Cart', () => {
 				expect(button).not.toBeDisabled();
 			});
 
-			it('AssertProductCannotBeAddedToCartFromProductDetailsIfProductIsNotPurchasable: purchasable=false disables the button regardless of stock', () => {
+			it('purchasable=false disables the button regardless of stock', () => {
 				const addToCart = render(
 					<AddToCart
 						{...mockProduct({
@@ -395,7 +395,7 @@ describe('Add to Cart', () => {
 				expect(button).toBeDisabled();
 			});
 
-			it('CannotAddToCartOptionWhenStockIsZeroAndBackOrderIsDisabled: stockQuantity=0 + backOrderAllowed=false → button is disabled', () => {
+			it('stockQuantity=0 + backOrderAllowed=false → button is disabled', () => {
 				const addToCart = render(
 					<AddToCart
 						{...mockProduct({
@@ -414,7 +414,7 @@ describe('Add to Cart', () => {
 		});
 
 		describe('Quantity validation', () => {
-			it('AssertOnlyAllowedQuantitiesAreSelectableInProductDetails: when allowedOrderQuantities is set, the QuantitySelector renders the corresponding <option> values', () => {
+			it('when allowedOrderQuantities is set, the QuantitySelector renders the corresponding <option> values', () => {
 				const allowedOrderQuantities = [1, 4, 5, 7, 11];
 
 				const addToCart = render(
@@ -441,7 +441,7 @@ describe('Add to Cart', () => {
 				});
 			});
 
-			it('AssertSelectableQuantitiesInProductDetailsStartFromMinimumQuantitySet: the quantity input reflects minOrderQuantity as input.min', () => {
+			it('the quantity input reflects minOrderQuantity as input.min', () => {
 				const addToCart = render(
 					<AddToCart
 						{...mockProduct({
@@ -462,7 +462,7 @@ describe('Add to Cart', () => {
 				expect(input.min).toBe('4');
 			});
 
-			it('AssertOnlyMultipleValuesAreSelectableQuantitiesInProductDetails: the quantity input reflects multipleOrderQuantity as input.step', () => {
+			it('the quantity input reflects multipleOrderQuantity as input.step', () => {
 				const addToCart = render(
 					<AddToCart
 						{...mockProduct({
@@ -485,7 +485,7 @@ describe('Add to Cart', () => {
 		});
 
 		describe('Multi-SKU product variants — after a SKU is resolved, AddToCart sees the same contract as a single-SKU product', () => {
-			it('CanAssertMultipleSkusProductInvalidAllowedOrderQuantity: typing a value outside allowedOrderQuantities is rejected by the QuantitySelector and addToCart never fires', async () => {
+			it('typing a value outside allowedOrderQuantities is rejected by the QuantitySelector and addToCart never fires', async () => {
 				const allowedOrderQuantities = [1, 5, 10];
 
 				const addToCart = render(
@@ -518,7 +518,7 @@ describe('Add to Cart', () => {
 				expect(addProductToCartFn).not.toHaveBeenCalled();
 			});
 
-			it('CanAssertMultipleSkusProductInvalidMaximumOrderQuantity: typing a value above maxOrderQuantity blocks the add-to-cart call', () => {
+			it('typing a value above maxOrderQuantity blocks the add-to-cart call', () => {
 				const addToCart = render(
 					<AddToCart
 						{...mockProduct({
@@ -545,7 +545,7 @@ describe('Add to Cart', () => {
 				expect(addProductToCartFn).not.toHaveBeenCalled();
 			});
 
-			it('CanAssertMultipleSkusProductInvalidMinimumOrderQuantity: typing a value below minOrderQuantity blocks the add-to-cart call', () => {
+			it('typing a value below minOrderQuantity blocks the add-to-cart call', () => {
 				const addToCart = render(
 					<AddToCart
 						{...mockProduct({
@@ -572,7 +572,7 @@ describe('Add to Cart', () => {
 				expect(addProductToCartFn).not.toHaveBeenCalled();
 			});
 
-			it('CanAssertMultipleSkusProductInvalidMultipleOrderQuantity: typing a non-step-multiple value blocks the add-to-cart call', () => {
+			it('typing a non-step-multiple value blocks the add-to-cart call', () => {
 				const addToCart = render(
 					<AddToCart
 						{...mockProduct({
@@ -599,7 +599,7 @@ describe('Add to Cart', () => {
 				expect(addProductToCartFn).not.toHaveBeenCalled();
 			});
 
-			it('CanAssertMultipleSkusProductMaximumMultipleCombinationInvalidQuantities: a value that exceeds the max AND is not a step-multiple is rejected', () => {
+			it('a value that exceeds the max AND is not a step-multiple is rejected', () => {
 				const addToCart = render(
 					<AddToCart
 						{...mockProduct({
@@ -626,7 +626,7 @@ describe('Add to Cart', () => {
 				expect(addProductToCartFn).not.toHaveBeenCalled();
 			});
 
-			it('CanAssertMultipleSkusProductMinimumMultipleCombinationInvalidQuantities: a value below the min AND not a step-multiple is rejected', () => {
+			it('a value below the min AND not a step-multiple is rejected', () => {
 				const addToCart = render(
 					<AddToCart
 						{...mockProduct({
