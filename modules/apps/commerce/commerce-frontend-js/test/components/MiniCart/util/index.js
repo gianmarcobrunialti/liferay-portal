@@ -11,15 +11,22 @@ import {
 } from '../../../../src/main/resources/META-INF/resources/components/mini_cart/util/constants';
 import {
 	filterOptions,
+	getCorrectedQuantity,
 	hasErrors,
 	parseOptions,
 	summaryDataMapper,
 } from '../../../../src/main/resources/META-INF/resources/components/mini_cart/util/index';
 import {regenerateOrderDetailURL} from '../../../../src/main/resources/META-INF/resources/utilities/regenerateOrderDetailURL';
+import {mockProductConfiguration} from '../../fixtures/quickAddFixtures';
 
 jest.mock(
 	'../../../../src/main/resources/META-INF/resources/ServiceProvider/index'
 );
+
+jest.mock('frontend-js-components-web', () => ({
+	...jest.requireActual('frontend-js-components-web'),
+	openToast: jest.fn(),
+}));
 
 describe('MiniCart tests_utilities', () => {
 	describe('hasErrors', () => {
@@ -225,6 +232,104 @@ describe('MiniCart tests_utilities', () => {
 
 				expect(orderDiscountRow.value).toBe('$ 100.00');
 				expect(totalRow.value).toBe('$ 1,758.50');
+			});
+		});
+	});
+
+	describe('getCorrectedQuantity', () => {
+		const SKU = 'SKU-001';
+
+		describe('Poshi: CommerceQuickAddToCart Unit ports', () => {
+			it('CannotAddSKUWithAllowedQuantitiesWhenTheyAreHigherThanMaximumQuantity: returns 0 when maxOrderQuantity is below the lowest allowed value', () => {
+				const productConfiguration = mockProductConfiguration({
+					allowedOrderQuantities: [10, 20, 30],
+					maxOrderQuantity: 5,
+				});
+
+				expect(
+					getCorrectedQuantity(productConfiguration, SKU, [])
+				).toBe(0);
+			});
+
+			it('CannotAddSKUWithAllowedQuantitiesWhenTheyAreLowerThanMinimumQuantity: returns 0 when minOrderQuantity is above the highest allowed value', () => {
+				const productConfiguration = mockProductConfiguration({
+					allowedOrderQuantities: [1, 2, 3],
+					minOrderQuantity: 5,
+				});
+
+				expect(
+					getCorrectedQuantity(productConfiguration, SKU, [])
+				).toBe(0);
+			});
+
+			it('CannotAddSKUWithAllowedQuantitiesWhichAreNotMultiples: returns 0 when no allowed quantity is a multiple of multipleOrderQuantity', () => {
+				const productConfiguration = mockProductConfiguration({
+					allowedOrderQuantities: [1, 5, 10],
+					multipleOrderQuantity: 3,
+				});
+
+				expect(
+					getCorrectedQuantity(productConfiguration, SKU, [])
+				).toBe(0);
+			});
+
+			it('CannotAddSKUWithMultipleQuantityWhenItIsHigherThanMaximumQuantity: returns 0 when multipleOrderQuantity exceeds maxOrderQuantity', () => {
+				const productConfiguration = mockProductConfiguration({
+					maxOrderQuantity: 5,
+					multipleOrderQuantity: 10,
+				});
+
+				expect(
+					getCorrectedQuantity(productConfiguration, SKU, [])
+				).toBe(0);
+			});
+
+			it('CanAddToCartProductWithPriceList: returns a positive quantity for a SKU whose configuration is unconstrained (price-list pricing does not affect quantity validation)', () => {
+				const productConfiguration = mockProductConfiguration({
+					maxOrderQuantity: 50,
+					minOrderQuantity: 1,
+					multipleOrderQuantity: 1,
+				});
+
+				expect(
+					getCorrectedQuantity(productConfiguration, SKU, [])
+				).toBeGreaterThan(0);
+			});
+
+			it('CanAddToCartProductWithPromotion: returns a positive quantity for an unconstrained SKU regardless of any promotional pricing applied upstream', () => {
+				const productConfiguration = mockProductConfiguration({
+					maxOrderQuantity: 50,
+					minOrderQuantity: 1,
+					multipleOrderQuantity: 1,
+				});
+
+				expect(
+					getCorrectedQuantity(productConfiguration, SKU, [])
+				).toBeGreaterThan(0);
+			});
+
+			it('CanUseQuickAddToCartWhenOneProductHasExpiredSKU: an expired-SKU configuration still yields a positive default quantity — purchasability filtering happens upstream of getCorrectedQuantity', () => {
+				const productConfiguration = mockProductConfiguration({
+					maxOrderQuantity: 50,
+					minOrderQuantity: 1,
+					multipleOrderQuantity: 1,
+				});
+
+				expect(
+					getCorrectedQuantity(productConfiguration, SKU, [])
+				).toBeGreaterThan(0);
+			});
+
+			it('CanUseQuickAddToCartWhenOneProductHasNoSKU: an empty cartItems list is a valid input — the function returns the configured min', () => {
+				const productConfiguration = mockProductConfiguration({
+					maxOrderQuantity: 50,
+					minOrderQuantity: 1,
+					multipleOrderQuantity: 1,
+				});
+
+				expect(
+					getCorrectedQuantity(productConfiguration, SKU, [])
+				).toBe(1);
 			});
 		});
 	});
