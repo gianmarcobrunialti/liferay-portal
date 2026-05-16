@@ -43,29 +43,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-/**
- * Java integration coverage for the storefront product-search invariants
- * behind the {@code CommerceSearch.testcase} Poshi suite (Block 5.8 of the
- * Shopping Experience migration plan).
- *
- * The 11 Integration-classified Poshi rows fold into the underlying
- * {@link CPDefinitionLocalService#searchCPDefinitions(long, long[], String,
- * int, boolean, int, int, Sort)} contract.
- * The Poshi rows exercised the search-bar widget through the storefront UI;
- * the service-level invariants are the same set of token / phrase / SKU /
- * category / specification matchings against the {@code CPDefinition}
- * indexer.
- *
- * The category and specification rows are deferred to a P6 audit — those
- * lookups depend on asset-category + CP-option fixtures whose setup is
- * disproportionate to the marginal signal beyond the token / phrase / SKU
- * shapes covered here. The deferred rows are still covered transitively by
- * the underlying indexer ITs in
- * {@code commerce-product-test/.../CPDefinitionIndexerTest}; see the block
- * STATUS file for the full rationale.
- *
- * @author Gianmarco Brunialti
- */
 @RunWith(Arquillian.class)
 public class StorefrontSearchTest {
 
@@ -105,11 +82,6 @@ public class StorefrontSearchTest {
 	public void testSearchByPartialNameReturnsAllTokenMatches()
 		throws Exception {
 
-		// Poshi: SearchBarWidgetSearchProductByName plus
-		// AssertMultipleProductsPopulatedSharingSamePartialSKUThatIsSearched.
-		// The shared token "Sensor" matches "ABS Sensor" plus "Wear Sensors"
-		// (plural still tokenizes on "Sensor"); "Brake Pad" must not appear.
-
 		List<CPDefinition> results = _search("Sensor");
 
 		Assert.assertTrue(
@@ -127,10 +99,6 @@ public class StorefrontSearchTest {
 	public void testSearchByPhraseInDoubleQuotesReturnsExactMatch()
 		throws Exception {
 
-		// Poshi: SearchBarWidgetSearchProductByNameDoubleQuotes +
-		// SearchBarWidgetSearchProductByNameSingleQuotes. The Lucene phrase
-		// search collapses both quote forms into the same exact-phrase query.
-
 		List<CPDefinition> results = _search("\"ABS Sensor\"");
 
 		Assert.assertTrue(
@@ -143,9 +111,6 @@ public class StorefrontSearchTest {
 
 	@Test
 	public void testSearchBySKUReturnsExactSKUMatch() throws Exception {
-
-		// Poshi: SearchBarWidgetSearchProductBySKU +
-		// SearchBarWidgetSearchProductsByDifferentSKUs.
 
 		List<CPDefinition> results = _search(_absSensorSku);
 
