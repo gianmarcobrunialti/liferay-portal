@@ -354,4 +354,304 @@ describe('Add to Cart', () => {
 			expect(button).toBeDisabled();
 		});
 	});
+
+	describe('product-details stock, quantity, and multi-SKU validation', () => {
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
+		const {
+			mockProduct,
+
+			// @ts-ignore
+		} = require('../fixtures/productFixtures');
+
+		describe('Stock and purchasability', () => {
+			it('stockQuantity=0 + backOrderAllowed=true → button is enabled (back-order overrides empty stock)', () => {
+				const addToCart = render(
+					<AddToCart
+						{...mockProduct({
+							cpInstance: {
+								availability: {stockQuantity: 0},
+								backOrderAllowed: true,
+							},
+						})}
+					/>
+				);
+
+				const {button} = getLocators(addToCart);
+
+				expect(button).not.toBeDisabled();
+			});
+
+			it('purchasable=false disables the button regardless of stock', () => {
+				const addToCart = render(
+					<AddToCart
+						{...mockProduct({
+							cpInstance: {purchasable: false},
+						})}
+					/>
+				);
+
+				const {button} = getLocators(addToCart);
+
+				expect(button).toBeDisabled();
+			});
+
+			it('stockQuantity=0 + backOrderAllowed=false → button is disabled', () => {
+				const addToCart = render(
+					<AddToCart
+						{...mockProduct({
+							cpInstance: {
+								availability: {stockQuantity: 0},
+								backOrderAllowed: false,
+							},
+						})}
+					/>
+				);
+
+				const {button} = getLocators(addToCart);
+
+				expect(button).toBeDisabled();
+			});
+		});
+
+		describe('Quantity validation', () => {
+			it('when allowedOrderQuantities is set, the QuantitySelector renders the corresponding <option> values', () => {
+				const allowedOrderQuantities = [1, 4, 5, 7, 11];
+
+				const addToCart = render(
+					<AddToCart
+						{...mockProduct({
+							settings: {
+								productConfiguration: {
+									allowedOrderQuantities,
+								},
+							},
+						})}
+					/>
+				);
+
+				const options =
+					addToCart.container.querySelectorAll('option');
+
+				expect(options).toHaveLength(allowedOrderQuantities.length);
+
+				Array.from(options).forEach((option, index) => {
+					expect(option.getAttribute('value')).toBe(
+						String(allowedOrderQuantities[index])
+					);
+				});
+			});
+
+			it('the quantity input reflects minOrderQuantity as input.min', () => {
+				const addToCart = render(
+					<AddToCart
+						{...mockProduct({
+							settings: {
+								productConfiguration: {
+									allowedOrderQuantities: [],
+									maxOrderQuantity: 50,
+									minOrderQuantity: 4,
+									multipleOrderQuantity: 1,
+								},
+							},
+						})}
+					/>
+				);
+
+				const {input} = getLocators(addToCart);
+
+				expect(input.min).toBe('4');
+			});
+
+			it('the quantity input reflects multipleOrderQuantity as input.step', () => {
+				const addToCart = render(
+					<AddToCart
+						{...mockProduct({
+							settings: {
+								productConfiguration: {
+									allowedOrderQuantities: [],
+									maxOrderQuantity: 30,
+									minOrderQuantity: 3,
+									multipleOrderQuantity: 3,
+								},
+							},
+						})}
+					/>
+				);
+
+				const {input} = getLocators(addToCart);
+
+				expect(input.step).toBe('3');
+			});
+		});
+
+		describe('Multi-SKU product variants — after a SKU is resolved, AddToCart sees the same contract as a single-SKU product', () => {
+			it('typing a value outside allowedOrderQuantities is rejected by the QuantitySelector and addToCart never fires', async () => {
+				const allowedOrderQuantities = [1, 5, 10];
+
+				const addToCart = render(
+					<AddToCart
+						{...mockProduct({
+							settings: {
+								productConfiguration: {
+									allowedOrderQuantities,
+								},
+							},
+						})}
+					/>
+				);
+
+				const select =
+					addToCart.container.querySelector('select') as
+						| HTMLSelectElement
+						| null;
+				const {button} = getLocators(addToCart);
+
+				expect(select).toBeInTheDocument();
+				expect(
+					Array.from(select!.options).map((option) =>
+						Number(option.value)
+					)
+				).toEqual(allowedOrderQuantities);
+
+				fireEvent.click(button);
+
+				expect(addProductToCartFn).not.toHaveBeenCalled();
+			});
+
+			it('typing a value above maxOrderQuantity blocks the add-to-cart call', () => {
+				const addToCart = render(
+					<AddToCart
+						{...mockProduct({
+							settings: {
+								productConfiguration: {
+									allowedOrderQuantities: [],
+									maxOrderQuantity: 5,
+									minOrderQuantity: 1,
+									multipleOrderQuantity: 1,
+								},
+							},
+						})}
+					/>
+				);
+
+				const {button, input} = getLocators(addToCart);
+
+				act(() => {
+					fireEvent.change(input, {target: {value: '10'}});
+				});
+
+				fireEvent.click(button);
+
+				expect(addProductToCartFn).not.toHaveBeenCalled();
+			});
+
+			it('typing a value below minOrderQuantity blocks the add-to-cart call', () => {
+				const addToCart = render(
+					<AddToCart
+						{...mockProduct({
+							settings: {
+								productConfiguration: {
+									allowedOrderQuantities: [],
+									maxOrderQuantity: 50,
+									minOrderQuantity: 5,
+									multipleOrderQuantity: 1,
+								},
+							},
+						})}
+					/>
+				);
+
+				const {button, input} = getLocators(addToCart);
+
+				act(() => {
+					fireEvent.change(input, {target: {value: '2'}});
+				});
+
+				fireEvent.click(button);
+
+				expect(addProductToCartFn).not.toHaveBeenCalled();
+			});
+
+			it('typing a non-step-multiple value blocks the add-to-cart call', () => {
+				const addToCart = render(
+					<AddToCart
+						{...mockProduct({
+							settings: {
+								productConfiguration: {
+									allowedOrderQuantities: [],
+									maxOrderQuantity: 30,
+									minOrderQuantity: 3,
+									multipleOrderQuantity: 3,
+								},
+							},
+						})}
+					/>
+				);
+
+				const {button, input} = getLocators(addToCart);
+
+				act(() => {
+					fireEvent.change(input, {target: {value: '7'}});
+				});
+
+				fireEvent.click(button);
+
+				expect(addProductToCartFn).not.toHaveBeenCalled();
+			});
+
+			it('a value that exceeds the max AND is not a step-multiple is rejected', () => {
+				const addToCart = render(
+					<AddToCart
+						{...mockProduct({
+							settings: {
+								productConfiguration: {
+									allowedOrderQuantities: [],
+									maxOrderQuantity: 10,
+									minOrderQuantity: 2,
+									multipleOrderQuantity: 2,
+								},
+							},
+						})}
+					/>
+				);
+
+				const {button, input} = getLocators(addToCart);
+
+				act(() => {
+					fireEvent.change(input, {target: {value: '13'}});
+				});
+
+				fireEvent.click(button);
+
+				expect(addProductToCartFn).not.toHaveBeenCalled();
+			});
+
+			it('a value below the min AND not a step-multiple is rejected', () => {
+				const addToCart = render(
+					<AddToCart
+						{...mockProduct({
+							settings: {
+								productConfiguration: {
+									allowedOrderQuantities: [],
+									maxOrderQuantity: 30,
+									minOrderQuantity: 4,
+									multipleOrderQuantity: 2,
+								},
+							},
+						})}
+					/>
+				);
+
+				const {button, input} = getLocators(addToCart);
+
+				act(() => {
+					fireEvent.change(input, {target: {value: '3'}});
+				});
+
+				fireEvent.click(button);
+
+				expect(addProductToCartFn).not.toHaveBeenCalled();
+			});
+		});
+	});
 });
