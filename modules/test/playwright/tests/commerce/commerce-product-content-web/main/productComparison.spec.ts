@@ -182,3 +182,76 @@ test(
 		await expect(productComparisonPage.compareBar).toHaveCount(0);
 	}
 );
+
+async function setUpProductComparisonLayout(apiHelpers, page, site) {
+	await apiHelpers.headlessCommerceAdminChannel.postChannel({
+		siteGroupId: site.id,
+	});
+
+	const catalog = await apiHelpers.headlessCommerceAdminCatalog.postCatalog();
+
+	for (const productName of ['Product A', 'Product B', 'Product C']) {
+		await apiHelpers.headlessCommerceAdminCatalog.postProduct({
+			catalogId: catalog.id,
+			name: {en_US: productName},
+		});
+	}
+
+	const layout = await apiHelpers.headlessDelivery.createSitePage({
+		pageDefinition: getPageDefinition([
+			getWidgetDefinition({
+				id: getRandomString(),
+				widgetName:
+					'com_liferay_commerce_product_content_web_internal_portlet_CPCompareContentMiniPortlet',
+			}),
+			getWidgetDefinition({
+				id: getRandomString(),
+				widgetName:
+					'com_liferay_commerce_product_content_web_internal_portlet_CPPublisherPortlet',
+			}),
+		]),
+		siteId: site.id,
+		title: getRandomString(),
+	});
+
+	await page.goto(`/web/${site.name}/${layout.friendlyUrlPath}`);
+}
+
+test(
+	'Selecting two products populates the mini-compare bar with both items',
+	{tag: ['@COMMERCE-5911']},
+	async ({apiHelpers, globalMenuPage, page, productComparisonPage, site}) => {
+		await setUpProductComparisonLayout(apiHelpers, page, site);
+
+		await globalMenuPage.goToSite(site.name);
+
+		const checkboxes = page.getByRole('checkbox', {disabled: false});
+
+		await checkboxes.nth(0).click();
+		await checkboxes.nth(1).click();
+
+		await expect(productComparisonPage.compareBar).toHaveCount(1);
+		await expect(productComparisonPage.activeCompareItems).toHaveCount(2);
+	}
+);
+
+test(
+	'Removing an item via the mini-compare delete button shrinks the comparison',
+	{tag: ['@COMMERCE-5913']},
+	async ({apiHelpers, globalMenuPage, page, productComparisonPage, site}) => {
+		await setUpProductComparisonLayout(apiHelpers, page, site);
+
+		await globalMenuPage.goToSite(site.name);
+
+		const checkboxes = page.getByRole('checkbox', {disabled: false});
+
+		await checkboxes.nth(0).click();
+		await checkboxes.nth(1).click();
+
+		await expect(productComparisonPage.activeCompareItems).toHaveCount(2);
+
+		await productComparisonPage.deleteCompareItemButton.first().click();
+
+		await expect(productComparisonPage.activeCompareItems).toHaveCount(1);
+	}
+);
