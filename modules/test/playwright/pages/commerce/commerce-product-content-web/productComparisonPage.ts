@@ -8,7 +8,9 @@ import {Locator, Page} from '@playwright/test';
 import {CommerceLayoutsPage} from '../commerce-order-content-web/commerceLayoutsPage';
 
 export class ProductComparisonPage {
+	readonly activeCompareItems: Locator;
 	readonly compareBar: Locator;
+	readonly deleteCompareItemButton: Locator;
 	readonly layoutsPage: CommerceLayoutsPage;
 	readonly page: Page;
 
@@ -16,6 +18,12 @@ export class ProductComparisonPage {
 		this.compareBar = page
 			.locator('.mini-compare.active')
 			.filter({hasText: 'Compare'});
+		this.activeCompareItems = this.compareBar.locator(
+			'.mini-compare-item.active'
+		);
+		this.deleteCompareItemButton = this.activeCompareItems.locator(
+			'.mini-compare-delete'
+		);
 		this.layoutsPage = new CommerceLayoutsPage(page);
 		this.page = page;
 	}

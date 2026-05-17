@@ -32,6 +32,8 @@ import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 
+import java.math.BigDecimal;
+
 import java.text.DateFormat;
 
 import java.time.LocalDateTime;
@@ -465,8 +467,16 @@ public class LayoutStructureRulesHelperImpl
 				return _isGreaterThan(fieldType, fieldValue, value);
 			}
 
+			if (Objects.equals(optionsType, "greater-than-or-equals")) {
+				return _isGreaterThanOrEqual(fieldType, fieldValue, value);
+			}
+
 			if (Objects.equals(optionsType, "less-than")) {
 				return _isLessThan(fieldType, fieldValue, value);
+			}
+
+			if (Objects.equals(optionsType, "less-than-or-equals")) {
+				return _isLessThanOrEqual(fieldType, fieldValue, value);
 			}
 
 			if (Objects.equals(optionsType, "not-equal")) {
@@ -500,7 +510,56 @@ public class LayoutStructureRulesHelperImpl
 				return false;
 			}
 
+			return fieldLocalDateTime.isAfter(valueLocalDateTime);
+		}
+
+		if (Objects.equals(fieldType, "number")) {
+			BigDecimal fieldBigDecimal = _toBigDecimal(fieldValue);
+			BigDecimal valueBigDecimal = _toBigDecimal(value);
+
+			if ((fieldBigDecimal == null) || (valueBigDecimal == null)) {
+				return false;
+			}
+
+			if (fieldBigDecimal.compareTo(valueBigDecimal) > 0) {
+				return true;
+			}
+
+			return false;
+		}
+
+		return false;
+	}
+
+	private boolean _isGreaterThanOrEqual(
+		String fieldType, Object fieldValue, Object value) {
+
+		if (Objects.equals(fieldType, "date") ||
+			Objects.equals(fieldType, "date-time")) {
+
+			LocalDateTime fieldLocalDateTime = _toLocalDateTime(fieldValue);
+			LocalDateTime valueLocalDateTime = _toLocalDateTime(value);
+
+			if ((fieldLocalDateTime == null) || (valueLocalDateTime == null)) {
+				return false;
+			}
+
 			return !fieldLocalDateTime.isBefore(valueLocalDateTime);
+		}
+
+		if (Objects.equals(fieldType, "number")) {
+			BigDecimal fieldBigDecimal = _toBigDecimal(fieldValue);
+			BigDecimal valueBigDecimal = _toBigDecimal(value);
+
+			if ((fieldBigDecimal == null) || (valueBigDecimal == null)) {
+				return false;
+			}
+
+			if (fieldBigDecimal.compareTo(valueBigDecimal) >= 0) {
+				return true;
+			}
+
+			return false;
 		}
 
 		return false;
@@ -519,7 +578,56 @@ public class LayoutStructureRulesHelperImpl
 				return false;
 			}
 
+			return fieldLocalDateTime.isBefore(valueLocalDateTime);
+		}
+
+		if (Objects.equals(fieldType, "number")) {
+			BigDecimal fieldBigDecimal = _toBigDecimal(fieldValue);
+			BigDecimal valueBigDecimal = _toBigDecimal(value);
+
+			if ((fieldBigDecimal == null) || (valueBigDecimal == null)) {
+				return false;
+			}
+
+			if (fieldBigDecimal.compareTo(valueBigDecimal) < 0) {
+				return true;
+			}
+
+			return false;
+		}
+
+		return false;
+	}
+
+	private boolean _isLessThanOrEqual(
+		String fieldType, Object fieldValue, Object value) {
+
+		if (Objects.equals(fieldType, "date") ||
+			Objects.equals(fieldType, "date-time")) {
+
+			LocalDateTime fieldLocalDateTime = _toLocalDateTime(fieldValue);
+			LocalDateTime valueLocalDateTime = _toLocalDateTime(value);
+
+			if ((fieldLocalDateTime == null) || (valueLocalDateTime == null)) {
+				return false;
+			}
+
 			return !fieldLocalDateTime.isAfter(valueLocalDateTime);
+		}
+
+		if (Objects.equals(fieldType, "number")) {
+			BigDecimal fieldBigDecimal = _toBigDecimal(fieldValue);
+			BigDecimal valueBigDecimal = _toBigDecimal(value);
+
+			if ((fieldBigDecimal == null) || (valueBigDecimal == null)) {
+				return false;
+			}
+
+			if (fieldBigDecimal.compareTo(valueBigDecimal) <= 0) {
+				return true;
+			}
+
+			return false;
 		}
 
 		return false;
@@ -543,6 +651,25 @@ public class LayoutStructureRulesHelperImpl
 				).put(
 					"itemId", actionsJSONObject.getString("itemId")
 				));
+		}
+	}
+
+	private BigDecimal _toBigDecimal(Object value) {
+		if (value == null) {
+			return null;
+		}
+
+		try {
+			return new BigDecimal(value.toString());
+		}
+		catch (NumberFormatException numberFormatException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"Unable to parse number from " + value,
+					numberFormatException);
+			}
+
+			return null;
 		}
 	}
 

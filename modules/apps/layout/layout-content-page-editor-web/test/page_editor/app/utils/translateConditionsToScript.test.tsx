@@ -32,7 +32,7 @@ describe('translateConditionsToScript', () => {
 			).toBe('publishDate != "2026-05-11"');
 		});
 
-		it('emits futureDates for greater-than (inclusive >=)', () => {
+		it('emits futureDates with an inequality for strict greater-than', () => {
 			expect(
 				translateConditionsToScript(
 					[
@@ -44,16 +44,50 @@ describe('translateConditionsToScript', () => {
 					],
 					'all'
 				)
+			).toBe(
+				'(futureDates(publishDate, "2026-05-11") AND publishDate != "2026-05-11")'
+			);
+		});
+
+		it('emits futureDates for greater-than-or-equals', () => {
+			expect(
+				translateConditionsToScript(
+					[
+						getFieldCondition(
+							'publishDate',
+							'greater-than-or-equals',
+							'2026-05-11'
+						),
+					],
+					'all'
+				)
 			).toBe('futureDates(publishDate, "2026-05-11")');
 		});
 
-		it('emits pastDates for less-than (inclusive <=)', () => {
+		it('emits pastDates with an inequality for strict less-than', () => {
 			expect(
 				translateConditionsToScript(
 					[
 						getFieldCondition(
 							'publishDate',
 							'less-than',
+							'2026-05-11'
+						),
+					],
+					'all'
+				)
+			).toBe(
+				'(pastDates(publishDate, "2026-05-11") AND publishDate != "2026-05-11")'
+			);
+		});
+
+		it('emits pastDates for less-than-or-equals', () => {
+			expect(
+				translateConditionsToScript(
+					[
+						getFieldCondition(
+							'publishDate',
+							'less-than-or-equals',
 							'2026-05-11'
 						),
 					],
@@ -76,6 +110,93 @@ describe('translateConditionsToScript', () => {
 					'all'
 				)
 			).toBe('title == ""');
+		});
+	});
+
+	describe('numeric field conditions', () => {
+		const fieldTypes = {budget: 'number'};
+
+		it('emits an unquoted equality check', () => {
+			expect(
+				translateConditionsToScript(
+					[getFieldCondition('budget', 'equal', '10')],
+					'all',
+					fieldTypes
+				)
+			).toBe('budget == 10');
+		});
+
+		it('emits an unquoted inequality check', () => {
+			expect(
+				translateConditionsToScript(
+					[getFieldCondition('budget', 'not-equal', '10')],
+					'all',
+					fieldTypes
+				)
+			).toBe('budget != 10');
+		});
+
+		it('emits a numeric strict greater-than', () => {
+			expect(
+				translateConditionsToScript(
+					[getFieldCondition('budget', 'greater-than', '10')],
+					'all',
+					fieldTypes
+				)
+			).toBe('budget > 10');
+		});
+
+		it('emits a numeric greater-than-or-equals', () => {
+			expect(
+				translateConditionsToScript(
+					[
+						getFieldCondition(
+							'budget',
+							'greater-than-or-equals',
+							'10'
+						),
+					],
+					'all',
+					fieldTypes
+				)
+			).toBe('budget >= 10');
+		});
+
+		it('emits a numeric strict less-than', () => {
+			expect(
+				translateConditionsToScript(
+					[getFieldCondition('budget', 'less-than', '10')],
+					'all',
+					fieldTypes
+				)
+			).toBe('budget < 10');
+		});
+
+		it('emits a numeric less-than-or-equals', () => {
+			expect(
+				translateConditionsToScript(
+					[getFieldCondition('budget', 'less-than-or-equals', '10')],
+					'all',
+					fieldTypes
+				)
+			).toBe('budget <= 10');
+		});
+
+		it('defaults a missing value to 0', () => {
+			expect(
+				translateConditionsToScript(
+					[
+						{
+							field: 'budget',
+							id: 'a',
+							options: {type: 'equal'},
+							type: 'field',
+						},
+					],
+					'all',
+					fieldTypes
+				)
+			).toBe('budget == 0');
 		});
 	});
 
@@ -135,12 +256,12 @@ describe('translateConditionsToScript', () => {
 					[
 						getFieldCondition(
 							'publishDate',
-							'greater-than',
+							'greater-than-or-equals',
 							'2026-01-01'
 						),
 						getFieldCondition(
 							'publishDate',
-							'less-than',
+							'less-than-or-equals',
 							'2027-01-01'
 						),
 					],

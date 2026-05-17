@@ -63,31 +63,6 @@ definition {
 		}
 	}
 
-	@description = "COMMERCE-5911. Verify products selected for comparison are visible in the mini compare widget at the bottom of the page."
-	@priority = 5
-	test AssertComparisonItemsAreVisibleOnMiniCompare {
-		property portal.acceptance = "true";
-
-		// TODO Review
-
-		task ("When multiple products are selected for comparison") {
-			User.logoutPG();
-
-			CommerceLogin.miniumLogin(
-				password = PropsUtil.get("default.admin.password"),
-				urlAppend = "web/minium",
-				userEmailAddress = "buyer@liferay.com");
-
-			FrontStore.compareProducts(
-				clickCompare = "false",
-				products = "U-Joint,Transmission Fluid");
-		}
-
-		task ("Then those products are visible in the mini compare widget") {
-			FrontStore.assertMiniCompareItems(products = "U-Joint,Transmission Fluid");
-		}
-	}
-
 	@description = "COMMERCE-5918. As a buyer, I want to deselect a item in Product Compare page"
 	@priority = 3
 	test CanRemoveComparisonItemFromComparePage {
@@ -221,45 +196,6 @@ definition {
 			AssertElementNotPresent(
 				key_value = 4,
 				locator1 = "CommerceFrontStore#MINI_COMPARE_ITEM_N");
-		}
-	}
-
-	@description = "COMMERCE-5913. Verify buyers can deselect items that are being compared from the MiniCompare widget."
-	@priority = 3
-	test RemoveComparisonItemFromMiniCompare {
-		property portal.acceptance = "false";
-
-		task ("Given multiple products are selected for comparison") {
-			User.logoutPG();
-
-			CommerceLogin.miniumLogin(
-				password = PropsUtil.get("default.admin.password"),
-				urlAppend = "web/minium",
-				userEmailAddress = "buyer@liferay.com");
-
-			FrontStore.compareProducts(
-				clickCompare = "false",
-				products = "U-Joint,Transmission Fluid");
-		}
-
-		task ("When the buyer clicks on the X button on a product in the mini compare widget") {
-			var transmissionFluidImageId = CommerceJSONProductsAPI._getCommerceProductImageIds(productName = "Transmission Fluid");
-
-			Click(
-				key_productMediaId = ${transmissionFluidImageId},
-				locator1 = "CommerceFrontStore#MINI_COMPARE_ITEM_REMOVE_BUTTON");
-		}
-
-		task ("Then that product is removed from the comparison") {
-			AssertElementNotPresent(
-				key_productMediaId = ${transmissionFluidImageId},
-				locator1 = "CommerceFrontStore#MINI_COMPARE_ITEM_CUSTOM_IMAGE");
-
-			Click(locator1 = "CommerceFrontStore#MINI_COMPARE_COMPARE_BUTTON");
-
-			AssertElementNotPresent(
-				key_productName = "transmission-fluid",
-				locator1 = "CommerceFrontStore#PRODUCT_CARD_IMAGE");
 		}
 	}
 

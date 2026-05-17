@@ -9,14 +9,7 @@ import {ScreenReaderAnnouncerContext} from '@liferay/layout-js-components-web';
 import {useId} from 'frontend-js-components-web';
 import {dateUtils, sub} from 'frontend-js-web';
 import moment from 'moment';
-import React, {
-	FC,
-	useCallback,
-	useContext,
-	useMemo,
-	useRef,
-	useState,
-} from 'react';
+import React, {FC, useCallback, useContext, useRef, useState} from 'react';
 
 import {LAYOUT_TYPES} from '../../../app/config/constants/layoutTypes';
 import {config} from '../../../app/config/index';
@@ -25,7 +18,6 @@ import {
 	ObjectFields,
 } from '../../../app/contexts/ObjectDataContext';
 import {useRuleValidation} from '../../../app/contexts/RulesModalContext';
-import InfoItemService from '../../../app/services/InfoItemService';
 import RulesService from '../../../app/services/RulesService';
 import {CACHE_KEYS} from '../../../app/utils/cache';
 import useCache from '../../../app/utils/useCache';
@@ -37,6 +29,7 @@ import OPERATORS from './operators';
 interface ConditionProps {
 	condition: ConditionType;
 	inputFragmentItems: {label: string; value: string}[];
+	mappingFieldItems: {label: string; type: string; value: string}[];
 	onConditionChange: (condition: ConditionType) => void;
 }
 
@@ -102,11 +95,14 @@ export function getOperators(type: string | undefined): ReadonlyArray<{
 	switch (type) {
 		case 'date':
 		case 'date-time':
+		case 'number':
 			return [
 				OPERATORS.EQUAL,
 				OPERATORS.NOT_EQUAL,
 				OPERATORS.GREATER_THAN,
+				OPERATORS.GREATER_THAN_OR_EQUALS,
 				OPERATORS.LESS_THAN,
+				OPERATORS.LESS_THAN_OR_EQUALS,
 			];
 
 		default:
@@ -129,6 +125,7 @@ const VALUE_SELECTOR_COMPONENTS: Record<
 export default function Condition({
 	condition,
 	inputFragmentItems,
+	mappingFieldItems,
 	onConditionChange,
 }: ConditionProps) {
 	const {sendMessage} = useContext(ScreenReaderAnnouncerContext);
@@ -171,6 +168,7 @@ export default function Condition({
 			{condition.type === TYPE_VALUES.field ? (
 				<FieldFragmentTypeSelectors
 					condition={condition}
+					items={mappingFieldItems}
 					onConditionChange={onConditionChange}
 					onErrorChange={onErrorChange}
 					sendMessage={sendMessage}
@@ -311,37 +309,17 @@ function FormFragmentTypeSelectors({
 
 function FieldFragmentTypeSelectors({
 	condition,
+	items,
 	onConditionChange,
 	onErrorChange,
 	sendMessage,
 }: {
 	condition: ConditionType;
+	items: {label: string; type: string; value: string}[];
 	onConditionChange: (condition: ConditionType) => void;
 	onErrorChange: (error: RuleError | null) => void;
 	sendMessage: (message: string) => void;
 }) {
-	const {subtype, type} = config.selectedMappingTypes!;
-
-	const mappingFields = useCache({
-		fetcher: () =>
-			InfoItemService.getAvailableStructureMappingFields({
-				classNameId: type.id,
-				classTypeId: subtype ? subtype.id : '',
-			}),
-		key: subtype
-			? [CACHE_KEYS.mappingFields, type.id, subtype.id]
-			: [CACHE_KEYS.mappingFields, type.id],
-	});
-
-	const items = useMemo(
-		() => filterAndConvertMappingFields(mappingFields),
-		[mappingFields]
-	);
-
-	if (!mappingFields) {
-		return null;
-	}
-
 	const selectedItem = items.find((item) => item.value === condition.field);
 
 	const selectedKey = selectedItem ? condition.field : undefined;
@@ -514,6 +492,8 @@ function ConditionValueInput({
 		);
 	}
 
+	const isNumber = fieldType === 'number';
+
 	return (
 		<ClayInput
 			aria-label={Liferay.Language.get('value')}
@@ -526,6 +506,8 @@ function ConditionValueInput({
 				}
 			}}
 			sizing="sm"
+			step={isNumber ? 'any' : undefined}
+			type={isNumber ? 'number' : 'text'}
 			value={value}
 		/>
 	);
