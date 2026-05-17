@@ -24,9 +24,21 @@ export class HeadlessCommerceAdminChannelApiHelper {
 		this.basePath = 'headless-commerce-admin-channel/v1.0/';
 	}
 
+	async deleteAccountAddressChannel(accountAddressChannelId: number) {
+		return this.apiHelpers.delete(
+			`${this.apiHelpers.baseUrl}${this.basePath}/account-address-channels/${accountAddressChannelId}`
+		);
+	}
+
 	async deleteChannel(channelId: number) {
 		return this.apiHelpers.delete(
 			`${this.apiHelpers.baseUrl}${this.basePath}/channels/${channelId}`
+		);
+	}
+
+	async getAccountAddressChannelsPage(addressId: number) {
+		return this.apiHelpers.get(
+			`${this.apiHelpers.baseUrl}${this.basePath}/account-addresses/${addressId}/account-address-channels`
 		);
 	}
 
@@ -53,6 +65,19 @@ export class HeadlessCommerceAdminChannelApiHelper {
 			`${this.apiHelpers.baseUrl}${this.basePath}/channels/${channel.id}`,
 			{
 				accountId,
+			}
+		);
+	}
+
+	async postAccountAddressChannel(addressId: number, channelId: number) {
+		return this.apiHelpers.post(
+			`${this.apiHelpers.baseUrl}${this.basePath}/account-addresses/${addressId}/account-address-channels`,
+			{
+				data: {
+					addressChannelId: channelId,
+					addressId,
+				},
+				failOnStatusCode: true,
 			}
 		);
 	}
