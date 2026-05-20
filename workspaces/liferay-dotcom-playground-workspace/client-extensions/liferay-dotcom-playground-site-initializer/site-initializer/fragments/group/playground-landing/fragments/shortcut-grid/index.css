@@ -1,0 +1,43 @@
+.playground-shortcut-grid {
+	margin: 2rem 0;
+}
+
+.playground-shortcut-grid__title {
+	font-size: 1.25rem;
+	font-weight: 600;
+	margin-bottom: 1rem;
+}
+
+.playground-shortcut-grid__items {
+	display: grid;
+	gap: 1rem;
+	grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+}
+
+.playground-shortcut {
+	align-items: center;
+	background: #fff;
+	border: 1px solid #e6e9f0;
+	border-radius: 10px;
+	color: #1a2027;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	padding: 1.25rem 1rem;
+	text-decoration: none;
+	transition: border-color 120ms ease, transform 120ms ease;
+}
+
+.playground-shortcut:hover {
+	border-color: #0b5fff;
+	transform: translateY(-1px);
+}
+
+.playground-shortcut__icon {
+	font-size: 1.75rem;
+}
+
+.playground-shortcut__label {
+	font-size: 0.9rem;
+	font-weight: 500;
+}

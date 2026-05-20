@@ -1,0 +1,15 @@
+{
+	"pageElement": {
+		"pageElements": [
+			{
+				"definition": {
+					"layout": {
+						"widthType": "Fluid"
+					}
+				},
+				"type": "Section"
+			}
+		],
+		"type": "Root"
+	}
+}

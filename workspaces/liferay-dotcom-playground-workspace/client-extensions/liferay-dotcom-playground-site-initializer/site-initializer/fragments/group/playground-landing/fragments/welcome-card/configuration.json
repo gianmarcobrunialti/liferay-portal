@@ -1,0 +1,25 @@
+{
+	"fieldSets": [
+		{
+			"fields": [
+				{
+					"dataType": "string",
+					"defaultValue": "Welcome to your Playground",
+					"label": "Heading",
+					"localizable": true,
+					"name": "heading",
+					"type": "text"
+				},
+				{
+					"dataType": "string",
+					"defaultValue": "This is your personal training space. Build pages, drop in fragments, edit web content — nothing here affects production.",
+					"label": "Body",
+					"localizable": true,
+					"name": "body",
+					"type": "text"
+				}
+			],
+			"label": "Configurations"
+		}
+	]
+}

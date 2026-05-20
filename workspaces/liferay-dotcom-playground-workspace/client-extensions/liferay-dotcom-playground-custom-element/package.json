@@ -1,0 +1,26 @@
+{
+	"name": "@liferay/liferay-dotcom-playground-custom-element",
+	"private": true,
+	"version": "1.0.0",
+	"scripts": {
+		"build": "tsc && vite build",
+		"dev": "vite",
+		"preview": "vite preview"
+	},
+	"dependencies": {
+		"@clayui/alert": "^3.159.0",
+		"@clayui/button": "^3.159.0",
+		"@clayui/css": "^3.159.0",
+		"@clayui/form": "^3.159.0",
+		"@clayui/loading-indicator": "^3.159.0",
+		"react": "^18.2.0",
+		"react-dom": "^18.2.0"
+	},
+	"devDependencies": {
+		"@types/react": "^18.0.15",
+		"@types/react-dom": "^18.0.6",
+		"@vitejs/plugin-react-swc": "^3.3.1",
+		"typescript": "^4.7.4",
+		"vite": "^4.3.3"
+	}
+}

@@ -1,0 +1,12 @@
+.playground-missing-fragment {
+	background: #fff8e6;
+	border: 1px dashed #d4a017;
+	border-radius: 8px;
+	color: #6a4f00;
+	margin: 0.75rem 0;
+	padding: 1rem 1.25rem;
+}
+
+.playground-missing-fragment p {
+	margin: 0.25rem 0 0;
+}

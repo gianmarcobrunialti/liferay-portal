@@ -1,0 +1,57 @@
+{
+	"pageElement": {
+		"pageElements": [
+			{
+				"definition": {
+					"fragment": {
+						"key": "welcome-card"
+					},
+					"fragmentConfig": {
+					}
+				},
+				"type": "Fragment"
+			},
+			{
+				"definition": {
+					"fragment": {
+						"key": "shortcut-grid"
+					},
+					"fragmentConfig": {
+					}
+				},
+				"type": "Fragment"
+			},
+			{
+				"definition": {
+					"fragment": {
+						"key": "training-modules"
+					},
+					"fragmentConfig": {
+					}
+				},
+				"type": "Fragment"
+			},
+			{
+				"definition": {
+					"fragment": {
+						"key": "url-cloner"
+					},
+					"fragmentConfig": {
+					}
+				},
+				"type": "Fragment"
+			},
+			{
+				"definition": {
+					"fragment": {
+						"key": "quota-status"
+					},
+					"fragmentConfig": {
+					}
+				},
+				"type": "Fragment"
+			}
+		],
+		"type": "Root"
+	}
+}

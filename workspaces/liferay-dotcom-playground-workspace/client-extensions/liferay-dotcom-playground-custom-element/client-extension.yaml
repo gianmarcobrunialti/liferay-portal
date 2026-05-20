@@ -1,0 +1,17 @@
+assemble:
+    -   from: build/static
+        into: static
+liferay-dotcom-playground-custom-element:
+    cssURLs:
+        -   "*.css"
+    friendlyURLMapping: liferay-dotcom-playground-custom-element
+    htmlElementName: liferay-dotcom-playground-custom-element
+    instanceable: false
+    name: Liferay Dotcom Playground Custom Element
+    portletCategoryName: category.client-extensions
+    properties:
+        clone-endpoint: /o/playground/clone-page
+    type: customElement
+    urls:
+        -   "*.js"
+    useESM: true

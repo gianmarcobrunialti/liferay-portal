@@ -1,0 +1,124 @@
+{
+	"configuration": {
+		"className": "com.liferay.object.admin.rest.dto.v1_0.ObjectDefinition",
+		"parameters": {
+			"containsHeaders": "false",
+			"createStrategy": "UPSERT",
+			"importStrategy": "ON_ERROR_FAIL",
+			"updateStrategy": "UPDATE"
+		},
+		"taskItemDelegateName": "DEFAULT"
+	},
+	"items": [
+		{
+			"externalReferenceCode": "PlaygroundEnrollment",
+			"label": {
+				"en_US": "Playground Enrollment"
+			},
+			"name": "PlaygroundEnrollment",
+			"objectActions": [
+				{
+					"active": true,
+					"label": {
+						"en_US": "Provision Playground Site"
+					},
+					"name": "ProvisionPlaygroundSite",
+					"objectActionExecutorKey": "function#liferay-dotcom-playground-etc-spring-boot-object-action-enrollment",
+					"objectActionTriggerKey": "onAfterAdd",
+					"parameters": {
+					},
+					"status": {
+						"code": 0,
+						"label": "never-ran",
+						"label_i18n": "Never Ran"
+					}
+				}
+			],
+			"objectFields": [
+				{
+					"DBType": "Long",
+					"businessType": "LongInteger",
+					"label": {
+						"en_US": "User ID"
+					},
+					"name": "liferayUserId",
+					"required": true,
+					"type": "Long"
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"label": {
+						"en_US": "User Screen Name"
+					},
+					"name": "userScreenName",
+					"required": false,
+					"type": "String"
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"label": {
+						"en_US": "User Email Address"
+					},
+					"name": "userEmailAddress",
+					"required": false,
+					"type": "String"
+				},
+				{
+					"DBType": "String",
+					"businessType": "Picklist",
+					"label": {
+						"en_US": "Status"
+					},
+					"listTypeDefinitionExternalReferenceCode": "playgroundEnrollmentStatus",
+					"name": "enrollmentStatus",
+					"required": false,
+					"state": false,
+					"type": "String"
+				},
+				{
+					"DBType": "Long",
+					"businessType": "LongInteger",
+					"label": {
+						"en_US": "Site ID"
+					},
+					"name": "liferaySiteId",
+					"required": false,
+					"type": "Long"
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"label": {
+						"en_US": "Site Friendly URL"
+					},
+					"name": "siteFriendlyURL",
+					"required": false,
+					"type": "String"
+				},
+				{
+					"DBType": "Clob",
+					"businessType": "LongText",
+					"label": {
+						"en_US": "Failure Reason"
+					},
+					"name": "failureReason",
+					"required": false,
+					"type": "String"
+				}
+			],
+			"panelCategoryKey": "control_panel.users",
+			"pluralLabel": {
+				"en_US": "Playground Enrollments"
+			},
+			"portlet": true,
+			"scope": "company",
+			"status": {
+				"code": 0,
+				"label": "approved",
+				"label_i18n": "Approved"
+			}
+		}
+	]
+}

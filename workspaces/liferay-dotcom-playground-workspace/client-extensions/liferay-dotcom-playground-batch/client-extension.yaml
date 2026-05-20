@@ -1,0 +1,15 @@
+assemble:
+    -   from: batch
+        into: batch
+liferay-dotcom-playground-batch:
+    name: Liferay Dotcom Playground Batch
+    oAuthApplicationHeadlessServer: liferay-dotcom-playground-batch-oahs
+    type: batch
+liferay-dotcom-playground-batch-oahs:
+    .serviceAddress: localhost:8080
+    .serviceScheme: http
+    name: Liferay Dotcom Playground Batch OAuth Application Headless Server
+    scopes:
+        -   Liferay.Headless.Batch.Engine.everything
+        -   Liferay.Object.Admin.REST.everything
+    type: oAuthApplicationHeadlessServer

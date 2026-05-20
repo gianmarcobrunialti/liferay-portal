@@ -1,0 +1,56 @@
+.playground-quota {
+	margin: 2rem 0;
+}
+
+.playground-quota__title {
+	font-size: 1.25rem;
+	font-weight: 600;
+	margin-bottom: 1rem;
+}
+
+.playground-quota__items {
+	display: grid;
+	gap: 1rem;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.playground-quota-gauge {
+	background: #fff;
+	border: 1px solid #e6e9f0;
+	border-radius: 10px;
+	padding: 1rem 1.25rem;
+}
+
+.playground-quota-gauge__label {
+	color: #4a5568;
+	font-size: 0.85rem;
+	text-transform: uppercase;
+}
+
+.playground-quota-gauge__value {
+	font-size: 1.4rem;
+	font-weight: 600;
+	margin: 0.25rem 0 0.6rem;
+}
+
+.playground-quota-gauge__bar {
+	background: #eef0f5;
+	border-radius: 999px;
+	height: 6px;
+	overflow: hidden;
+}
+
+.playground-quota-gauge__bar-fill {
+	background: #0b5fff;
+	height: 100%;
+	transition: width 250ms ease;
+	width: 0;
+}
+
+.playground-quota-gauge__bar-fill.is-warning {
+	background: #f5a623;
+}
+
+.playground-quota-gauge__bar-fill.is-danger {
+	background: #de3618;
+}

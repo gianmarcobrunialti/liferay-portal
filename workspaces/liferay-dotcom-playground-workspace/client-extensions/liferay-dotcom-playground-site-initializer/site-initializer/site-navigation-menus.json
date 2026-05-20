@@ -1,0 +1,18 @@
+[
+	{
+		"externalReferenceCode": "PLAYGROUND-NAVIGATION-MAIN",
+		"menuItems": [
+			{
+				"externalReferenceCode": "PLAYGROUND-NAV-HOME",
+				"friendlyURL": "/home",
+				"type": "layout"
+			},
+			{
+				"externalReferenceCode": "PLAYGROUND-NAV-SANDBOX",
+				"friendlyURL": "/sandbox",
+				"type": "layout"
+			}
+		],
+		"name": "Main"
+	}
+]

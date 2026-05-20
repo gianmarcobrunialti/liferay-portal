@@ -1,0 +1,29 @@
+assemble:
+    -   fromTask: bootJar
+liferay-dotcom-playground-etc-spring-boot-oahs:
+    .serviceAddress: localhost:58090
+    .serviceScheme: http
+    name: Liferay Dotcom Playground Etc Spring Boot OAuth Application Headless Server
+    scopes:
+        -   Liferay.Headless.Admin.List.Type.everything
+        -   Liferay.Headless.Admin.Site.everything
+        -   Liferay.Headless.Admin.Taxonomy.everything
+        -   Liferay.Headless.Admin.User.everything
+        -   Liferay.Headless.Delivery.everything
+        -   Liferay.Headless.Site.everything
+        -   Liferay.Object.Admin.REST.everything
+        -   c_playgroundenrollment.everything
+    type: oAuthApplicationHeadlessServer
+liferay-dotcom-playground-etc-spring-boot-oaua:
+    .serviceAddress: localhost:58090
+    .serviceScheme: http
+    name: Liferay Dotcom Playground Etc Spring Boot OAuth Application User Agent
+    scopes:
+        -   Liferay.Headless.Admin.User.everything.read
+        -   Liferay.Headless.Delivery.everything
+    type: oAuthApplicationUserAgent
+liferay-dotcom-playground-etc-spring-boot-object-action-enrollment:
+    name: Liferay Dotcom Playground Etc Spring Boot Object Action Enrollment
+    oAuth2ApplicationExternalReferenceCode: liferay-dotcom-playground-etc-spring-boot-oaua
+    resourcePath: /object/action/enrollment
+    type: objectAction
