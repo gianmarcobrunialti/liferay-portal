@@ -158,6 +158,7 @@ export type AdditionalProps = {
 	rootFolder?: boolean;
 	rootObjectEntryFolderExternalReferenceCode: string;
 	showAdditionalItemInfo?: boolean;
+	trashEnabled?: boolean;
 };
 
 export default function AssetsFDSPropsTransformer({
@@ -567,7 +568,7 @@ export default function AssetsFDSPropsTransformer({
 							closeModal,
 							defaultSourceLanguageId:
 								itemData.embedded?.defaultLanguageId,
-							itemId: itemData.embedded.id,
+							translationsAPIURL: `${itemData.actions.get.href}/translations`,
 						}),
 				});
 			}
@@ -710,6 +711,7 @@ export default function AssetsFDSPropsTransformer({
 								apiURL: bulkActionAPIURL,
 								dataSetId: otherProps.id,
 								selectedData,
+								trashEnabled: additionalProps.trashEnabled,
 							});
 						},
 						selectAll: selectedData.selectAll,
@@ -719,6 +721,7 @@ export default function AssetsFDSPropsTransformer({
 					deleteAssetEntriesBulkAction({
 						apiURL: bulkActionAPIURL,
 						selectedData,
+						trashEnabled: additionalProps.trashEnabled,
 					});
 				}
 			}

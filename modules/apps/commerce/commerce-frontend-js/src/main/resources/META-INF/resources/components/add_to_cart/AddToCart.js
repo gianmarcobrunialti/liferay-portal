@@ -51,17 +51,11 @@ function AddToCart({
 	channel,
 	cpInstance: initialCpInstance,
 	disabled: initialDisabled,
-	guestOrderEnabled,
 	productId,
 	settings,
 }) {
 	const account = useCommerceAccount({id: initialAccountId});
-	const cart = useCommerceCart({
-		guestOrderEnabled,
-		initialCart: {
-			id: initialCartId,
-		},
-	});
+	const cart = useCommerceCart({id: initialCartId});
 	const [cpInstance, setCpInstance] = useState({
 		...initialCpInstance,
 		quantity: getQuantity(settings, initialCpInstance.skuUnitOfMeasure),

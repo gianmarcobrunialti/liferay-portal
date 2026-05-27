@@ -12,14 +12,15 @@ import {waitForLoadingToBeRemoved} from 'test/helpers';
 
 jest.unmock('react-dom');
 
-jest.mock('shared/hooks/useFrontendDataSet', () => ({
-	useFrontendDataSet: () => {
-		const FakeDataSet = ({id}: {id: string}) => (
-			<div data-testid='fds-component' id={id} />
-		);
+jest.mock('@liferay/frontend-data-set-web', () => ({
+	...jest.requireActual('@liferay/frontend-data-set-web'),
+	FrontendDataSet: ({id}: {id: string}) => (
+		<div data-testid='fds-component' id={id} />
+	)
+}));
 
-		return FakeDataSet;
-	}
+jest.mock('shared/components/dropdown-range-key/DropdownRangeKey', () => ({
+	DropdownRangeKey: () => null
 }));
 
 jest.mock('shared/hooks/useRequest', () => ({

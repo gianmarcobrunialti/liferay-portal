@@ -7,6 +7,7 @@ import {ClayButtonWithIcon} from '@clayui/button';
 import {ClayDropDownWithItems} from '@clayui/drop-down';
 import React from 'react';
 
+import buildLocalizedValue from '../../common/utils/buildLocalizedValue';
 import {useCache} from '../contexts/CacheContext';
 import {useSelector, useStateDispatch} from '../contexts/StateContext';
 import selectStructure from '../selectors/selectStructure';
@@ -34,10 +35,14 @@ export default function AddChildDropdown({
 	className,
 	displayType = 'secondary',
 	parentUuid,
+	triggerProps,
 }: {
 	className?: string;
 	displayType?: 'secondary' | 'unstyled';
 	parentUuid?: RepeatableGroup['uuid'];
+	triggerProps?: React.HTMLAttributes<HTMLButtonElement> & {
+		'data-canonical-name'?: string;
+	};
 }) {
 	const dispatch = useStateDispatch();
 	const structure = useSelector(selectStructure);
@@ -63,10 +68,7 @@ export default function AddChildDropdown({
 		dispatch({
 			relatedContent: {
 				erc: getRandomId(),
-				label: {
-					[Liferay.ThemeDisplay.getDefaultLanguageId()]:
-						Liferay.Language.get('select-related-content'),
-				},
+				label: buildLocalizedValue('select-related-content'),
 				multiselection: false,
 				name: getRandomName(),
 				parent: parentUuid ?? structure.uuid,
@@ -121,6 +123,7 @@ export default function AddChildDropdown({
 						size="sm"
 						symbol="plus"
 						title={Liferay.Language.get('add-field')}
+						{...triggerProps}
 					/>
 				}
 			/>

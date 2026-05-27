@@ -16,17 +16,20 @@ export class HeadlessAssetLibraryApiHelper {
 
 	async createAssetLibrary({
 		description,
+		externalReferenceCode,
 		name,
 		settings = {},
 		type = 'Space',
 	}: {
 		description?: string;
+		externalReferenceCode?: string;
 		name: string;
 		settings?: any;
 		type?: string;
 	}) {
 		const data = JSON.stringify({
 			description,
+			externalReferenceCode,
 			name,
 			settings,
 			type,
@@ -84,6 +87,17 @@ export class HeadlessAssetLibraryApiHelper {
 		return this.apiHelpers.patchRequestOptions(
 			`${this.apiHelpers.baseUrl}${this.basePath}/asset-libraries/${externalReferenceCode}`,
 			{data: body, failOnStatusCode: false}
+		);
+	}
+
+	async connectSite(
+		assetLibraryExternalReferenceCode: string,
+		connectedSiteExternalReferenceCode: string,
+		body: Record<string, any> = {searchable: true}
+	) {
+		return this.apiHelpers.put(
+			`${this.apiHelpers.baseUrl}${this.basePath}/asset-libraries/${assetLibraryExternalReferenceCode}/connected-sites/${connectedSiteExternalReferenceCode}`,
+			{data: body}
 		);
 	}
 

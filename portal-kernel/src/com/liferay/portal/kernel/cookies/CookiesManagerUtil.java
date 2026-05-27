@@ -77,6 +77,12 @@ public class CookiesManagerUtil {
 			domain, httpServletRequest, httpServletResponse, cookieNames);
 	}
 
+	public static int getConsentType(Cookie cookie) {
+		CookiesManager cookiesManager = _cookiesManagerSnapshot.get();
+
+		return cookiesManager.getConsentType(cookie);
+	}
+
 	public static String getCookieValue(
 		String cookieName, HttpServletRequest httpServletRequest) {
 

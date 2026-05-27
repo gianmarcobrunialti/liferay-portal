@@ -11,6 +11,7 @@ import com.liferay.osb.faro.engine.client.model.AccountDetails;
 import com.liferay.osb.faro.engine.client.model.AccountLifecycle;
 import com.liferay.osb.faro.engine.client.model.AccountLifecycleMetric;
 import com.liferay.osb.faro.engine.client.model.AccountLifecycleStageMetric;
+import com.liferay.osb.faro.engine.client.model.AccountLifecycleStatus;
 import com.liferay.osb.faro.engine.client.model.AccountMetric;
 import com.liferay.osb.faro.engine.client.model.Activity;
 import com.liferay.osb.faro.engine.client.model.ActivityAggregation;
@@ -184,6 +185,10 @@ public interface ContactsEngineClient {
 		FaroProject faroProject, Long channelId, String fieldMappingFieldName,
 		String query, int cur, int delta);
 
+	public Results<Individual> getAccountIndividuals(
+		FaroProject faroProject, String accountId, String query, int cur,
+		int delta, String sortString);
+
 	public Results<IndividualSegment> getAccountIndividualSegments(
 		FaroProject faroProject, String accountId, String channelId,
 		String query, String status, int cur, int delta,
@@ -191,6 +196,12 @@ public interface ContactsEngineClient {
 
 	public AccountLifecycle getAccountLifecycle(
 			FaroProject faroProject, String id)
+		throws FaroEngineClientException;
+
+	public Results<Account> getAccountLifecycleAccounts(
+			FaroProject faroProject, String country, String id, String industry,
+			String query, String stageType, int cur, int delta,
+			String sortString)
 		throws FaroEngineClientException;
 
 	public List<AccountLifecycleMetric> getAccountLifecycleMetrics(
@@ -202,6 +213,10 @@ public interface ContactsEngineClient {
 
 	public List<AccountLifecycleStageMetric> getAccountLifecycleStageMetrics(
 			FaroProject faroProject, String country, String id, String industry)
+		throws FaroEngineClientException;
+
+	public AccountLifecycleStatus getAccountLifecycleStatus(
+			FaroProject faroProject, String accountLifecycleId, String id)
 		throws FaroEngineClientException;
 
 	public List<AccountMetric> getAccountMetrics(
@@ -255,18 +270,19 @@ public interface ContactsEngineClient {
 		String keywords, int rangeKey, int cur, int delta, String sortString);
 
 	public Results<AssetSummaryCategory> getAssetSummaryCategories(
-		FaroProject faroProject, long channelId, String keywords,
-		String rangeEnd, int rangeKey, String rangeStart, String sort,
-		String vocabularyId, int cur, int delta);
+		FaroProject faroProject, String accountId, long channelId,
+		String keywords, String rangeEnd, int rangeKey, String rangeStart,
+		String selectedMetric, String sort, String vocabularyId, int cur,
+		int delta);
 
 	public Results<AssetSummaryMimeType> getAssetSummaryMimeTypes(
 		FaroProject faroProject, long channelId, String rangeEnd, int rangeKey,
 		String rangeStart, int cur, int delta);
 
 	public Results<AssetSummaryTag> getAssetSummaryTags(
-		FaroProject faroProject, long channelId, String keywords,
-		String rangeEnd, int rangeKey, String rangeStart, String sort, int cur,
-		int delta);
+		FaroProject faroProject, String accountId, long channelId,
+		String keywords, String rangeEnd, int rangeKey, String rangeStart,
+		String selectedMetric, String sort, int cur, int delta);
 
 	public Results<AssetSummaryType> getAssetSummaryTypes(
 		FaroProject faroProject, long channelId, String rangeEnd, int rangeKey,

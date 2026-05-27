@@ -72,6 +72,7 @@ import {loadData} from './utils/loadData';
 
 import {logError} from './utils/logError';
 import {transformAdditionalAPIURLParameters} from './utils/transformAdditionalAPIURLParameters';
+import transformDataSetItems from './utils/transformDataSetItems';
 import {
 	EConfigInURLBehavior,
 	EConfigInURLKeys,
@@ -469,10 +470,11 @@ const FrontendDataSetContent = ({
 					selectedItems:
 						newSelectionFilter.selectedData?.selectedItems.map(
 							(newItem) => {
-								const selectedItem = selectionFilter.items.find(
-									(item: ISelectionFilterStateItem) =>
-										item.value === newItem.value
-								);
+								const selectedItem =
+									selectionFilter.items?.find(
+										(item: ISelectionFilterStateItem) =>
+											item.value === newItem.value
+									);
 
 								if (selectedItem) {
 									return selectedItem;
@@ -800,29 +802,16 @@ const FrontendDataSetContent = ({
 
 	const updateDataSetItems = useCallback(
 		(dataSetData: IDataSetData) => {
-			const remappedItems = dataSetData.items.map((item) => {
-				if (item.embedded && item.embedded.actions) {
-					const actions = item.embedded.actions;
+			const transformedItems = transformDataSetItems(dataSetData.items);
 
-					delete item.embedded.actions;
-
-					return {
-						...item,
-						actions,
-					};
-				}
-
-				return {
-					...item,
-				};
-			});
-
-			setItems(remappedItems);
+			setItems(transformedItems);
 			setTotal(dataSetData.totalCount);
 
 			if (!dataSetData.items.length && dataSetData.totalCount > 0) {
 				viewsDispatch(updatePageNumber(dataSetData.lastPage));
 			}
+
+			return transformedItems;
 		},
 		[updatePageNumber, viewsDispatch]
 	);
@@ -1302,10 +1291,10 @@ const FrontendDataSetContent = ({
 					}
 
 					if (isMounted()) {
-						updateDataSetItems(data);
+						const updatedItems = updateDataSetItems(data);
 
 						setSelectedItems(
-							data.items.filter(
+							updatedItems.filter(
 								(item: ISelectionFilterStateItem) => {
 									const itemValue = getObjectValueFromPath({
 										object: item,

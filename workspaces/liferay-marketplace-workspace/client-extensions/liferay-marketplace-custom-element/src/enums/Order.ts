@@ -29,6 +29,7 @@ export enum OrderStatus {
 export enum OrderTypes {
 	ADDONS = 'ADDONS',
 	AI_HUB = 'AI_HUB',
+	AI_HUB_TOKEN = 'AI_HUB_TOKEN',
 	CLIENT_EXTENSION = 'CLIENT_EXTENSION',
 	CLOUD_APP = 'CLOUD_APP',
 	CMP = 'CMP_BETA',
@@ -128,9 +129,12 @@ export const paymentWorkflowDisplayType = {
 
 export function getOrderStatusLabel(order: PlacedOrder) {
 	if (
-		[OrderTypes.ADDONS, OrderTypes.CMP, OrderTypes.DXP].includes(
-			order.orderTypeExternalReferenceCode as OrderTypes
-		)
+		[
+			OrderTypes.ADDONS,
+			OrderTypes.CMP,
+			OrderTypes.DXP,
+			OrderTypes.DSR,
+		].includes(order.orderTypeExternalReferenceCode as OrderTypes)
 	) {
 		return (
 			{

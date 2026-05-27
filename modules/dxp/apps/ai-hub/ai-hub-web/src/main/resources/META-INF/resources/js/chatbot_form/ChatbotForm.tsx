@@ -13,7 +13,8 @@ import ClayPanel from '@clayui/panel';
 import {Provider} from '@clayui/provider';
 import {openToast} from '@liferay/object-js-components-web';
 import {InputLocalized} from 'frontend-js-components-web';
-import React, {useEffect, useState} from 'react';
+import {sub} from 'frontend-js-web';
+import React, {useEffect, useRef, useState} from 'react';
 
 import './ChatbotForm.scss';
 import {getAgentDefinitions} from '../agent_definition_form/services/AgentDefinitionService';
@@ -82,33 +83,46 @@ function generateEmbedCode(externalReferenceCode: string, portalURL: string) {
 </script>`;
 }
 
-const availableAgentDefinitions = await (async () => {
-	try {
-		const response = await getAgentDefinitions();
+function readFileAsBase64(file: File): Promise<string> {
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader();
 
-		return (
-			(response.items || []).map((item: AgentDefinitionOption) => ({
-				externalReferenceCode: item.externalReferenceCode,
-				title: item.title,
-			})) || []
-		);
-	}
-	catch (error) {
-		console.error(error);
-	}
-})();
+		reader.onerror = () => reject(reader.error);
+		reader.onload = () => {
+			const dataUrl = reader.result as string;
+
+			resolve(dataUrl.substring(dataUrl.indexOf(',') + 1));
+		};
+
+		reader.readAsDataURL(file);
+	});
+}
 
 export default function ChatbotForm({
 	accountEntryExternalReferenceCode,
 	backURL,
+	companyLogoAcceptedFileExtensions,
+	companyLogoMaximumFileSize,
+	companyLogoMaximumFileSizeLabel,
+	companyLogoUploadTip,
 	externalReferenceCode,
 	portalURL,
+	readOnly,
 }: {
 	accountEntryExternalReferenceCode: string;
 	backURL: string;
+	companyLogoAcceptedFileExtensions: string;
+	companyLogoMaximumFileSize: number;
+	companyLogoMaximumFileSizeLabel: string;
+	companyLogoUploadTip: string;
 	externalReferenceCode: string;
 	portalURL: string;
+	readOnly: boolean;
 }) {
+	const [availableAgentDefinitions, setAvailableAgentDefinitions] = useState<
+		AgentDefinitionOption[]
+	>([]);
+	const [agentDefinitionsLoaded, setAgentDefinitionsLoaded] = useState(false);
 	const [formData, setFormData] = useState<Chatbot>({} as Chatbot);
 	const [
 		existingChatbotExternalReferenceCode,
@@ -121,6 +135,29 @@ export default function ChatbotForm({
 		originalSelectedAgentDefinitions,
 		setOriginalSelectedAgentDefinitions,
 	] = useState<AgentDefinitionOption[]>([]);
+	const [companyLogoChanged, setCompanyLogoChanged] = useState(false);
+	const [companyLogoLoading, setCompanyLogoLoading] = useState(false);
+	const companyLogoInputRef = useRef<HTMLInputElement>(null);
+
+	useEffect(() => {
+		getAgentDefinitions()
+			.then((response) => {
+				setAvailableAgentDefinitions(
+					(response.items || []).map(
+						(item: AgentDefinitionOption) => ({
+							externalReferenceCode: item.externalReferenceCode,
+							title: item.title,
+						})
+					)
+				);
+			})
+			.catch((error) => {
+				console.error(error);
+			})
+			.finally(() => {
+				setAgentDefinitionsLoaded(true);
+			});
+	}, []);
 
 	const handleInputChange = (
 		event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -131,6 +168,83 @@ export default function ChatbotForm({
 			...prev,
 			[name]: value,
 		}));
+	};
+
+	const handleSelectCompanyLogo = () => {
+		const fileInput = companyLogoInputRef.current;
+
+		if (fileInput) {
+			fileInput.value = '';
+			fileInput.click();
+		}
+	};
+
+	const handleCompanyLogoChange = async (
+		event: React.ChangeEvent<HTMLInputElement>
+	) => {
+		const file = event.target.files?.[0];
+
+		if (!file) {
+			return;
+		}
+
+		if (
+			companyLogoMaximumFileSize > 0 &&
+			file.size > companyLogoMaximumFileSize
+		) {
+			openToast({
+				message: sub(
+					Liferay.Language.get(
+						'please-enter-a-file-with-a-valid-file-size-no-larger-than-x'
+					),
+					companyLogoMaximumFileSizeLabel
+				),
+				type: 'danger',
+			});
+
+			return;
+		}
+
+		setCompanyLogoLoading(true);
+
+		try {
+			const fileBase64 = await readFileAsBase64(file);
+
+			setFormData((prev) => ({
+				...prev,
+				companyLogo: {
+					fileBase64,
+					mimeType: file.type,
+					name: file.name,
+				},
+				companyLogoFileName: file.name,
+			}));
+
+			setCompanyLogoChanged(true);
+		}
+		catch (error) {
+			openToast({
+				message: Liferay.Language.get('an-unexpected-error-occurred'),
+				type: 'danger',
+			});
+		}
+		finally {
+			setCompanyLogoLoading(false);
+		}
+	};
+
+	const handleClearCompanyLogo = () => {
+		if (!formData.companyLogo) {
+			return;
+		}
+
+		setFormData((prev) => ({
+			...prev,
+			companyLogo: null,
+			companyLogoFileName: undefined,
+		}));
+
+		setCompanyLogoChanged(true);
 	};
 
 	const handleCopyEmbedCode = () => {
@@ -149,14 +263,17 @@ export default function ChatbotForm({
 
 	const handleSubmit = async () => {
 		try {
+			const {companyLogo, ...rest} = formData;
+
 			const payload = {
-				...formData,
+				...rest,
 				r_accountToAIHubChatbots_accountEntryERC:
 					accountEntryExternalReferenceCode,
 				title:
 					formData.title_i18n?.['en_US'] ||
 					Object.values(formData.title_i18n ?? {})[0] ||
 					'',
+				...(companyLogoChanged && {companyLogo}),
 			};
 
 			let chatbotExternalReferenceCode =
@@ -213,6 +330,8 @@ export default function ChatbotForm({
 
 			setOriginalSelectedAgentDefinitions(selectedAgentDefinitions);
 
+			setCompanyLogoChanged(false);
+
 			openToast({
 				message: Liferay.Language.get('chatbot-was-saved-successfully'),
 				type: 'success',
@@ -233,6 +352,7 @@ export default function ChatbotForm({
 			if (!externalReferenceCode) {
 				setFormData({
 					active: false,
+					companyLogo: undefined,
 					description: '',
 					externalReferenceCode: '',
 					introMessage_i18n: {},
@@ -243,8 +363,10 @@ export default function ChatbotForm({
 					showCompanyLogo: true,
 					title_i18n: {},
 				});
+
 				setSelectedAgentDefinitions([]);
 				setOriginalSelectedAgentDefinitions([]);
+				setCompanyLogoChanged(false);
 
 				return;
 			}
@@ -252,8 +374,18 @@ export default function ChatbotForm({
 			try {
 				const chatbot = await getChatbot(externalReferenceCode);
 
+				const companyLogoAttachment =
+					chatbot.companyLogo &&
+					typeof chatbot.companyLogo === 'object'
+						? chatbot.companyLogo
+						: null;
+
 				setFormData({
 					active: chatbot.active ?? false,
+					companyLogo: companyLogoAttachment
+						? companyLogoAttachment.id
+						: chatbot.companyLogo,
+					companyLogoFileName: companyLogoAttachment?.name,
 					description: chatbot.description,
 					externalReferenceCode: chatbot.externalReferenceCode,
 					introMessage_i18n: chatbot.introMessage_i18n,
@@ -274,6 +406,7 @@ export default function ChatbotForm({
 
 				setSelectedAgentDefinitions(agentDefinitions);
 				setOriginalSelectedAgentDefinitions(agentDefinitions);
+				setCompanyLogoChanged(false);
 			}
 			catch (error) {
 				openToast({
@@ -316,6 +449,7 @@ export default function ChatbotForm({
 						aria-label={Liferay.Language.get('save')}
 						data-title="Save Button"
 						data-title-set-as-html
+						disabled={readOnly}
 						onClick={handleSubmit}
 						size="sm"
 					>
@@ -340,6 +474,7 @@ export default function ChatbotForm({
 										</h2>
 
 										<ClayToggle
+											disabled={readOnly}
 											label={Liferay.Language.get(
 												'enable-chatbot'
 											)}
@@ -361,6 +496,7 @@ export default function ChatbotForm({
 
 									<ClayForm.Group>
 										<InputLocalized
+											disabled={readOnly}
 											id="title"
 											label={Liferay.Language.get(
 												'title'
@@ -396,6 +532,7 @@ export default function ChatbotForm({
 										</label>
 
 										<ClayInput
+											disabled={readOnly}
 											id="externalReferenceCode"
 											name="externalReferenceCode"
 											onChange={handleInputChange}
@@ -420,6 +557,7 @@ export default function ChatbotForm({
 
 										<textarea
 											className="form-control"
+											disabled={readOnly}
 											id="description"
 											name="description"
 											onChange={handleInputChange}
@@ -432,35 +570,127 @@ export default function ChatbotForm({
 									</ClayForm.Group>
 
 									<ClayForm.Group>
+										<label htmlFor="companyLogo">
+											{Liferay.Language.get(
+												'company-logo'
+											)}
+										</label>
+
+										<div className="chatbot-company-logo">
+											<Button
+												aria-label={sub(
+													Liferay.Language.get(
+														'select-x'
+													),
+													Liferay.Language.get(
+														'company-logo'
+													)
+												)}
+												disabled={
+													companyLogoLoading ||
+													readOnly
+												}
+												displayType="secondary"
+												onClick={
+													handleSelectCompanyLogo
+												}
+												small
+											>
+												{companyLogoLoading && (
+													<span
+														aria-hidden="true"
+														className="loading-animation loading-animation-sm mr-2"
+													/>
+												)}
+
+												{Liferay.Language.get(
+													'select-file'
+												)}
+											</Button>
+
+											{formData.companyLogo && (
+												<>
+													<span>
+														{formData.companyLogoFileName ||
+															Liferay.Language.get(
+																'current-file'
+															)}
+													</span>
+
+													<Button
+														disabled={readOnly}
+														displayType="danger"
+														onClick={
+															handleClearCompanyLogo
+														}
+														small
+													>
+														{Liferay.Language.get(
+															'clear'
+														)}
+													</Button>
+												</>
+											)}
+
+											<input
+												accept={companyLogoAcceptedFileExtensions
+													.split(',')
+													.map(
+														(extension) =>
+															`.${extension.trim()}`
+													)
+													.join(',')}
+												id="companyLogo"
+												onChange={
+													handleCompanyLogoChange
+												}
+												ref={companyLogoInputRef}
+												style={{display: 'none'}}
+												type="file"
+											/>
+										</div>
+
+										<small className="form-text text-secondary">
+											{companyLogoUploadTip}
+										</small>
+									</ClayForm.Group>
+
+									<ClayForm.Group>
 										<label>
 											{Liferay.Language.get(
 												'assigned-agents'
 											)}
 										</label>
 
-										<ClayMultiSelect
-											allowDuplicateValues={false}
-											allowsCustomLabel={false}
-											inputName="assignedAgents"
-											items={selectedAgentDefinitions}
-											locator={{
-												label: 'title',
-												value: 'externalReferenceCode',
-											}}
-											onItemsChange={(items) => {
-												setSelectedAgentDefinitions(
-													items
-												);
-											}}
-											sourceItems={
-												availableAgentDefinitions
-											}
-											spritemap={Liferay.Icons.spritemap}
-										/>
+										{agentDefinitionsLoaded && (
+											<ClayMultiSelect
+												allowDuplicateValues={false}
+												allowsCustomLabel={false}
+												disabled={readOnly}
+												inputName="assignedAgents"
+												items={selectedAgentDefinitions}
+												locator={{
+													label: 'title',
+													value: 'externalReferenceCode',
+												}}
+												onItemsChange={(items) => {
+													setSelectedAgentDefinitions(
+														items
+													);
+												}}
+												sourceItems={
+													availableAgentDefinitions
+												}
+												spritemap={
+													Liferay.Icons.spritemap
+												}
+											/>
+										)}
 									</ClayForm.Group>
 
 									<ClayForm.Group>
 										<InputLocalized
+											disabled={readOnly}
 											id="notificationMessage"
 											label={Liferay.Language.get(
 												'notification-message'
@@ -486,6 +716,7 @@ export default function ChatbotForm({
 
 									<ClayForm.Group>
 										<InputLocalized
+											disabled={readOnly}
 											id="placeholderMessage"
 											label={Liferay.Language.get(
 												'placeholder-message'
@@ -511,6 +742,7 @@ export default function ChatbotForm({
 
 									<ClayForm.Group>
 										<InputLocalized
+											disabled={readOnly}
 											id="introMessage"
 											label={Liferay.Language.get(
 												'intro-message'
@@ -534,6 +766,7 @@ export default function ChatbotForm({
 									</ClayForm.Group>
 
 									<ClayToggle
+										disabled={readOnly}
 										label={Liferay.Language.get(
 											'show-company-logo'
 										)}

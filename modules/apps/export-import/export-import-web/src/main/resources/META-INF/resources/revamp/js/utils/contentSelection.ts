@@ -3,21 +3,28 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {PortletDataHandlerControl} from '../types/portletDataHandler';
+import {PreviewPortletDataHandlerControl} from '../types/portletDataHandler';
 
 export type HandlerSelection =
 	| {
-			[key: string]: HandlerSelection;
+			[key: string]: HandlerSelection | boolean | number[];
 	  }
 	| string
 	| true;
 
+export const LAYOUT_SET_LAYOUTS_PORTLET_DATA_KEY =
+	'PORTLET_DATA_com_liferay_layout_admin_web_portlet_LayoutSetLayoutsPortlet';
+
 export function isSelected(
 	value: HandlerSelection | undefined,
-	entry: PortletDataHandlerControl
+	entry: PreviewPortletDataHandlerControl
 ): boolean {
 	if (!value) {
 		return false;
+	}
+
+	if (entry.name === LAYOUT_SET_LAYOUTS_PORTLET_DATA_KEY) {
+		return typeof value === 'object' && !('layoutIds' in value);
 	}
 
 	if (entry.type === 'Choice') {
@@ -25,35 +32,41 @@ export function isSelected(
 	}
 
 	if (
-		!entry.portletDataHandlerControls?.length ||
+		!entry.previewPortletDataHandlerControls?.length ||
 		typeof value !== 'object'
 	) {
 		return true;
 	}
 
-	return entry.portletDataHandlerControls.every((control) =>
-		isSelected(value[control.name], control)
+	return entry.previewPortletDataHandlerControls.every((control) =>
+		isSelected(value[control.name] as HandlerSelection, control)
 	);
 }
 
 export function getInitialSelection(
-	entry: PortletDataHandlerControl
+	entry: PreviewPortletDataHandlerControl
 ): HandlerSelection {
+	if (entry.name === LAYOUT_SET_LAYOUTS_PORTLET_DATA_KEY) {
+		return {privateLayout: false};
+	}
+
 	if (entry.type === 'Choice') {
 		return entry.choices[0].name;
 	}
 
-	if (!entry.portletDataHandlerControls?.length) {
+	if (!entry.previewPortletDataHandlerControls?.length) {
 		return true;
 	}
 
-	const selection: Record<string, HandlerSelection> = {};
+	return getInitialSelections(entry.previewPortletDataHandlerControls);
+}
 
-	entry.portletDataHandlerControls.forEach((control) => {
-		selection[control.name] = getInitialSelection(control);
-	});
-
-	return selection;
+export function getInitialSelections(
+	controls: PreviewPortletDataHandlerControl[]
+): Record<string, HandlerSelection> {
+	return Object.fromEntries(
+		controls.map((control) => [control.name, getInitialSelection(control)])
+	);
 }
 
 export function updateSelection<V>(
@@ -65,4 +78,14 @@ export function updateSelection<V>(
 	const next: Record<string, V> = value ? {...rest, [key]: value} : rest;
 
 	return Object.keys(next).length ? next : undefined;
+}
+
+export function getSelectionSummary(
+	controls: {label: string; name: string}[],
+	selection: Record<string, HandlerSelection>
+): string {
+	return controls
+		.filter((control) => selection[control.name] !== undefined)
+		.map((control) => control.label)
+		.join(', ');
 }

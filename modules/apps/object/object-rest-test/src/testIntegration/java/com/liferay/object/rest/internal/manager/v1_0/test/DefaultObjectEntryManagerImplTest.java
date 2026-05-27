@@ -286,8 +286,8 @@ import org.junit.runner.RunWith;
  */
 @FeatureFlags(
 	featureFlags = {
-		@FeatureFlag(value = "LPD-34594"), @FeatureFlag(value = "LPS-164801"),
-		@FeatureFlag("LPS-172017")
+		@FeatureFlag(value = "LPD-34594"), @FeatureFlag(value = "LPD-69877"),
+		@FeatureFlag(value = "LPS-164801"), @FeatureFlag("LPS-172017")
 	}
 )
 @RunWith(Arquillian.class)
@@ -1435,6 +1435,78 @@ public class DefaultObjectEntryManagerImplTest
 	}
 
 	@Test
+	public void testAddObjectEntryWithAllowStandaloneObjectEntry()
+		throws Exception {
+
+		// Allow standalone object entry setting is disabled
+
+		_companyObjectDefinitionAA =
+			objectDefinitionLocalService.getObjectDefinition(
+				_companyObjectDefinitionAA.getObjectDefinitionId());
+
+		ObjectDefinitionSetting objectDefinitionSetting =
+			_objectDefinitionSettingLocalService.fetchObjectDefinitionSetting(
+				_companyObjectDefinitionAA.getObjectDefinitionId(),
+				ObjectDefinitionSettingConstants.
+					NAME_ALLOW_STANDALONE_OBJECT_ENTRY);
+
+		String originalAllowStandaloneObjectEntryValue =
+			objectDefinitionSetting.getValue();
+
+		objectDefinitionSetting.setValue(StringPool.FALSE);
+
+		objectDefinitionSetting =
+			_objectDefinitionSettingLocalService.updateObjectDefinitionSetting(
+				objectDefinitionSetting);
+
+		AssertUtils.assertFailure(
+			ObjectEntryValuesException.NotAllowedStandaloneObjectEntry.class,
+			StringBundler.concat(
+				"Standalone object entry is not allowed for object definition ",
+				"\"", _companyObjectDefinitionAA.getShortName(), "\""),
+			() -> _addObjectEntry(
+				objectDefinitionLocalService.getObjectDefinition(
+					_companyObjectDefinitionAA.getObjectDefinitionId()),
+				Collections.emptyMap()));
+
+		ObjectEntry relatedObjectEntry =
+			_defaultObjectEntryManager.addRelatedObjectEntry(
+				_simpleDTOConverterContext,
+				new ObjectEntry() {
+					{
+						properties = new HashMap<>();
+					}
+				},
+				_companyObjectEntryA.getId(), _companyObjectRelationshipA_AA);
+
+		Assert.assertNotNull(relatedObjectEntry);
+
+		// Allow standalone object entry setting is enabled
+
+		objectDefinitionSetting.setValue(StringPool.TRUE);
+
+		objectDefinitionSetting =
+			_objectDefinitionSettingLocalService.updateObjectDefinitionSetting(
+				objectDefinitionSetting);
+
+		ObjectEntry objectEntry = _addObjectEntry(
+			objectDefinitionLocalService.getObjectDefinition(
+				_companyObjectDefinitionAA.getObjectDefinitionId()),
+			Collections.emptyMap());
+
+		Assert.assertNotNull(objectEntry);
+
+		objectDefinitionSetting.setValue(
+			originalAllowStandaloneObjectEntryValue);
+
+		_objectDefinitionSettingLocalService.updateObjectDefinitionSetting(
+			objectDefinitionSetting);
+
+		_objectEntryLocalService.deleteObjectEntry(objectEntry.getId());
+		_objectEntryLocalService.deleteObjectEntry(relatedObjectEntry.getId());
+	}
+
+	@Test
 	public void testAddObjectEntryWithAssigneeObjectField() throws Exception {
 		ObjectFieldUtil.addCustomObjectField(
 			new AssigneeObjectFieldBuilder(
@@ -2310,13 +2382,16 @@ public class DefaultObjectEntryManagerImplTest
 		LocalDateTime localDateTime = nowLocalDateTime.truncatedTo(
 			ChronoUnit.MILLIS);
 
+		String localDateTimeString = localDateTime.format(
+			DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS"));
+
 		assertEquals(
 			_defaultObjectEntryManager.addObjectEntry(
 				dtoConverterContext, _objectDefinition2,
 				new ObjectEntry() {
 					{
 						properties = HashMapBuilder.<String, Object>put(
-							"dateTimeObjectFieldName", localDateTime
+							"dateTimeObjectFieldName", localDateTimeString
 						).build();
 					}
 				},
@@ -2324,10 +2399,7 @@ public class DefaultObjectEntryManagerImplTest
 			new ObjectEntry() {
 				{
 					properties = HashMapBuilder.<String, Object>put(
-						"dateTimeObjectFieldName",
-						localDateTime.format(
-							DateTimeFormatter.ofPattern(
-								"yyyy-MM-dd'T'HH:mm:ss.SSS"))
+						"dateTimeObjectFieldName", localDateTimeString
 					).build();
 				}
 			});
@@ -7574,8 +7646,6 @@ public class DefaultObjectEntryManagerImplTest
 
 	@Test
 	public void testPartialUpdateObjectEntry() throws Exception {
-		LocalDateTime nowLocalDateTime = LocalDateTime.now();
-
 		ObjectEntry objectEntry1 = _defaultObjectEntryManager.addObjectEntry(
 			dtoConverterContext, _objectDefinition2,
 			new ObjectEntry() {
@@ -7585,7 +7655,13 @@ public class DefaultObjectEntryManagerImplTest
 						_simpleDateFormat.format(RandomTestUtil.nextDate())
 					).put(
 						"dateTimeObjectFieldName",
-						nowLocalDateTime.truncatedTo(ChronoUnit.MILLIS)
+						LocalDateTime.now(
+						).truncatedTo(
+							ChronoUnit.MILLIS
+						).format(
+							DateTimeFormatter.ofPattern(
+								"yyyy-MM-dd'T'HH:mm:ss.SSS")
+						)
 					).put(
 						"decimalObjectFieldName", RandomTestUtil.randomDouble()
 					).put(

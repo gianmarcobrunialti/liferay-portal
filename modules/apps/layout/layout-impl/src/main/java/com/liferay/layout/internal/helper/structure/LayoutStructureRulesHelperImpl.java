@@ -31,6 +31,10 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
+
+import java.math.BigDecimal;
 
 import java.text.DateFormat;
 
@@ -183,6 +187,42 @@ public class LayoutStructureRulesHelperImpl
 		}
 
 		return jsonArray;
+	}
+
+	private boolean _contains(Object fieldValue, Object value) {
+		if ((fieldValue == null) || (value == null)) {
+			return false;
+		}
+
+		if (fieldValue instanceof JSONArray) {
+			if (!(value instanceof JSONArray)) {
+				return false;
+			}
+
+			JSONArray fieldValueJSONArray = (JSONArray)fieldValue;
+			JSONArray valueJSONArray = (JSONArray)value;
+
+			for (int i = 0; i < valueJSONArray.length(); i++) {
+				if (JSONUtil.hasValue(
+						fieldValueJSONArray, valueJSONArray.get(i))) {
+
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		String fieldValueString = StringUtil.toLowerCase(fieldValue.toString());
+		String valueString = StringUtil.toLowerCase(value.toString());
+
+		if (Validator.isNull(fieldValueString) ||
+			Validator.isNull(valueString)) {
+
+			return false;
+		}
+
+		return fieldValueString.contains(valueString);
 	}
 
 	private boolean _evaluateLayoutStructureRule(
@@ -400,7 +440,12 @@ public class LayoutStructureRulesHelperImpl
 				}
 			}
 
-			map.put(infoField.getUniqueId(), String.valueOf(value));
+			if (value instanceof JSONArray) {
+				map.put(infoField.getUniqueId(), value);
+			}
+			else {
+				map.put(infoField.getUniqueId(), String.valueOf(value));
+			}
 		}
 
 		return map;
@@ -459,21 +504,46 @@ public class LayoutStructureRulesHelperImpl
 			String fieldName = conditionJSONObject.getString("field");
 
 			Object fieldValue = fieldValuesMap.get(fieldName);
+
+			if (Objects.equals(optionsType, "contains")) {
+				return _contains(fieldValue, value);
+			}
+
+			if (Objects.equals(optionsType, "does-not-contain")) {
+				return !_contains(fieldValue, value);
+			}
+
 			String fieldType = fieldTypesMap.get(fieldName);
 
 			if (Objects.equals(optionsType, "greater-than")) {
 				return _isGreaterThan(fieldType, fieldValue, value);
 			}
 
+			if (Objects.equals(optionsType, "greater-than-or-equals")) {
+				return _isGreaterThanOrEqual(fieldType, fieldValue, value);
+			}
+
+			if (Objects.equals(optionsType, "is-empty")) {
+				return _isEmpty(fieldValue);
+			}
+
+			if (Objects.equals(optionsType, "is-not-empty")) {
+				return !_isEmpty(fieldValue);
+			}
+
 			if (Objects.equals(optionsType, "less-than")) {
 				return _isLessThan(fieldType, fieldValue, value);
 			}
 
-			if (Objects.equals(optionsType, "not-equal")) {
-				return !Objects.equals(fieldValue, value);
+			if (Objects.equals(optionsType, "less-than-or-equals")) {
+				return _isLessThanOrEqual(fieldType, fieldValue, value);
 			}
 
-			return Objects.equals(fieldValue, value);
+			if (Objects.equals(optionsType, "not-equal")) {
+				return !_isEqual(fieldValue, value);
+			}
+
+			return _isEqual(fieldValue, value);
 		}
 
 		if (Objects.equals(conditionJSONObject.getString("type"), "user")) {
@@ -485,6 +555,41 @@ public class LayoutStructureRulesHelperImpl
 		}
 
 		return false;
+	}
+
+	private boolean _isEmpty(Object fieldValue) {
+		if (fieldValue == null) {
+			return true;
+		}
+
+		if (fieldValue instanceof JSONArray) {
+			return JSONUtil.isEmpty((JSONArray)fieldValue);
+		}
+
+		return Validator.isNull(fieldValue.toString());
+	}
+
+	private boolean _isEqual(Object fieldValue, Object value) {
+		if ((fieldValue instanceof JSONArray) && (value instanceof JSONArray)) {
+			JSONArray fieldValueJSONArray = (JSONArray)fieldValue;
+			JSONArray valueJSONArray = (JSONArray)value;
+
+			if (fieldValueJSONArray.length() != valueJSONArray.length()) {
+				return false;
+			}
+
+			for (int i = 0; i < valueJSONArray.length(); i++) {
+				if (!JSONUtil.hasValue(
+						fieldValueJSONArray, valueJSONArray.get(i))) {
+
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		return Objects.equals(fieldValue, value);
 	}
 
 	private boolean _isGreaterThan(
@@ -500,7 +605,56 @@ public class LayoutStructureRulesHelperImpl
 				return false;
 			}
 
+			return fieldLocalDateTime.isAfter(valueLocalDateTime);
+		}
+
+		if (Objects.equals(fieldType, "number")) {
+			BigDecimal fieldBigDecimal = _toBigDecimal(fieldValue);
+			BigDecimal valueBigDecimal = _toBigDecimal(value);
+
+			if ((fieldBigDecimal == null) || (valueBigDecimal == null)) {
+				return false;
+			}
+
+			if (fieldBigDecimal.compareTo(valueBigDecimal) > 0) {
+				return true;
+			}
+
+			return false;
+		}
+
+		return false;
+	}
+
+	private boolean _isGreaterThanOrEqual(
+		String fieldType, Object fieldValue, Object value) {
+
+		if (Objects.equals(fieldType, "date") ||
+			Objects.equals(fieldType, "date-time")) {
+
+			LocalDateTime fieldLocalDateTime = _toLocalDateTime(fieldValue);
+			LocalDateTime valueLocalDateTime = _toLocalDateTime(value);
+
+			if ((fieldLocalDateTime == null) || (valueLocalDateTime == null)) {
+				return false;
+			}
+
 			return !fieldLocalDateTime.isBefore(valueLocalDateTime);
+		}
+
+		if (Objects.equals(fieldType, "number")) {
+			BigDecimal fieldBigDecimal = _toBigDecimal(fieldValue);
+			BigDecimal valueBigDecimal = _toBigDecimal(value);
+
+			if ((fieldBigDecimal == null) || (valueBigDecimal == null)) {
+				return false;
+			}
+
+			if (fieldBigDecimal.compareTo(valueBigDecimal) >= 0) {
+				return true;
+			}
+
+			return false;
 		}
 
 		return false;
@@ -519,7 +673,56 @@ public class LayoutStructureRulesHelperImpl
 				return false;
 			}
 
+			return fieldLocalDateTime.isBefore(valueLocalDateTime);
+		}
+
+		if (Objects.equals(fieldType, "number")) {
+			BigDecimal fieldBigDecimal = _toBigDecimal(fieldValue);
+			BigDecimal valueBigDecimal = _toBigDecimal(value);
+
+			if ((fieldBigDecimal == null) || (valueBigDecimal == null)) {
+				return false;
+			}
+
+			if (fieldBigDecimal.compareTo(valueBigDecimal) < 0) {
+				return true;
+			}
+
+			return false;
+		}
+
+		return false;
+	}
+
+	private boolean _isLessThanOrEqual(
+		String fieldType, Object fieldValue, Object value) {
+
+		if (Objects.equals(fieldType, "date") ||
+			Objects.equals(fieldType, "date-time")) {
+
+			LocalDateTime fieldLocalDateTime = _toLocalDateTime(fieldValue);
+			LocalDateTime valueLocalDateTime = _toLocalDateTime(value);
+
+			if ((fieldLocalDateTime == null) || (valueLocalDateTime == null)) {
+				return false;
+			}
+
 			return !fieldLocalDateTime.isAfter(valueLocalDateTime);
+		}
+
+		if (Objects.equals(fieldType, "number")) {
+			BigDecimal fieldBigDecimal = _toBigDecimal(fieldValue);
+			BigDecimal valueBigDecimal = _toBigDecimal(value);
+
+			if ((fieldBigDecimal == null) || (valueBigDecimal == null)) {
+				return false;
+			}
+
+			if (fieldBigDecimal.compareTo(valueBigDecimal) <= 0) {
+				return true;
+			}
+
+			return false;
 		}
 
 		return false;
@@ -543,6 +746,25 @@ public class LayoutStructureRulesHelperImpl
 				).put(
 					"itemId", actionsJSONObject.getString("itemId")
 				));
+		}
+	}
+
+	private BigDecimal _toBigDecimal(Object value) {
+		if (value == null) {
+			return null;
+		}
+
+		try {
+			return new BigDecimal(value.toString());
+		}
+		catch (NumberFormatException numberFormatException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"Unable to parse number from " + value,
+					numberFormatException);
+			}
+
+			return null;
 		}
 	}
 

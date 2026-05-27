@@ -20,6 +20,7 @@ import com.liferay.osb.faro.engine.client.model.AccountLifecycle;
 import com.liferay.osb.faro.engine.client.model.AccountLifecycleMetric;
 import com.liferay.osb.faro.engine.client.model.AccountLifecycleStageMetric;
 import com.liferay.osb.faro.engine.client.model.AccountLifecycleStageRule;
+import com.liferay.osb.faro.engine.client.model.AccountLifecycleStatus;
 import com.liferay.osb.faro.engine.client.model.AccountMetric;
 import com.liferay.osb.faro.engine.client.model.Activity;
 import com.liferay.osb.faro.engine.client.model.ActivityAggregation;
@@ -594,7 +595,7 @@ public class ContactsEngineClientImpl
 	public AccountDetails getAccountDetails(FaroProject faroProject, String id)
 		throws FaroEngineClientException {
 
-		return get(faroProject, Rels.ACCOUNT_DETAILS, id, AccountDetails.class);
+		return get(faroProject, Rels.ACCOUNT, id, AccountDetails.class);
 	}
 
 	@Override
@@ -654,6 +655,38 @@ public class ContactsEngineClientImpl
 	}
 
 	@Override
+	public Results<Individual> getAccountIndividuals(
+		FaroProject faroProject, String accountId, String query, int cur,
+		int delta, String sortString) {
+
+		Map<String, Object> uriVariables = getUriVariables(
+			faroProject, cur, delta, null);
+
+		uriVariables.put("id", accountId);
+
+		if (Validator.isNotNull(query)) {
+			uriVariables.put("query", query);
+		}
+
+		if (Validator.isNotNull(sortString)) {
+			uriVariables.put(
+				"sort",
+				Arrays.asList(
+					StringUtil.replace(
+						sortString, CharPool.COLON, CharPool.COMMA)));
+		}
+
+		PagedModel<?, Individual> pagedModel = get(
+			faroProject, Rels.ACCOUNT_INDIVIDUALS,
+			new ParameterizedTypeReference
+				<EntityModelPagedModel<Individual>>() {
+			},
+			uriVariables);
+
+		return pagedModel.getResults();
+	}
+
+	@Override
 	public Results<IndividualSegment> getAccountIndividualSegments(
 		FaroProject faroProject, String accountId, String channelId,
 		String query, String status, int cur, int delta,
@@ -696,6 +729,51 @@ public class ContactsEngineClientImpl
 
 		return get(
 			faroProject, Rels.ACCOUNT_LIFECYCLE, id, AccountLifecycle.class);
+	}
+
+	@Override
+	public Results<Account> getAccountLifecycleAccounts(
+			FaroProject faroProject, String country, String id, String industry,
+			String query, String stageType, int cur, int delta,
+			String sortString)
+		throws FaroEngineClientException {
+
+		Map<String, Object> uriVariables = getUriVariables(
+			faroProject, cur, delta, null);
+
+		if (Validator.isNotNull(country)) {
+			uriVariables.put("country", country);
+		}
+
+		uriVariables.put("id", id);
+
+		if (Validator.isNotNull(industry)) {
+			uriVariables.put("industry", industry);
+		}
+
+		if (Validator.isNotNull(query)) {
+			uriVariables.put("query", query);
+		}
+
+		if (Validator.isNotNull(sortString)) {
+			uriVariables.put(
+				"sort",
+				Arrays.asList(
+					StringUtil.replace(
+						sortString, CharPool.COLON, CharPool.COMMA)));
+		}
+
+		if (Validator.isNotNull(stageType)) {
+			uriVariables.put("stageType", stageType);
+		}
+
+		PagedModel<?, Account> pagedModel = get(
+			faroProject, Rels.ACCOUNT_LIFECYCLE_ACCOUNTS,
+			new ParameterizedTypeReference<EntityModelPagedModel<Account>>() {
+			},
+			uriVariables);
+
+		return pagedModel.getResults();
 	}
 
 	@Override
@@ -752,6 +830,20 @@ public class ContactsEngineClientImpl
 				<List<AccountLifecycleStageMetric>>() {
 			},
 			uriVariables);
+	}
+
+	@Override
+	public AccountLifecycleStatus getAccountLifecycleStatus(
+			FaroProject faroProject, String accountLifecycleId, String id)
+		throws FaroEngineClientException {
+
+		Map<String, Object> uriVariables = getUriVariables(faroProject, id);
+
+		uriVariables.put("accountLifecycleId", accountLifecycleId);
+
+		return get(
+			faroProject, Rels.ACCOUNT_LIFECYCLE_STATUS, id,
+			AccountLifecycleStatus.class, uriVariables);
 	}
 
 	@Override
@@ -1117,12 +1209,17 @@ public class ContactsEngineClientImpl
 
 	@Override
 	public Results<AssetSummaryCategory> getAssetSummaryCategories(
-		FaroProject faroProject, long channelId, String keywords,
-		String rangeEnd, int rangeKey, String rangeStart, String sort,
-		String vocabularyId, int cur, int delta) {
+		FaroProject faroProject, String accountId, long channelId,
+		String keywords, String rangeEnd, int rangeKey, String rangeStart,
+		String selectedMetric, String sort, String vocabularyId, int cur,
+		int delta) {
 
 		Map<String, Object> uriVariables = getUriVariables(
 			faroProject, cur, delta, null);
+
+		if (Validator.isNotNull(accountId)) {
+			uriVariables.put("accountId", accountId);
+		}
 
 		uriVariables.put("channelId", channelId);
 
@@ -1136,6 +1233,10 @@ public class ContactsEngineClientImpl
 		}
 		else {
 			uriVariables.put("rangeKey", rangeKey);
+		}
+
+		if (Validator.isNotNull(selectedMetric)) {
+			uriVariables.put("selectedMetric", selectedMetric);
 		}
 
 		if (Validator.isNotNull(sort)) {
@@ -1189,12 +1290,16 @@ public class ContactsEngineClientImpl
 
 	@Override
 	public Results<AssetSummaryTag> getAssetSummaryTags(
-		FaroProject faroProject, long channelId, String keywords,
-		String rangeEnd, int rangeKey, String rangeStart, String sort, int cur,
-		int delta) {
+		FaroProject faroProject, String accountId, long channelId,
+		String keywords, String rangeEnd, int rangeKey, String rangeStart,
+		String selectedMetric, String sort, int cur, int delta) {
 
 		Map<String, Object> uriVariables = getUriVariables(
 			faroProject, cur, delta, null);
+
+		if (Validator.isNotNull(accountId)) {
+			uriVariables.put("accountId", accountId);
+		}
 
 		uriVariables.put("channelId", channelId);
 
@@ -1208,6 +1313,10 @@ public class ContactsEngineClientImpl
 		}
 		else {
 			uriVariables.put("rangeKey", rangeKey);
+		}
+
+		if (Validator.isNotNull(selectedMetric)) {
+			uriVariables.put("selectedMetric", selectedMetric);
 		}
 
 		if (Validator.isNotNull(sort)) {

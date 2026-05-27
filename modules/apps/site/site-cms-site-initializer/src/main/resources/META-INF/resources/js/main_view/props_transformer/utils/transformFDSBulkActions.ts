@@ -12,15 +12,16 @@ const BULK_ACTION_PERMISSION_KEYS: Record<string, string> = {
 	'delete': 'delete',
 	'download': 'get',
 	'duplicate': 'duplicate',
-	'edit-categories': 'edit-categories',
+	'edit-categories': 'update',
 	'edit-default-permissions-by-role': 'permissions',
 	'edit-permissions-by-role': 'permissions',
-	'edit-tags': 'edit-tags',
+	'edit-tags': 'update',
 	'expire': 'expire',
 	'export-for-translation': 'get',
 	'move-to': 'update',
 	'permissions': 'permissions',
 	'reset-to-default-permissions': 'permissions',
+	'restore': 'restore',
 };
 
 export default function transformFDSBulkActions(
@@ -44,7 +45,7 @@ export default function transformFDSBulkActions(
 				selectedItems?: Array<any>;
 			} = {}): boolean => {
 				if (allItemsSelectedActive) {
-					return key !== 'download';
+					return key !== 'download' && key !== 'duplicate';
 				}
 
 				if (key === 'download') {

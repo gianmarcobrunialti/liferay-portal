@@ -13,6 +13,7 @@ import com.liferay.osb.faro.engine.client.model.AccountDetails;
 import com.liferay.osb.faro.engine.client.model.AccountLifecycle;
 import com.liferay.osb.faro.engine.client.model.AccountLifecycleMetric;
 import com.liferay.osb.faro.engine.client.model.AccountLifecycleStageMetric;
+import com.liferay.osb.faro.engine.client.model.AccountLifecycleStatus;
 import com.liferay.osb.faro.engine.client.model.AccountMetric;
 import com.liferay.osb.faro.engine.client.model.Activity;
 import com.liferay.osb.faro.engine.client.model.ActivityAggregation;
@@ -355,6 +356,18 @@ public abstract class BaseMockContactsEngineClientImpl
 	}
 
 	@Override
+	public Results<Account> getAccountLifecycleAccounts(
+			FaroProject faroProject, String country, String id, String industry,
+			String query, String stageType, int cur, int delta,
+			String sortString)
+		throws FaroEngineClientException {
+
+		return contactsEngineClient.getAccountLifecycleAccounts(
+			faroProject, country, id, industry, query, stageType, cur, delta,
+			sortString);
+	}
+
+	@Override
 	public List<AccountLifecycleMetric> getAccountLifecycleMetrics(
 			FaroProject faroProject, String country, String id, String industry)
 		throws FaroEngineClientException {
@@ -377,6 +390,15 @@ public abstract class BaseMockContactsEngineClientImpl
 
 		return contactsEngineClient.getAccountLifecycleStageMetrics(
 			faroProject, country, id, industry);
+	}
+
+	@Override
+	public AccountLifecycleStatus getAccountLifecycleStatus(
+			FaroProject faroProject, String accountLifecycleId, String id)
+		throws FaroEngineClientException {
+
+		return contactsEngineClient.getAccountLifecycleStatus(
+			faroProject, accountLifecycleId, id);
 	}
 
 	@Override
@@ -494,13 +516,14 @@ public abstract class BaseMockContactsEngineClientImpl
 
 	@Override
 	public Results<AssetSummaryCategory> getAssetSummaryCategories(
-		FaroProject faroProject, long channelId, String keywords,
-		String rangeEnd, int rangeKey, String rangeStart, String sort,
-		String vocabularyId, int cur, int delta) {
+		FaroProject faroProject, String accountId, long channelId,
+		String keywords, String rangeEnd, int rangeKey, String rangeStart,
+		String selectedMetric, String sort, String vocabularyId, int cur,
+		int delta) {
 
 		return contactsEngineClient.getAssetSummaryCategories(
-			faroProject, channelId, keywords, rangeEnd, rangeKey, rangeStart,
-			sort, vocabularyId, cur, delta);
+			faroProject, accountId, channelId, keywords, rangeEnd, rangeKey,
+			rangeStart, selectedMetric, sort, vocabularyId, cur, delta);
 	}
 
 	@Override
@@ -514,13 +537,13 @@ public abstract class BaseMockContactsEngineClientImpl
 
 	@Override
 	public Results<AssetSummaryTag> getAssetSummaryTags(
-		FaroProject faroProject, long channelId, String keywords,
-		String rangeEnd, int rangeKey, String rangeStart, String sort, int cur,
-		int delta) {
+		FaroProject faroProject, String accountId, long channelId,
+		String keywords, String rangeEnd, int rangeKey, String rangeStart,
+		String selectedMetric, String sort, int cur, int delta) {
 
 		return contactsEngineClient.getAssetSummaryTags(
-			faroProject, channelId, keywords, rangeEnd, rangeKey, rangeStart,
-			sort, cur, delta);
+			faroProject, accountId, channelId, keywords, rangeEnd, rangeKey,
+			rangeStart, selectedMetric, sort, cur, delta);
 	}
 
 	@Override

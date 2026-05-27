@@ -7,8 +7,8 @@ package com.liferay.exportimport.rest.resource.v1_0.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.exportimport.rest.client.dto.v1_0.ExportPreview;
-import com.liferay.exportimport.rest.client.dto.v1_0.PortletDataHandler;
-import com.liferay.exportimport.rest.client.dto.v1_0.PortletDataHandlerSection;
+import com.liferay.exportimport.rest.client.dto.v1_0.PreviewPortletDataHandler;
+import com.liferay.exportimport.rest.client.dto.v1_0.PreviewPortletDataHandlerSection;
 import com.liferay.exportimport.rest.client.resource.v1_0.ExportPreviewResource;
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.constants.ObjectDefinitionSettingConstants;
@@ -32,6 +32,7 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
@@ -77,14 +78,18 @@ public class ExportPreviewResourceTest
 		).authentication(
 			_user.getEmailAddress(), password
 		).endpoint(
-			testCompany.getVirtualHostname(), 8080, "http"
+			testCompany.getVirtualHostname(),
+			PortalUtil.getPortalServerPort(false), "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
 
 	@After
-	public void tearDownObjectDefinitions() throws Exception {
+	@Override
+	public void tearDown() throws Exception {
+		super.tearDown();
+
 		_objectDefinitionLocalService.deleteObjectDefinition(
 			_companyObjectDefinition);
 		_objectDefinitionLocalService.deleteObjectDefinition(
@@ -180,14 +185,17 @@ public class ExportPreviewResourceTest
 	private long _getAdditionCount(
 		ExportPreview exportPreview, String portletId) {
 
-		for (PortletDataHandlerSection portletDataHandlerSection :
-				exportPreview.getPortletDataHandlerSections()) {
+		String name = "PORTLET_DATA_" + portletId;
 
-			for (PortletDataHandler portletDataHandler :
-					portletDataHandlerSection.getPortletDataHandlers()) {
+		for (PreviewPortletDataHandlerSection previewPortletDataHandlerSection :
+				exportPreview.getPreviewPortletDataHandlerSections()) {
 
-				if (portletId.equals(portletDataHandler.getName())) {
-					return portletDataHandler.getAdditionCount();
+			for (PreviewPortletDataHandler previewPortletDataHandler :
+					previewPortletDataHandlerSection.
+						getPreviewPortletDataHandlers()) {
+
+				if (name.equals(previewPortletDataHandler.getName())) {
+					return previewPortletDataHandler.getAdditionCount();
 				}
 			}
 		}

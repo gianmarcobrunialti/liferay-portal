@@ -110,8 +110,6 @@ if (alignment.equals("full-width")) {
 		).put(
 			"disabled", disabled
 		).put(
-			"guestOrderEnabled", guestOrderEnabled
-		).put(
 			"productId", productId
 		).put(
 			"settings",

@@ -10,7 +10,9 @@ import userEvent from '@testing-library/user-event';
 import React from 'react';
 
 import {NewImport} from '../../../../../src/main/resources/META-INF/resources/revamp/js/pages/import/NewImport';
-import {mockPortletDataHandlerSections} from '../../mocks/mockPortletDataHandlerSections';
+import {postImportPreview} from '../../../../../src/main/resources/META-INF/resources/revamp/js/services/postImportPreview';
+import {mockImportPreview} from '../../mocks/mockImportPreview';
+import {mockSectionsForFilterTest} from '../../mocks/mockSectionsForFilterTest';
 
 jest.mock('frontend-js-web', () => {
 	const actual = jest.requireActual('frontend-js-web');
@@ -28,19 +30,7 @@ jest.mock(
 	'../../../../../src/main/resources/META-INF/resources/revamp/js/services/postImportPreview',
 	() => ({
 		postImportPreview: jest.fn(() =>
-			Promise.resolve({
-				data: {
-					additionCount: 0,
-					author: 'Test User',
-					deletionCount: 0,
-					exportDate: '2000-07-27T00:00:00Z',
-					fileEntryId: 1,
-					fileName: 'site.lar',
-					fileSize: 4096,
-					portletDataHandlerSections: mockPortletDataHandlerSections,
-				},
-				error: null,
-			})
+			Promise.resolve({data: mockImportPreview, error: null})
 		),
 	})
 );
@@ -76,7 +66,35 @@ const uploadFile = async (fileName = 'site.lar') => {
 	jest.useRealTimers();
 };
 
+const goToDataSelectionStep = async () => {
+	const result = renderComponent();
+
+	await user.type(screen.getByLabelText(/^name/i), 'My import');
+
+	await uploadFile('site.lar');
+
+	await waitFor(() => {
+		expect(screen.getByRole('button', {name: /continue/i})).toBeEnabled();
+	});
+
+	await user.click(screen.getByRole('button', {name: /continue/i}));
+
+	return result;
+};
+
 describe('NewImport', () => {
+	beforeAll(() => {
+		(Liferay.Language.get as jest.Mock).mockImplementation(
+			(key: string) =>
+				({
+					'collapse-x': 'Collapse {0}',
+					'expand-x': 'Expand {0}',
+					'hide-all-x': 'Hide All {0}',
+					'show-all-x': 'Show All {0}',
+				})[key] ?? key
+		);
+	});
+
 	beforeEach(() => {
 		user = userEvent.setup();
 	});
@@ -197,6 +215,100 @@ describe('NewImport', () => {
 	});
 
 	it('shows the file summary and the lar contents on the Data Selection step after uploading a file and clicking Continue', async () => {
+		(postImportPreview as jest.Mock).mockImplementationOnce(() =>
+			Promise.resolve({
+				data: {...mockImportPreview, deletionCount: 0},
+				error: null,
+			})
+		);
+
+		const {container} = await goToDataSelectionStep();
+
+		expect(screen.getByText('file-summary')).toBeInTheDocument();
+		expect(screen.getAllByText('site.lar').length).toBeGreaterThan(0);
+		expect(screen.getByText('Test User')).toBeInTheDocument();
+		expect(screen.getByText('5 days ago')).toBeInTheDocument();
+		expect(screen.getByText('4 KB')).toBeInTheDocument();
+
+		expect(screen.getByText('Design')).toBeInTheDocument();
+
+		await user.click(screen.getByRole('checkbox', {name: 'Design'}));
+
+		await user.click(screen.getByRole('button', {name: 'Expand Design'}));
+
+		expect(
+			screen.getByRole('checkbox', {name: 'Theme Settings'})
+		).toBeChecked();
+		expect(screen.getByRole('checkbox', {name: 'Logo'})).toBeChecked();
+		expect(screen.getByRole('checkbox', {name: 'Fragments'})).toBeChecked();
+
+		expect(
+			screen.getByLabelText(/^import-permissions/)
+		).toBeInTheDocument();
+		expect(
+			screen.queryByLabelText(/^replicate-selected-deletions/)
+		).not.toBeInTheDocument();
+
+		await checkAccessibility({context: container});
+	});
+
+	it('shows the section as indeterminate and summarizes the selected handlers when the selection is partial', async () => {
+		await goToDataSelectionStep();
+
+		await user.click(screen.getByRole('button', {name: 'Expand Design'}));
+
+		await user.click(
+			screen.getByRole('checkbox', {name: 'Theme Settings'})
+		);
+		await user.click(screen.getByRole('checkbox', {name: 'Logo'}));
+
+		expect(
+			screen.getByRole('checkbox', {name: 'Design'})
+		).toBePartiallyChecked();
+
+		expect(screen.getByText('Theme Settings, Logo')).toBeInTheDocument();
+	});
+
+	it('reveals and hides the nested handler controls through the Show all and Hide all toggle', async () => {
+		await goToDataSelectionStep();
+
+		await user.click(
+			screen.getByRole('button', {name: 'Expand Content & Data'})
+		);
+
+		expect(
+			screen.queryByRole('checkbox', {name: 'Version History'})
+		).not.toBeInTheDocument();
+
+		await user.click(
+			screen.getByRole('button', {name: 'Show All Web Content'})
+		);
+
+		expect(
+			screen.getByRole('checkbox', {name: 'Version History'})
+		).toBeInTheDocument();
+
+		await user.click(
+			screen.getByRole('button', {name: 'Hide All Web Content'})
+		);
+
+		expect(
+			screen.queryByRole('checkbox', {name: 'Version History'})
+		).not.toBeInTheDocument();
+	});
+
+	it('filters deletions-only sections based on the deletions toggle', async () => {
+		(postImportPreview as jest.Mock).mockImplementationOnce(() =>
+			Promise.resolve({
+				data: {
+					...mockImportPreview,
+					previewPortletDataHandlerSections:
+						mockSectionsForFilterTest,
+				},
+				error: null,
+			})
+		);
+
 		renderComponent();
 
 		await user.type(screen.getByLabelText(/^name/i), 'My import');
@@ -211,13 +323,15 @@ describe('NewImport', () => {
 
 		await user.click(screen.getByRole('button', {name: /continue/i}));
 
-		expect(screen.getByText('file-summary')).toBeInTheDocument();
-		expect(screen.getAllByText('site.lar').length).toBeGreaterThan(0);
-		expect(screen.getByText('Test User')).toBeInTheDocument();
-		expect(screen.getByText('5 days ago')).toBeInTheDocument();
-		expect(screen.getByText('4 KB')).toBeInTheDocument();
+		expect(screen.getByText('Additions Only')).toBeInTheDocument();
+		expect(screen.queryByText('Deletions Only')).not.toBeInTheDocument();
+		expect(screen.getByText('Both')).toBeInTheDocument();
+		expect(screen.getByText('No Counts')).toBeInTheDocument();
 
-		expect(screen.getByText('Design')).toBeInTheDocument();
-		expect(screen.getByText('Theme Settings')).toBeInTheDocument();
+		await user.click(
+			screen.getByLabelText(/^replicate-selected-deletions/)
+		);
+
+		expect(screen.getByText('Deletions Only')).toBeInTheDocument();
 	});
 });

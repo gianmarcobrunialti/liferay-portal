@@ -6,8 +6,6 @@
 package com.liferay.commerce.shop.by.diagram.web.internal.type;
 
 import com.liferay.account.model.AccountEntry;
-import com.liferay.commerce.configuration.CommerceOrderCheckoutConfiguration;
-import com.liferay.commerce.constants.CommerceConstants;
 import com.liferay.commerce.constants.CommerceWebKeys;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.currency.model.CommerceCurrency;
@@ -24,11 +22,9 @@ import com.liferay.commerce.shop.by.diagram.web.internal.util.CSDiagramSettingUt
 import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
-import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -176,11 +172,6 @@ public class DefaultCSDiagramType implements CSDiagramType {
 			if (accountEntry != null) {
 				hashMapWrapper.put(
 					"commerceAccountId", accountEntry.getAccountEntryId());
-				hashMapWrapper.put(
-					"guestOrderEnabled",
-					_isGuestOrderEnabled(
-						accountEntry,
-						commerceContext.getCommerceChannelGroupId()));
 			}
 
 			CommerceCurrency commerceCurrency =
@@ -195,27 +186,6 @@ public class DefaultCSDiagramType implements CSDiagramType {
 
 		return hashMapWrapper.build();
 	}
-
-	private boolean _isGuestOrderEnabled(
-			AccountEntry accountEntry, long commerceChannelGroupId)
-		throws Exception {
-
-		if (!accountEntry.isGuestAccount()) {
-			return false;
-		}
-
-		CommerceOrderCheckoutConfiguration commerceOrderCheckoutConfiguration =
-			_configurationProvider.getConfiguration(
-				CommerceOrderCheckoutConfiguration.class,
-				new GroupServiceSettingsLocator(
-					commerceChannelGroupId,
-					CommerceConstants.SERVICE_NAME_COMMERCE_ORDER));
-
-		return commerceOrderCheckoutConfiguration.guestCheckoutEnabled();
-	}
-
-	@Reference
-	private ConfigurationProvider _configurationProvider;
 
 	@Reference
 	private CPFriendlyURL _cpFriendlyURL;

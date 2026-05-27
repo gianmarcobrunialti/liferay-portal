@@ -349,6 +349,7 @@ export default {
 	'go-to-dashboard': 'Go to Dashboard',
 	'go-to-download': 'Go to Download',
 	'go-to-dxp': 'Go to DXP',
+	'go-to-liferay-data-platform': 'Go to Liferay Data Platform',
 	'go-to-marketplace': 'Go to Marketplace',
 	'go-to-my-apps': 'Go to My Apps',
 	'go-to-ssa-trial-listing': 'Go to SSA Trial Listing',
@@ -372,7 +373,7 @@ export default {
 	'i-have-read-and-agree-to-the-liferay-end-user-agreement':
 		'I have read and agree to the Liferay End User Agreement',
 	'i-have-read-and-agree-to-the-terms-and-conditions-above':
-		'I have read and agree to the terms and conditions above:',
+		'I have read and agree to the terms and conditions above',
 	'id': 'ID',
 	'if-the-app-is-compatible-with-different-updates-of-74-please-upload-multiple-packages-for-each-update-or-update-the-compatibility-range':
 		'If the app is compatible with different updates of 7.4, please upload multiple packages for each update or update the compatibility range.',
@@ -911,6 +912,7 @@ export default {
 	'when-adding-app-versions-you-can-use-your-own-numbering-system-but-be-sure-it-is-consistent-and-understandable-by-the-customer':
 		'When adding app versions, you can use your own numbering system, but be sure it is consistent and understandable by the customer.',
 	'workflow-action': 'Workflow Action',
+	'workspace': 'Workspace',
 	'workspace-friendly-url': 'Workspace Friendly URL',
 	'workspace-info': 'Workspace Info',
 	'workspace-name': 'Workspace Name',

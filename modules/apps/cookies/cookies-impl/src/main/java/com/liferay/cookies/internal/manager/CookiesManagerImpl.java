@@ -255,6 +255,15 @@ public class CookiesManagerImpl implements CookiesManager {
 	}
 
 	@Override
+	public int getConsentType(Cookie cookie) {
+		if (_knownCookies.containsKey(cookie.getName())) {
+			return _knownCookies.get(cookie.getName());
+		}
+
+		return -1;
+	}
+
+	@Override
 	public String getCookieValue(
 		String cookieName, HttpServletRequest httpServletRequest) {
 

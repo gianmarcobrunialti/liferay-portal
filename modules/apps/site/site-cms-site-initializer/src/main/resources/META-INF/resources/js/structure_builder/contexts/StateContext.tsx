@@ -30,7 +30,6 @@ import findAvailableFieldName from '../utils/findAvailableFieldName';
 import findChild from '../utils/findChild';
 import {getChildrenUuids} from '../utils/getChildrenUuids';
 import getRandomId from '../utils/getRandomId';
-import getRandomName from '../utils/getRandomName';
 import getUuid from '../utils/getUuid';
 import normalizeString from '../utils/normalizeString';
 import addChild from '../utils/state/addChild';
@@ -507,27 +506,12 @@ function reducer(state: State, action: Action): State {
 					uuid: child.parent,
 				}) || nextStructure) as Structure | RepeatableGroup;
 
-				const copyUuid = getUuid();
-
-				const copy = {...child, uuid: copyUuid};
-
-				if (copy.type === 'referenced-structure') {
-					copy.relationshipName = getRandomName();
-				}
-				else if (copy.type === 'repeatable-group') {
-					copy.erc = getRandomId();
-					copy.name = getRandomName({capitalize: true});
-					copy.relationshipERC = getRandomId();
-					copy.relationshipName = getRandomName();
-				}
-				else {
-					copy.erc = getRandomId();
-					copy.name = findAvailableFieldName(
-						parent.children,
-						state.history.deletedChildren,
-						child.name
-					);
-				}
+				const copy = cloneChild({
+					child,
+					deletedChildren: state.history.deletedChildren,
+					parent: parent.uuid,
+					siblings: parent.children,
+				});
 
 				const updatedChildren = addChild({
 					child: copy,
@@ -536,7 +520,7 @@ function reducer(state: State, action: Action): State {
 
 				nextStructure = {...nextStructure, children: updatedChildren};
 
-				newSelection.push(copyUuid);
+				newSelection.push(copy.uuid);
 			}
 
 			return {
@@ -659,8 +643,7 @@ function reducer(state: State, action: Action): State {
 			const {name, uuid} = action;
 			const {structure} = state;
 
-			const defaultLanguageId =
-				Liferay.ThemeDisplay.getDefaultLanguageId();
+			const languageId = Liferay.ThemeDisplay.getLanguageId();
 
 			if (uuid === structure.uuid) {
 				return {
@@ -668,7 +651,7 @@ function reducer(state: State, action: Action): State {
 					renamingItemUuid: null,
 					structure: {
 						...structure,
-						label: {...structure.label, [defaultLanguageId]: name},
+						label: {...structure.label, [languageId]: name},
 					},
 				};
 			}
@@ -682,7 +665,7 @@ function reducer(state: State, action: Action): State {
 			const children = updateChild({
 				child: {
 					...child,
-					label: {...child.label, [defaultLanguageId]: name},
+					label: {...child.label, [languageId]: name},
 				},
 				root: structure,
 			});
@@ -1119,7 +1102,7 @@ function getDefaultChildren(structureUuid: Uuid) {
 	const children = new Map();
 
 	const title = getDefaultField({
-		label: Liferay.Language.get('title'),
+		languageKey: 'title',
 		locked: true,
 		name: 'title',
 		parent: structureUuid,
@@ -1131,7 +1114,7 @@ function getDefaultChildren(structureUuid: Uuid) {
 
 	if (type === 'L_CMS_FILE_TYPES') {
 		const file = getDefaultField({
-			label: Liferay.Language.get('file'),
+			languageKey: 'file',
 			locked: true,
 			name: 'file',
 			parent: structureUuid,

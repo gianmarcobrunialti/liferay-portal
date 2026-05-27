@@ -42,6 +42,8 @@ public interface CookiesManager {
 		String domain, HttpServletRequest httpServletRequest,
 		HttpServletResponse httpServletResponse, String... cookieNames);
 
+	public int getConsentType(Cookie cookie);
+
 	public String getCookieValue(
 		String cookieName, HttpServletRequest httpServletRequest);
 

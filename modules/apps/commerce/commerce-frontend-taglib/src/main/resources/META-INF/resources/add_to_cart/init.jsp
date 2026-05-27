@@ -30,7 +30,6 @@ long commerceOrderId = (long)request.getAttribute("liferay-commerce:add-to-cart:
 long cpInstanceId = (long)request.getAttribute("liferay-commerce:add-to-cart:cpInstanceId");
 CPInstanceUnitOfMeasure cpInstanceUnitOfMeasure = (CPInstanceUnitOfMeasure)request.getAttribute("liferay-commerce:add-to-cart:cpInstanceUnitOfMeasure");
 boolean disabled = (boolean)request.getAttribute("liferay-commerce:add-to-cart:disabled");
-boolean guestOrderEnabled = (boolean)request.getAttribute("liferay-commerce:add-to-cart:guestOrderEnabled");
 boolean iconOnly = (boolean)request.getAttribute("liferay-commerce:add-to-cart:iconOnly");
 boolean inCart = (boolean)request.getAttribute("liferay-commerce:add-to-cart:inCart");
 boolean inline = (boolean)request.getAttribute("liferay-commerce:add-to-cart:inline");
