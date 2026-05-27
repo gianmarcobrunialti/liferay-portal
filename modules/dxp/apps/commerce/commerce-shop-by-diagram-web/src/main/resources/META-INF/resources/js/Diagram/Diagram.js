@@ -41,7 +41,6 @@ function Diagram({
 	commerceCurrencyCode,
 	datasetDisplayId,
 	diagramId,
-	guestOrderEnabled,
 	imageURL,
 	isAdmin,
 	namespace,
@@ -50,10 +49,7 @@ function Diagram({
 	productBaseURL,
 	productId,
 }) {
-	const commerceCart = useCommerceCart({
-		guestOrderEnabled,
-		initialCart: {id: cartId},
-	});
+	const commerceCart = useCommerceCart({id: cartId});
 	const commerceAccount = useCommerceAccount({id: initialAccountId});
 	const chartInstanceRef = useRef(null);
 	const pinsRadiusInitializedRef = useRef(false);

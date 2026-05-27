@@ -179,7 +179,17 @@ public class TransferHeadersHelperUtil {
 				return;
 			}
 
-			CookiesManagerUtil.addCookie(cookie, null, _httpServletResponse);
+			int consentType = CookiesManagerUtil.getConsentType(cookie);
+
+			if (consentType < 0) {
+				CookiesManagerUtil.addCookie(
+					cookie, null, _httpServletResponse);
+			}
+			else {
+				CookiesManagerUtil.addCookie(
+					consentType, cookie, null, _httpServletResponse,
+					cookie.getSecure());
+			}
 		}
 
 		@Override

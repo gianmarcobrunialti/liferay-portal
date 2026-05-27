@@ -16,8 +16,26 @@ import {
 	SIGN_IN_TO_CHECKOUT,
 	SUBMIT_ORDER,
 } from './util/constants';
-import {storeImmediateCheckout} from './util/guestModal';
 import {canSubmit} from './util/index';
+
+function _immediateCheckoutRedirect(signInURL) {
+	const redirectURL = new URL(window.location.href);
+
+	redirectURL.searchParams.set('commerceImmediateCheckout', 'true');
+
+	const url = new URL(signInURL, window.location.origin);
+
+	const redirectKey =
+		[...url.searchParams.keys()].find((key) => key.endsWith('redirect')) ??
+		'redirect';
+
+	url.searchParams.set(
+		redirectKey,
+		redirectURL.pathname + redirectURL.search
+	);
+
+	return url.pathname + url.search;
+}
 
 function OrderButton({disabled = false}) {
 	const {
@@ -59,8 +77,6 @@ function OrderButton({disabled = false}) {
 						onClick={() => {
 							closeCart();
 
-							storeImmediateCheckout(true);
-
 							setGuestSignInVisible(true);
 						}}
 					>
@@ -82,7 +98,7 @@ function OrderButton({disabled = false}) {
 						<GuestModal
 							isVisible={guestSignInVisible}
 							setIsVisible={setGuestSignInVisible}
-							signInURL={signInURL}
+							signInURL={_immediateCheckoutRedirect(signInURL)}
 						/>
 					) : null}
 				</>

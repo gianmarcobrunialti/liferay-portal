@@ -60,7 +60,6 @@ function DiagramTable({
 	channelId,
 	commerceAccountId: initialAccountId,
 	commerceCurrencyCode,
-	guestOrderEnabled,
 	isAdmin,
 	orderUUID,
 	productId,
@@ -73,10 +72,7 @@ function DiagramTable({
 	const [query, setQuery] = useState('');
 	const [refreshTrigger, setRefreshTrigger] = useState(false);
 	const commerceAccount = useCommerceAccount({id: initialAccountId});
-	const commerceCart = useCommerceCart({
-		guestOrderEnabled,
-		initialCart: {id: cartId},
-	});
+	const commerceCart = useCommerceCart({id: cartId});
 	const wrapperRef = useRef();
 
 	const handleDiagramUpdated = useCallback(

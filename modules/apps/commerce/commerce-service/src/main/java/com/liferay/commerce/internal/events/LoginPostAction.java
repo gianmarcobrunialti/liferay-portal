@@ -39,6 +39,7 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -320,7 +321,13 @@ public class LoginPostAction extends Action {
 
 		AccountEntry accountEntry = null;
 		CommerceOrder commerceOrder = null;
-		boolean immediateCheckout = false;
+
+		boolean immediateCheckout = StringUtil.equals(
+			HttpComponentsUtil.getParameter(
+				GetterUtil.getString(
+					httpServletRequest.getParameter("redirect")),
+				_IMMEDIATE_CHECKOUT_PARAM_NAME, false),
+			Boolean.TRUE.toString());
 
 		User user = _portal.getUser(httpServletRequest);
 
@@ -358,15 +365,6 @@ public class LoginPostAction extends Action {
 					cookieName);
 
 				String cookieValue = cookie.getValue();
-
-				if (cookieValue.endsWith(
-						CommerceCheckoutWebKeys.SUFFIX_IMMEDIATE_CHECKOUT)) {
-
-					cookieValue = StringUtil.removeSubstring(
-						cookieValue,
-						CommerceCheckoutWebKeys.SUFFIX_IMMEDIATE_CHECKOUT);
-					immediateCheckout = true;
-				}
 
 				String uuid = StringUtil.extractFirst(
 					cookieValue, StringPool.PIPE);
@@ -458,6 +456,9 @@ public class LoginPostAction extends Action {
 
 	private static final String _COOKIE_NAME_PREFIX_COMMERCE_ORDER =
 		CommerceOrder.class.getName() + StringPool.POUND;
+
+	private static final String _IMMEDIATE_CHECKOUT_PARAM_NAME =
+		"commerceImmediateCheckout";
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		LoginPostAction.class);

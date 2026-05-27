@@ -32,7 +32,6 @@ import com.liferay.commerce.service.CommerceOrderItemLocalService;
 import com.liferay.commerce.util.CommerceUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -175,9 +174,6 @@ public class AddToCartTag extends IncludeTag {
 			AccountEntry accountEntry = commerceContext.getAccountEntry();
 
 			if (accountEntry != null) {
-				_guestOrderEnabled = _isGuestOrderEnabled(
-					accountEntry, _commerceChannelGroupId);
-
 				if (accountEntry.isBusinessAccount()) {
 					ThemeDisplay themeDisplay =
 						(ThemeDisplay)httpServletRequest.getAttribute(
@@ -318,9 +314,6 @@ public class AddToCartTag extends IncludeTag {
 		httpServletRequest.setAttribute(
 			"liferay-commerce:add-to-cart:disabled", _disabled);
 		httpServletRequest.setAttribute(
-			"liferay-commerce:add-to-cart:guestOrderEnabled",
-			_guestOrderEnabled);
-		httpServletRequest.setAttribute(
 			"liferay-commerce:add-to-cart:iconOnly", _iconOnly);
 		httpServletRequest.setAttribute(
 			"liferay-commerce:add-to-cart:inCart", _inCart);
@@ -439,7 +432,6 @@ public class AddToCartTag extends IncludeTag {
 		_cpInstanceUnitOfMeasure = null;
 		_cpInstanceUnitOfMeasureLocalService = null;
 		_disabled = false;
-		_guestOrderEnabled = false;
 		_iconOnly = false;
 		_inCart = false;
 		_inline = false;
@@ -459,24 +451,6 @@ public class AddToCartTag extends IncludeTag {
 	@Override
 	protected String getPage() {
 		return _PAGE;
-	}
-
-	private boolean _isGuestOrderEnabled(
-			AccountEntry accountEntry, long commerceChannelGroupId)
-		throws PortalException {
-
-		if (!accountEntry.isGuestAccount()) {
-			return false;
-		}
-
-		CommerceOrderCheckoutConfiguration commerceOrderCheckoutConfiguration =
-			_configurationProvider.getConfiguration(
-				CommerceOrderCheckoutConfiguration.class,
-				new GroupServiceSettingsLocator(
-					commerceChannelGroupId,
-					CommerceConstants.SERVICE_NAME_COMMERCE_ORDER));
-
-		return commerceOrderCheckoutConfiguration.guestCheckoutEnabled();
 	}
 
 	private static final String _PAGE = "/add_to_cart/page.jsp";
@@ -503,7 +477,6 @@ public class AddToCartTag extends IncludeTag {
 	private CPInstanceUnitOfMeasureLocalService
 		_cpInstanceUnitOfMeasureLocalService;
 	private boolean _disabled;
-	private boolean _guestOrderEnabled;
 	private boolean _iconOnly;
 	private boolean _inCart;
 	private boolean _inline;

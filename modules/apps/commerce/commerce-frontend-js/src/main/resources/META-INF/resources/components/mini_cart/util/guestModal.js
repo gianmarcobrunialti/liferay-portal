@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {COOKIE_TYPES, addParams, fetch, getCookie} from 'frontend-js-web';
+import {addParams, fetch} from 'frontend-js-web';
 
 import {
 	ACCOUNT_ENTRY_TYPE_BUSINESS,
@@ -12,11 +12,7 @@ import {
 	SITE_TYPE_B2C,
 } from '../../../utilities/constants';
 import CommerceCookie from '../../../utilities/cookies';
-import {
-	ACCOUNT_INFORMATION_COOKIE_IDENTIFIER,
-	GUEST_COMMERCE_ORDER_COOKIE_IDENTIFIER,
-	SUFFIX_IMMEDIATE_CHECKOUT,
-} from '../../add_to_cart/constants';
+import {ACCOUNT_INFORMATION_COOKIE_IDENTIFIER} from '../../add_to_cart/constants';
 import ForgotPasswordModalView from '../GuestSignInModalViews/ForgotPasswordModalView';
 import SignInModalView from '../GuestSignInModalViews/SignInModalView';
 import SignUpModalView from '../GuestSignInModalViews/SignUpModalView';
@@ -240,26 +236,6 @@ export function storeAccountInformation({accountName, accountType, userEmail}) {
 		groupId,
 		`accountEntryName=${accountName}#accountEntryType=${accountType}#userEmailAddress=${userEmail}`
 	);
-}
-
-export function storeImmediateCheckout(store = true) {
-	const {commerceChannelGroupId: groupId} = Liferay.CommerceContext;
-
-	const cookieKey = `${GUEST_COMMERCE_ORDER_COOKIE_IDENTIFIER}${groupId}`;
-
-	const [cookieValue = ''] =
-		getCookie(cookieKey, COOKIE_TYPES.NECESSARY)?.split('#') ?? [];
-
-	if (cookieValue) {
-		const cookie = new CommerceCookie(
-			GUEST_COMMERCE_ORDER_COOKIE_IDENTIFIER
-		);
-
-		cookie.setValue(
-			groupId,
-			`${cookieValue}${store ? SUFFIX_IMMEDIATE_CHECKOUT : ''}`
-		);
-	}
 }
 
 function toPopUp(url) {

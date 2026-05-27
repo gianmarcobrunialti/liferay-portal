@@ -73,6 +73,8 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.events.ServicePreAction;
 import com.liferay.portal.events.ThemeServicePreAction;
+import com.liferay.portal.kernel.cookies.CookiesManagerUtil;
+import com.liferay.portal.kernel.cookies.constants.CookiesConstants;
 import com.liferay.portal.kernel.encryptor.Encryptor;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Country;
@@ -107,6 +109,7 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 
 import jakarta.ws.rs.core.MultivaluedMap;
@@ -116,11 +119,15 @@ import java.math.BigDecimal;
 
 import java.security.Key;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -444,6 +451,39 @@ public class CartResourceImpl extends BaseCartResourceImpl {
 			cart, commerceChannel.getGroupId());
 
 		_updateOrder(commerceOrder, cart);
+
+		if ((contextUser == null) || contextUser.isGuestUser()) {
+			CommerceOrderCheckoutConfiguration
+				commerceOrderCheckoutConfiguration =
+					_configurationProvider.getConfiguration(
+						CommerceOrderCheckoutConfiguration.class,
+						new GroupServiceSettingsLocator(
+							commerceChannel.getGroupId(),
+							CommerceConstants.SERVICE_NAME_COMMERCE_ORDER));
+
+			if (commerceOrderCheckoutConfiguration.guestCheckoutEnabled()) {
+				Cookie cookie = new Cookie(
+					CommerceOrder.class.getName() + StringPool.POUND +
+						commerceOrder.getGroupId(),
+					commerceOrder.getUuid() + StringPool.PIPE +
+						_formatDate(commerceOrder.getCreateDate()));
+
+				_initThemeDisplay(commerceOrder);
+
+				String domain = CookiesManagerUtil.getDomain(
+					contextHttpServletRequest);
+
+				if (Validator.isNotNull(domain)) {
+					cookie.setDomain(domain);
+				}
+
+				cookie.setMaxAge(CookiesConstants.MAX_AGE);
+
+				CookiesManagerUtil.addCookie(
+					CookiesConstants.CONSENT_TYPE_NECESSARY, cookie,
+					contextHttpServletRequest, contextHttpServletResponse);
+			}
+		}
 
 		return _toCart(commerceOrder.getCommerceOrderId());
 	}
@@ -858,6 +898,15 @@ public class CartResourceImpl extends BaseCartResourceImpl {
 		}
 
 		return cart;
+	}
+
+	private String _formatDate(Date date) {
+		DateFormat dateFormat = new SimpleDateFormat(
+			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+
+		dateFormat.setTimeZone(TimeZone.getTimeZone(StringPool.UTC));
+
+		return dateFormat.format(date);
 	}
 
 	private long[] _getCommerceAccountIds(long groupId) throws PortalException {
