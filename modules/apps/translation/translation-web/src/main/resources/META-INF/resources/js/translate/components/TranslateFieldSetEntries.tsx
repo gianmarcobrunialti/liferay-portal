@@ -24,6 +24,34 @@ import {FETCH_STATUS} from '../constants';
 
 const noop = () => {};
 
+// LPP-64525 When a CKEditor 5 field is in Source Editing mode, an external
+// update of the editor data (for example, an auto-translation) updates the
+// editor model but not the source <textarea> that is shown to the user. This
+// refreshes that <textarea> so the new content becomes visible.
+
+const refreshSourceEditingTextAreas = (editor: TEditor, data: string) => {
+	const sourceEditingPlugin: SourceEditing =
+		editor.plugins.get('SourceEditing');
+
+	if (!sourceEditingPlugin || !sourceEditingPlugin.isSourceEditingMode) {
+		return;
+	}
+
+	for (const [rootName] of editor.editing.view.domRoots) {
+		const replacedRoot =
+
+			// @ts-ignore
+
+			sourceEditingPlugin._replacedRoots?.get(rootName);
+
+		const textarea = replacedRoot?.querySelector('textarea');
+
+		if (textarea) {
+			textarea.value = data;
+		}
+	}
+};
+
 enum ELangDir {
 	LTR = 'ltr',
 	RTL = 'rtl',
@@ -148,6 +176,7 @@ const TranslateFieldEditor = ({
 	const [content, setContent] = useState(targetContent);
 
 	const editorRef = useRef<any>();
+	const ckEditor5Ref = useRef<TEditor>();
 	const internalUpdateRef = useRef(true);
 
 	const handleOnChange = (data: string) => {
@@ -157,6 +186,8 @@ const TranslateFieldEditor = ({
 	};
 
 	const handleOnReady = (editor: TEditor) => {
+		ckEditor5Ref.current = editor;
+
 		const sourceEditingPlugin: SourceEditing =
 			editor.plugins.get('SourceEditing');
 
@@ -199,6 +230,10 @@ const TranslateFieldEditor = ({
 		}
 		else {
 			internalUpdateRef.current = false;
+		}
+
+		if (ckEditor5Ref.current) {
+			refreshSourceEditingTextAreas(ckEditor5Ref.current, targetContent);
 		}
 
 		setContent(targetContent);
