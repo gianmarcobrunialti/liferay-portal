@@ -6,32 +6,30 @@
 package com.liferay.cdn.internal.layout;
 
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
+import com.liferay.asset.publisher.util.AssetPublisherHelper;
 import com.liferay.cdn.cache.tag.CDNCacheTagBuilder;
 import com.liferay.cdn.configuration.CDNConfiguration;
 import com.liferay.cdn.internal.cache.tag.CDNCacheTagHeaderUtil;
 import com.liferay.cdn.internal.template.CDNTemplateRegistry;
 import com.liferay.cdn.internal.template.ConfiguredCDNTemplate;
+import com.liferay.fragment.service.FragmentEntryLinkLocalService;
+import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
+import com.liferay.layout.page.template.service.LayoutPageTemplateStructureRelLocalService;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
-import com.liferay.portal.kernel.cdn.CDNCacheTagsUtil;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
-import com.liferay.portal.kernel.dao.orm.DynamicQuery;
-import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
-import com.liferay.portal.kernel.dao.orm.ProjectionList;
-import com.liferay.portal.kernel.dao.orm.Property;
-import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.layout.LayoutResponseHeaderContributor;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.service.PortletPreferenceValueLocalService;
+import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.servlet.HttpMethods;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -102,7 +100,8 @@ public class CDNLayoutResponseHeaderContributor
 			configuredCDNTemplate.getCacheTagHeaderName(),
 			CDNCacheTagHeaderUtil.getHeaderValue(
 				cacheTags, configuredCDNTemplate.getCacheTagHeaderMaxBytes(),
-				_getModelCacheTags(companyId, httpServletRequest),
+				_cdnLayoutContentCacheTagsProvider.getCacheTags(
+					httpServletRequest, layout),
 				_cdnCacheTagBuilder.getOverflowCacheTag(
 					companyId, layout.getGroupId()),
 				configuredCDNTemplate.getCacheTagHeaderSeparator()));
@@ -110,6 +109,14 @@ public class CDNLayoutResponseHeaderContributor
 
 	@Activate
 	protected void activate(BundleContext bundleContext) {
+		_cdnLayoutContentCacheTagsProvider =
+			new CDNLayoutContentCacheTagsProvider(
+				_assetEntryLocalService, _assetPublisherHelper,
+				_cdnCacheTagBuilder, _fragmentEntryLinkLocalService,
+				_layoutPageTemplateStructureLocalService,
+				_layoutPageTemplateStructureRelLocalService, _portal,
+				_portletPreferencesLocalService,
+				_portletPreferenceValueLocalService);
 		_cdnTemplateRegistry = new CDNTemplateRegistry(
 			bundleContext, _configurationProvider);
 	}
@@ -119,63 +126,41 @@ public class CDNLayoutResponseHeaderContributor
 		_cdnTemplateRegistry.close();
 	}
 
-	private Set<String> _getModelCacheTags(
-		long companyId, HttpServletRequest httpServletRequest) {
-
-		Set<String> modelCacheTags = new LinkedHashSet<>(
-			CDNCacheTagsUtil.getCacheTags(httpServletRequest));
-
-		Set<Long> linkedAssetEntryIds =
-			(Set<Long>)httpServletRequest.getAttribute(
-				WebKeys.LINKED_ASSET_ENTRY_IDS);
-
-		if (SetUtil.isEmpty(linkedAssetEntryIds)) {
-			return modelCacheTags;
-		}
-
-		DynamicQuery dynamicQuery = _assetEntryLocalService.dynamicQuery();
-
-		Property entryIdProperty = PropertyFactoryUtil.forName("entryId");
-
-		dynamicQuery.add(entryIdProperty.in(linkedAssetEntryIds));
-
-		ProjectionList projectionList = ProjectionFactoryUtil.projectionList();
-
-		projectionList.add(PropertyFactoryUtil.forName("classNameId"));
-		projectionList.add(PropertyFactoryUtil.forName("classPK"));
-
-		dynamicQuery.setProjection(projectionList);
-
-		List<Object[]> results = _assetEntryLocalService.dynamicQuery(
-			dynamicQuery);
-
-		for (Object[] result : results) {
-			String modelCacheTag = _cdnCacheTagBuilder.getModelCacheTag(
-				companyId, _portal.getClassName((Long)result[0]),
-				(Long)result[1]);
-
-			if (modelCacheTag == null) {
-				continue;
-			}
-
-			modelCacheTags.add(modelCacheTag);
-		}
-
-		return modelCacheTags;
-	}
-
 	@Reference
 	private AssetEntryLocalService _assetEntryLocalService;
 
 	@Reference
+	private AssetPublisherHelper _assetPublisherHelper;
+
+	@Reference
 	private CDNCacheTagBuilder _cdnCacheTagBuilder;
 
+	private CDNLayoutContentCacheTagsProvider
+		_cdnLayoutContentCacheTagsProvider;
 	private CDNTemplateRegistry _cdnTemplateRegistry;
 
 	@Reference
 	private ConfigurationProvider _configurationProvider;
 
 	@Reference
+	private FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;
+
+	@Reference
+	private LayoutPageTemplateStructureLocalService
+		_layoutPageTemplateStructureLocalService;
+
+	@Reference
+	private LayoutPageTemplateStructureRelLocalService
+		_layoutPageTemplateStructureRelLocalService;
+
+	@Reference
 	private Portal _portal;
+
+	@Reference
+	private PortletPreferenceValueLocalService
+		_portletPreferenceValueLocalService;
+
+	@Reference
+	private PortletPreferencesLocalService _portletPreferencesLocalService;
 
 }
