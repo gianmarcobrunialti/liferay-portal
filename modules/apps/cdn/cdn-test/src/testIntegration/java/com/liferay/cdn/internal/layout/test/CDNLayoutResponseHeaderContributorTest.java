@@ -6,20 +6,35 @@
 package com.liferay.cdn.internal.layout.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.list.constants.AssetListEntryTypeConstants;
+import com.liferay.asset.list.model.AssetListEntry;
+import com.liferay.asset.list.service.AssetListEntryLocalService;
+import com.liferay.asset.publisher.constants.AssetPublisherPortletKeys;
+import com.liferay.blogs.model.BlogsEntry;
+import com.liferay.document.library.kernel.model.DLFileEntry;
+import com.liferay.fragment.entry.processor.constants.FragmentEntryProcessorConstants;
+import com.liferay.fragment.model.FragmentEntry;
+import com.liferay.fragment.model.FragmentEntryLink;
+import com.liferay.item.selector.criteria.InfoListItemSelectorReturnType;
 import com.liferay.journal.constants.JournalContentPortletKeys;
 import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.test.util.JournalTestUtil;
+import com.liferay.layout.provider.LayoutStructureProvider;
+import com.liferay.layout.test.util.ContentLayoutTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.io.StreamUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.configuration.test.util.CompanyConfigurationTemporarySwapper;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.Base64;
@@ -30,7 +45,9 @@ import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.FeatureFlag;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.segments.service.SegmentsExperienceLocalService;
 
 import java.io.InputStream;
 
@@ -86,6 +103,68 @@ public class CDNLayoutResponseHeaderContributorTest {
 				new String[] {String.valueOf(journalArticle.getGroupId())}
 			).build());
 
+		Layout mappedContentLayout = LayoutTestUtil.addTypeContentLayout(
+			_group);
+
+		Layout draftLayout = mappedContentLayout.fetchDraftLayout();
+
+		long segmentsExperienceId =
+			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
+				draftLayout.getPlid());
+
+		FragmentEntryLink fragmentEntryLink =
+			ContentLayoutTestUtil.addFragmentEntryLinkToLayout(
+				JSONUtil.put(
+					FragmentEntryProcessorConstants.
+						KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
+					JSONUtil.put(
+						"element-text",
+						JSONUtil.put(
+							"classNameId",
+							PortalUtil.getClassNameId(JournalArticle.class)
+						).put(
+							"classPK", journalArticle.getResourcePrimKey()
+						).put(
+							"fieldId", "JournalArticle_title"
+						))
+				).toString(),
+				draftLayout, segmentsExperienceId);
+
+		AssetListEntry assetListEntry =
+			_assetListEntryLocalService.addAssetListEntry(
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
+				RandomTestUtil.randomString(),
+				AssetListEntryTypeConstants.TYPE_DYNAMIC,
+				ServiceContextTestUtil.getServiceContext(
+					_group, TestPropsValues.getUserId()));
+
+		ContentLayoutTestUtil.addCollectionDisplayToLayout(
+			JSONUtil.put(
+				"classPK", assetListEntry.getAssetListEntryId()
+			).put(
+				"itemType", AssetEntry.class.getName()
+			).put(
+				"type", InfoListItemSelectorReturnType.class.getName()
+			),
+			draftLayout, _layoutStructureProvider, null, null, 0,
+			segmentsExperienceId);
+
+		ContentLayoutTestUtil.publishLayout(draftLayout, mappedContentLayout);
+
+		FragmentEntry fragmentEntry = fragmentEntryLink.fetchFragmentEntry();
+
+		Layout assetPublisherLayout = LayoutTestUtil.addTypePortletLayout(
+			_group);
+
+		LayoutTestUtil.addPortletToLayout(
+			assetPublisherLayout, AssetPublisherPortletKeys.ASSET_PUBLISHER,
+			HashMapBuilder.put(
+				"anyAssetType",
+				new String[] {
+					String.valueOf(PortalUtil.getClassNameId(DLFileEntry.class))
+				}
+			).build());
+
 		long companyId = TestPropsValues.getCompanyId();
 
 		try (CompanyConfigurationTemporarySwapper
@@ -115,6 +194,32 @@ public class CDNLayoutResponseHeaderContributorTest {
 					"lfr-p" + portletLayout.getPlid(),
 					"lfr-wc" + journalArticle.getResourcePrimKey()),
 				_getCacheTags(portletLayout, false));
+
+			Set<String> cacheTags = _getCacheTags(mappedContentLayout, false);
+
+			Assert.assertTrue(
+				cacheTags.toString(),
+				cacheTags.containsAll(
+					SetUtil.fromArray(
+						companyCacheTag, groupCacheTag,
+						"lfr-f" + fragmentEntry.getFragmentEntryId(),
+						StringBundler.concat(
+							"lfr-l", _group.getGroupId(), "-",
+							PortalUtil.getClassNameId(BlogsEntry.class)),
+						StringBundler.concat(
+							"lfr-l", _group.getGroupId(), "-",
+							PortalUtil.getClassNameId(JournalArticle.class)),
+						"lfr-p" + mappedContentLayout.getPlid(),
+						"lfr-wc" + journalArticle.getResourcePrimKey())));
+
+			Assert.assertEquals(
+				SetUtil.fromArray(
+					companyCacheTag, groupCacheTag,
+					StringBundler.concat(
+						"lfr-l", _group.getGroupId(), "-",
+						PortalUtil.getClassNameId(DLFileEntry.class)),
+					"lfr-p" + assetPublisherLayout.getPlid()),
+				_getCacheTags(assetPublisherLayout, false));
 
 			Assert.assertNull(_getCacheTags(contentLayout, true));
 		}
@@ -187,7 +292,16 @@ public class CDNLayoutResponseHeaderContributorTest {
 			).build());
 	}
 
+	@Inject
+	private AssetListEntryLocalService _assetListEntryLocalService;
+
 	@DeleteAfterTestRun
 	private Group _group;
+
+	@Inject
+	private LayoutStructureProvider _layoutStructureProvider;
+
+	@Inject
+	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
 
 }
