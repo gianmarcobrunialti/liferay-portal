@@ -14,6 +14,12 @@ import com.liferay.cdn.internal.template.ConfiguredCDNTemplate;
 import com.liferay.cdn.purge.CDNPurgeManager;
 import com.liferay.cdn.purge.CDNPurgeRequest;
 import com.liferay.change.tracking.constants.CTConstants;
+import com.liferay.fragment.service.FragmentEntryLinkLocalService;
+import com.liferay.fragment.service.FragmentEntryLocalService;
+import com.liferay.layout.display.page.LayoutDisplayPageProviderRegistry;
+import com.liferay.layout.service.LayoutClassedModelUsageLocalService;
+import com.liferay.object.service.ObjectDefinitionLocalService;
+import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.lang.CentralizedThreadLocal;
 import com.liferay.petra.string.StringBundler;
@@ -21,14 +27,24 @@ import com.liferay.portal.configuration.module.configuration.ConfigurationProvid
 import com.liferay.portal.kernel.cache.thread.local.Lifecycle;
 import com.liferay.portal.kernel.cache.thread.local.ThreadLocalCacheManager;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.MessageBus;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.ShardedModel;
 import com.liferay.portal.kernel.model.change.tracking.CTModel;
+import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.transaction.TransactionCallbackUtil;
+import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.NamedThreadFactory;
+import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 
 import java.util.Set;
 import java.util.concurrent.Executors;
@@ -83,7 +99,8 @@ public class CDNPurgeManagerImpl implements CDNPurgeManager {
 	@Override
 	public void purge(BaseModel<?> baseModel) {
 		_purge(
-			baseModel, () -> _cdnCacheTagBuilder.getPurgeCacheTags(baseModel));
+			baseModel, () -> _cdnCacheTagBuilder.getPurgeCacheTags(baseModel),
+			baseModel);
 	}
 
 	@Override
@@ -101,7 +118,8 @@ public class CDNPurgeManagerImpl implements CDNPurgeManager {
 		_purge(
 			currentBaseModel,
 			() -> _cdnCacheTagBuilder.getPurgeCacheTags(
-				originalBaseModel, baseModel));
+				originalBaseModel, baseModel),
+			originalBaseModel, baseModel);
 	}
 
 	@Override
@@ -163,6 +181,15 @@ public class CDNPurgeManagerImpl implements CDNPurgeManager {
 
 		_cdnPurgeCoalescer = new CDNPurgeCoalescer(
 			this::_dispatch, _scheduledExecutorService);
+
+		_cdnPurgeURLResolver = new CDNPurgeURLResolver(
+			_companyLocalService, _fragmentEntryLinkLocalService,
+			_fragmentEntryLocalService, _groupLocalService, _language,
+			_layoutClassedModelUsageLocalService,
+			_layoutDisplayPageProviderRegistry, _layoutLocalService,
+			_layoutSetLocalService, _objectDefinitionLocalService,
+			_objectEntryLocalService, _portal,
+			Http.HTTPS.equals(PropsUtil.get(PropsKeys.WEB_SERVER_PROTOCOL)));
 	}
 
 	@Deactivate
@@ -180,10 +207,12 @@ public class CDNPurgeManagerImpl implements CDNPurgeManager {
 	 */
 	private void _dispatch(long companyId, CDNPurgeRequest cdnPurgeRequest) {
 		try {
+			CDNConfiguration cdnConfiguration =
+				_cdnTemplateRegistry.getCDNConfiguration(companyId);
+
 			ConfiguredCDNTemplate configuredCDNTemplate =
 				_cdnTemplateRegistry.getConfiguredCDNTemplate(
-					companyId,
-					_cdnTemplateRegistry.getCDNConfiguration(companyId));
+					companyId, cdnConfiguration);
 
 			if (configuredCDNTemplate == null) {
 				if (_log.isDebugEnabled()) {
@@ -199,7 +228,10 @@ public class CDNPurgeManagerImpl implements CDNPurgeManager {
 
 			for (CDNPurgeRequest batchCDNPurgeRequest :
 					CDNPurgeBatchUtil.getCDNPurgeRequests(
-						cdnPurgeRequest, configuredCDNTemplate)) {
+						_getCDNPurgeRequest(
+							companyId, cdnConfiguration, cdnPurgeRequest,
+							configuredCDNTemplate),
+						configuredCDNTemplate)) {
 
 				_messageBus.sendMessage(
 					CDNConstants.DESTINATION_NAME_CDN_PURGE,
@@ -222,9 +254,54 @@ public class CDNPurgeManagerImpl implements CDNPurgeManager {
 		}
 	}
 
+	/**
+	 * Returns the request to send to the CDN. When the CDN purges by URL only,
+	 * the request's cache tags are converted to URLs. The conversion runs here,
+	 * after the commit and outside the caller's thread, because it may read
+	 * many pages.
+	 */
+	private CDNPurgeRequest _getCDNPurgeRequest(
+		long companyId, CDNConfiguration cdnConfiguration,
+		CDNPurgeRequest cdnPurgeRequest,
+		ConfiguredCDNTemplate configuredCDNTemplate) {
+
+		Set<String> tags = cdnPurgeRequest.getTags();
+
+		if (tags.isEmpty() || !_isURLPurge(configuredCDNTemplate)) {
+			return cdnPurgeRequest;
+		}
+
+		return _cdnPurgeURLResolver.getURLCDNPurgeRequest(
+			companyId, cdnConfiguration.cacheTagNamespace(), cdnPurgeRequest,
+			configuredCDNTemplate.getPurgeAllCDNHTTPRequestTemplate() != null);
+	}
+
+	/**
+	 * Returns whether the CDN purges by URL only, so cache tags must be
+	 * converted to URLs.
+	 */
+	private boolean _isURLPurge(ConfiguredCDNTemplate configuredCDNTemplate) {
+		if ((configuredCDNTemplate.getTagPurgeCDNHTTPRequestTemplate() ==
+				null) &&
+			(configuredCDNTemplate.getURLPurgeCDNHTTPRequestTemplate() !=
+				null)) {
+
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Purges the cache tags of the model. When the CDN purges by URL, the
+	 * URLs of the pages among the models are read now, because a removed page
+	 * cannot be read once the transaction commits, and a page whose friendly
+	 * URL changed is still cached under the original friendly URL.
+	 */
 	private void _purge(
 		BaseModel<?> baseModel,
-		UnsafeSupplier<Set<String>, Exception> cacheTagsUnsafeSupplier) {
+		UnsafeSupplier<Set<String>, Exception> cacheTagsUnsafeSupplier,
+		BaseModel<?>... urlBaseModels) {
 
 		// A model removed inside a publication still carries the production
 		// collection ID, so the thread's collection must be checked as well.
@@ -247,23 +324,40 @@ public class CDNPurgeManagerImpl implements CDNPurgeManager {
 
 		long companyId = shardedModel.getCompanyId();
 
-		if (!isEnabled(companyId)) {
-			return;
-		}
-
 		try {
+			ConfiguredCDNTemplate configuredCDNTemplate =
+				_cdnTemplateRegistry.getConfiguredCDNTemplate(
+					companyId,
+					_cdnTemplateRegistry.getCDNConfiguration(companyId));
+
+			if (configuredCDNTemplate == null) {
+				return;
+			}
+
 			Set<String> cacheTags = cacheTagsUnsafeSupplier.get();
 
 			if (cacheTags.isEmpty()) {
 				return;
 			}
 
-			purge(
-				companyId,
-				CDNPurgeRequest.builder(
-				).tags(
-					cacheTags
-				).build());
+			CDNPurgeRequest.Builder builder = CDNPurgeRequest.builder(
+			).tags(
+				cacheTags
+			);
+
+			if (_isURLPurge(configuredCDNTemplate)) {
+				for (BaseModel<?> urlBaseModel : urlBaseModels) {
+					if (!(urlBaseModel instanceof Layout)) {
+						continue;
+					}
+
+					builder.urls(
+						_cdnPurgeURLResolver.getLayoutURLs(
+							(Layout)urlBaseModel));
+				}
+			}
+
+			purge(companyId, builder.build());
 		}
 		catch (Exception exception) {
 			_log.error(
@@ -282,13 +376,52 @@ public class CDNPurgeManagerImpl implements CDNPurgeManager {
 	private CDNCacheTagBuilder _cdnCacheTagBuilder;
 
 	private CDNPurgeCoalescer _cdnPurgeCoalescer;
+	private CDNPurgeURLResolver _cdnPurgeURLResolver;
 	private CDNTemplateRegistry _cdnTemplateRegistry;
+
+	@Reference
+	private CompanyLocalService _companyLocalService;
 
 	@Reference
 	private ConfigurationProvider _configurationProvider;
 
 	@Reference
+	private FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;
+
+	@Reference
+	private FragmentEntryLocalService _fragmentEntryLocalService;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private Language _language;
+
+	@Reference
+	private LayoutClassedModelUsageLocalService
+		_layoutClassedModelUsageLocalService;
+
+	@Reference
+	private LayoutDisplayPageProviderRegistry
+		_layoutDisplayPageProviderRegistry;
+
+	@Reference
+	private LayoutLocalService _layoutLocalService;
+
+	@Reference
+	private LayoutSetLocalService _layoutSetLocalService;
+
+	@Reference
 	private MessageBus _messageBus;
+
+	@Reference
+	private ObjectDefinitionLocalService _objectDefinitionLocalService;
+
+	@Reference
+	private ObjectEntryLocalService _objectEntryLocalService;
+
+	@Reference
+	private Portal _portal;
 
 	private ScheduledExecutorService _scheduledExecutorService;
 

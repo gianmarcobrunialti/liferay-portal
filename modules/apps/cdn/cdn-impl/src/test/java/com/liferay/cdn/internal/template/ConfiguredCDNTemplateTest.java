@@ -131,6 +131,15 @@ public class ConfiguredCDNTemplateTest {
 		Assert.assertEquals("PUT", cdnHTTPRequestTemplate.getMethod());
 		Assert.assertEquals(
 			"${endpoint}/purge", cdnHTTPRequestTemplate.getURLTemplate());
+
+		Mockito.when(
+			_cdnConfiguration.urlPurgeOnly()
+		).thenReturn(
+			true
+		);
+
+		Assert.assertNull(
+			_configuredCDNTemplate.getTagPurgeCDNHTTPRequestTemplate());
 	}
 
 	@Test
