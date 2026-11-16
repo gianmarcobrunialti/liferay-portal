@@ -9,6 +9,9 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.service.CTCollectionService;
+import com.liferay.journal.constants.JournalFolderConstants;
+import com.liferay.journal.model.JournalArticle;
+import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.io.StreamUtil;
 import com.liferay.petra.lang.SafeCloseable;
@@ -27,6 +30,8 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
+import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -101,25 +106,9 @@ public class CDNCTEventListenerTest {
 			_group, RandomTestUtil.randomString(),
 			WorkflowConstants.STATUS_APPROVED);
 
-		InetSocketAddress inetSocketAddress = _httpServer.getAddress();
-
 		try (CompanyConfigurationTemporarySwapper
 				cdnCompanyConfigurationTemporarySwapper =
-					new CompanyConfigurationTemporarySwapper(
-						TestPropsValues.getCompanyId(),
-						"com.liferay.cdn.configuration.CDNConfiguration",
-						HashMapDictionaryBuilder.<String, Object>put(
-							"coalesceWindowMs", 100L
-						).put(
-							"enabled", true
-						).put(
-							"endpoint",
-							StringBundler.concat(
-								"http://127.0.0.1:",
-								inetSocketAddress.getPort(), "/purge")
-						).put(
-							"templateKey", "custom"
-						).build())) {
+					_getCDNCompanyConfigurationTemporarySwapper()) {
 
 			// Modification
 
@@ -145,6 +134,29 @@ public class CDNCTEventListenerTest {
 			_assertPurge(
 				"lfr-p" + layout.getPlid(), "lfr-x" + _group.getGroupId());
 
+			// Modification that changes the navigation of every page
+
+			ctCollection = _addCTCollection();
+
+			try (SafeCloseable safeCloseable =
+					CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+						ctCollection.getCtCollectionId())) {
+
+				_layoutLocalService.updateName(
+					_layoutLocalService.getLayout(layout.getPlid()),
+					RandomTestUtil.randomString(),
+					LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()));
+			}
+
+			_assertNoPurge();
+
+			_ctCollectionService.publishCTCollection(
+				TestPropsValues.getUserId(), ctCollection.getCtCollectionId());
+
+			_assertPurge(
+				"lfr-p" + layout.getPlid(), "lfr-s" + _group.getGroupId(),
+				"lfr-x" + _group.getGroupId());
+
 			// Deletion
 
 			ctCollection = _addCTCollection();
@@ -162,10 +174,45 @@ public class CDNCTEventListenerTest {
 				TestPropsValues.getUserId(), ctCollection.getCtCollectionId());
 
 			_assertPurge(
-				"lfr-p" + layout.getPlid(), "lfr-x" + _group.getGroupId());
+				"lfr-p" + layout.getPlid(), "lfr-s" + _group.getGroupId(),
+				"lfr-x" + _group.getGroupId());
 
 			Assert.assertNull(
 				_layoutLocalService.fetchLayout(layout.getPlid()));
+		}
+	}
+
+	@FeatureFlag("LPD-107638")
+	@Test
+	public void testOnAfterPublishWithJournalArticle() throws Exception {
+		try (CompanyConfigurationTemporarySwapper
+				cdnCompanyConfigurationTemporarySwapper =
+					_getCDNCompanyConfigurationTemporarySwapper()) {
+
+			CTCollection ctCollection = _addCTCollection();
+
+			JournalArticle journalArticle = null;
+
+			try (SafeCloseable safeCloseable =
+					CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+						ctCollection.getCtCollectionId())) {
+
+				journalArticle = JournalTestUtil.addArticle(
+					_group.getGroupId(),
+					JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+			}
+
+			_assertNoPurge();
+
+			_ctCollectionService.publishCTCollection(
+				TestPropsValues.getUserId(), ctCollection.getCtCollectionId());
+
+			_assertPurge(
+				"lfr-wc" + journalArticle.getResourcePrimKey(),
+				StringBundler.concat(
+					"lfr-l", _group.getGroupId(), "-",
+					_portal.getClassNameId(JournalArticle.class)),
+				"lfr-x" + _group.getGroupId());
 		}
 	}
 
@@ -194,6 +241,28 @@ public class CDNCTEventListenerTest {
 		_assertNoPurge();
 	}
 
+	private CompanyConfigurationTemporarySwapper
+			_getCDNCompanyConfigurationTemporarySwapper()
+		throws Exception {
+
+		InetSocketAddress inetSocketAddress = _httpServer.getAddress();
+
+		return new CompanyConfigurationTemporarySwapper(
+			TestPropsValues.getCompanyId(),
+			"com.liferay.cdn.configuration.CDNConfiguration",
+			HashMapDictionaryBuilder.<String, Object>put(
+				"coalesceWindowMs", 100L
+			).put(
+				"enabled", true
+			).put(
+				"endpoint",
+				StringBundler.concat(
+					"http://127.0.0.1:", inetSocketAddress.getPort(), "/purge")
+			).put(
+				"templateKey", "custom"
+			).build());
+	}
+
 	private final BlockingQueue<String> _bodies = new LinkedBlockingQueue<>();
 
 	@Inject
@@ -209,5 +278,8 @@ public class CDNCTEventListenerTest {
 
 	@Inject
 	private LayoutLocalService _layoutLocalService;
+
+	@Inject
+	private Portal _portal;
 
 }
