@@ -7,6 +7,11 @@ package com.liferay.cdn.internal.cache.tag;
 
 import com.liferay.cdn.cache.tag.CDNCacheTagModelResolver;
 import com.liferay.cdn.configuration.CDNConfiguration;
+import com.liferay.cdn.internal.cache.tag.resolver.BlogsEntryCDNCacheTagModelResolver;
+import com.liferay.cdn.internal.cache.tag.resolver.DLFileEntryCDNCacheTagModelResolver;
+import com.liferay.cdn.internal.cache.tag.resolver.FileEntryCDNCacheTagModelResolver;
+import com.liferay.cdn.internal.cache.tag.resolver.FragmentEntryCDNCacheTagModelResolver;
+import com.liferay.cdn.internal.cache.tag.resolver.ObjectEntryCDNCacheTagModelResolver;
 import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
@@ -72,12 +77,17 @@ public class CDNCacheTagBuilderImplTest {
 			cdnCacheTagModelResolver
 		);
 
-		Mockito.when(
-			_serviceTrackerMap.getService(
-				"com.liferay.journal.model.JournalArticle")
-		).thenReturn(
-			null
-		);
+		_registerCDNCacheTagModelResolver(
+			new BlogsEntryCDNCacheTagModelResolver());
+		_registerCDNCacheTagModelResolver(
+			new DLFileEntryCDNCacheTagModelResolver());
+		_registerCDNCacheTagModelResolver(
+			new FileEntryCDNCacheTagModelResolver());
+		_registerCDNCacheTagModelResolver(
+			new FragmentEntryCDNCacheTagModelResolver());
+		_registerCDNCacheTagModelResolver(
+			new ObjectEntryCDNCacheTagModelResolver(
+				"com.liferay.object.model.ObjectDefinition#C_TICKET"));
 
 		ReflectionTestUtil.setFieldValue(
 			_cdnCacheTagBuilderImpl, "_configurationProvider",
@@ -153,6 +163,10 @@ public class CDNCacheTagBuilderImplTest {
 			_cdnCacheTagBuilderImpl.getModelCacheTag(
 				1, "com.liferay.document.library.kernel.model.DLFileEntry", 5));
 		Assert.assertEquals(
+			"ns-d5",
+			_cdnCacheTagBuilderImpl.getModelCacheTag(
+				1, "com.liferay.portal.kernel.repository.model.FileEntry", 5));
+		Assert.assertEquals(
 			"ns-f5",
 			_cdnCacheTagBuilderImpl.getModelCacheTag(
 				1, "com.liferay.fragment.model.FragmentEntry", 5));
@@ -164,14 +178,9 @@ public class CDNCacheTagBuilderImplTest {
 			"ns-o5",
 			_cdnCacheTagBuilderImpl.getModelCacheTag(
 				1, "com.liferay.object.model.ObjectDefinition#C_TICKET", 5));
-		Assert.assertEquals(
-			"ns-p5",
+		Assert.assertNull(
 			_cdnCacheTagBuilderImpl.getModelCacheTag(
 				1, "com.liferay.portal.kernel.model.Layout", 5));
-		Assert.assertEquals(
-			"ns-wc5",
-			_cdnCacheTagBuilderImpl.getModelCacheTag(
-				1, "com.liferay.journal.model.JournalArticle", 5));
 		Assert.assertNull(
 			_cdnCacheTagBuilderImpl.getModelCacheTag(
 				1, RandomTestUtil.randomString(), 5));
@@ -421,6 +430,17 @@ public class CDNCacheTagBuilderImplTest {
 		);
 
 		return layout;
+	}
+
+	private void _registerCDNCacheTagModelResolver(
+		CDNCacheTagModelResolver cdnCacheTagModelResolver) {
+
+		Mockito.when(
+			_serviceTrackerMap.getService(
+				cdnCacheTagModelResolver.getClassName())
+		).thenReturn(
+			cdnCacheTagModelResolver
+		);
 	}
 
 	private final CDNCacheTagBuilderImpl _cdnCacheTagBuilderImpl =
