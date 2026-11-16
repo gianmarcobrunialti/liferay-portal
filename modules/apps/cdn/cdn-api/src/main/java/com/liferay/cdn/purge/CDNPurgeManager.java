@@ -29,6 +29,15 @@ public interface CDNPurgeManager {
 	public void purge(BaseModel<?> baseModel);
 
 	/**
+	 * Purges the cache tags of a model changed in production, as {@link
+	 * com.liferay.cdn.cache.tag.CDNCacheTagBuilder#getPurgeCacheTags(
+	 * BaseModel, BaseModel)} returns them. The original model is
+	 * <code>null</code> when the model is added, and the model is
+	 * <code>null</code> when it is removed.
+	 */
+	public void purge(BaseModel<?> originalBaseModel, BaseModel<?> baseModel);
+
+	/**
 	 * Requests a purge without blocking the caller. The purge is sent after
 	 * the current transaction commits, or right away when there is no
 	 * transaction, and it is discarded if the transaction rolls back. Requests

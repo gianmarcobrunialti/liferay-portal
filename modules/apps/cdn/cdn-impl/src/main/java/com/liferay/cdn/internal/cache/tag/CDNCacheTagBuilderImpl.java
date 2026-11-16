@@ -5,14 +5,21 @@
 
 package com.liferay.cdn.internal.cache.tag;
 
+import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.cdn.cache.tag.CDNCacheTagBuilder;
 import com.liferay.cdn.cache.tag.CDNCacheTagModelResolver;
 import com.liferay.cdn.configuration.CDNConfiguration;
+import com.liferay.document.library.kernel.model.DLFileEntry;
+import com.liferay.document.library.kernel.model.DLFileVersion;
 import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.model.FragmentEntryLink;
+import com.liferay.journal.model.JournalArticle;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
+import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.model.ObjectEntry;
+import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.string.StringBundler;
@@ -22,15 +29,20 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutSet;
+import com.liferay.portal.kernel.model.WorkflowedModel;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
+import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.site.navigation.model.SiteNavigationMenu;
 import com.liferay.site.navigation.model.SiteNavigationMenuItem;
 import com.liferay.style.book.model.StyleBookEntry;
 
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import org.osgi.framework.BundleContext;
@@ -112,6 +124,24 @@ public class CDNCacheTagBuilderImpl implements CDNCacheTagBuilder {
 
 	@Override
 	public Set<String> getPurgeCacheTags(BaseModel<?> baseModel) {
+		if (baseModel instanceof WorkflowedModel) {
+			WorkflowedModel workflowedModel = (WorkflowedModel)baseModel;
+
+			Set<String> cacheTags = _getContentPurgeCacheTags(baseModel);
+
+			if (cacheTags != null) {
+				if (!_isVisibleStatus(workflowedModel.getStatus())) {
+					return Collections.emptySet();
+				}
+
+				return cacheTags;
+			}
+		}
+
+		if (baseModel instanceof DLFileEntry) {
+			return _getContentPurgeCacheTags(baseModel);
+		}
+
 		if (baseModel instanceof FragmentEntry) {
 			FragmentEntry fragmentEntry = (FragmentEntry)baseModel;
 
@@ -185,6 +215,42 @@ public class CDNCacheTagBuilderImpl implements CDNCacheTagBuilder {
 		return Collections.emptySet();
 	}
 
+	@Override
+	public Set<String> getPurgeCacheTags(
+		BaseModel<?> originalBaseModel, BaseModel<?> baseModel) {
+
+		BaseModel<?> currentBaseModel = baseModel;
+
+		if (currentBaseModel == null) {
+			currentBaseModel = originalBaseModel;
+		}
+
+		if (currentBaseModel == null) {
+			return Collections.emptySet();
+		}
+
+		if (currentBaseModel instanceof Layout) {
+			return _getPurgeCacheTags(
+				(Layout)originalBaseModel, (Layout)baseModel);
+		}
+
+		if (currentBaseModel instanceof WorkflowedModel) {
+			Set<String> cacheTags = _getContentPurgeCacheTags(currentBaseModel);
+
+			if (cacheTags != null) {
+				if (!_isApproved(originalBaseModel) &&
+					!_isApproved(baseModel)) {
+
+					return Collections.emptySet();
+				}
+
+				return cacheTags;
+			}
+		}
+
+		return getPurgeCacheTags(currentBaseModel);
+	}
+
 	@Activate
 	protected void activate(BundleContext bundleContext) {
 		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
@@ -227,6 +293,104 @@ public class CDNCacheTagBuilderImpl implements CDNCacheTagBuilder {
 		return cacheTagNamespace + cacheTag;
 	}
 
+	/**
+	 * Returns the cache tags of a content model, whatever its status, or
+	 * <code>null</code> when the model is not a content model. Besides the
+	 * model's own cache tag, the collections of the model's type in its group
+	 * show the model, and so does any page whose cache tags overflowed.
+	 */
+	private Set<String> _getContentPurgeCacheTags(BaseModel<?> baseModel) {
+		if (baseModel instanceof BlogsEntry) {
+			BlogsEntry blogsEntry = (BlogsEntry)baseModel;
+
+			return _getContentPurgeCacheTags(
+				blogsEntry.getCompanyId(), blogsEntry.getGroupId(),
+				BlogsEntry.class.getName(), blogsEntry.getEntryId(),
+				BlogsEntry.class.getName());
+		}
+
+		// Asset publishers list documents by the file entry model, while info
+		// collections list them by the repository file entry
+
+		if (baseModel instanceof DLFileEntry) {
+			DLFileEntry dlFileEntry = (DLFileEntry)baseModel;
+
+			return _getContentPurgeCacheTags(
+				dlFileEntry.getCompanyId(), dlFileEntry.getGroupId(),
+				DLFileEntry.class.getName(), dlFileEntry.getFileEntryId(),
+				DLFileEntry.class.getName(), FileEntry.class.getName());
+		}
+
+		if (baseModel instanceof DLFileVersion) {
+			DLFileVersion dlFileVersion = (DLFileVersion)baseModel;
+
+			return _getContentPurgeCacheTags(
+				dlFileVersion.getCompanyId(), dlFileVersion.getGroupId(),
+				DLFileEntry.class.getName(), dlFileVersion.getFileEntryId(),
+				DLFileEntry.class.getName(), FileEntry.class.getName());
+		}
+
+		if (baseModel instanceof JournalArticle) {
+			JournalArticle journalArticle = (JournalArticle)baseModel;
+
+			return _getContentPurgeCacheTags(
+				journalArticle.getCompanyId(), journalArticle.getGroupId(),
+				JournalArticle.class.getName(),
+				journalArticle.getResourcePrimKey(),
+				JournalArticle.class.getName());
+		}
+
+		if (baseModel instanceof ObjectEntry) {
+			ObjectEntry objectEntry = (ObjectEntry)baseModel;
+
+			ObjectDefinition objectDefinition =
+				_objectDefinitionLocalService.fetchObjectDefinition(
+					objectEntry.getObjectDefinitionId());
+
+			if ((objectDefinition == null) ||
+				objectDefinition.isUnmodifiableSystemObject()) {
+
+				return Collections.emptySet();
+			}
+
+			// Entries of company scoped object definitions belong to group 0,
+			// which is also the group of their collection cache tag
+
+			return _getContentPurgeCacheTags(
+				objectEntry.getCompanyId(), objectEntry.getGroupId(),
+				objectDefinition.getClassName(), objectEntry.getObjectEntryId(),
+				objectDefinition.getClassName());
+		}
+
+		return null;
+	}
+
+	private Set<String> _getContentPurgeCacheTags(
+		long companyId, long groupId, String className, long classPK,
+		String... collectionClassNames) {
+
+		String cacheTag = getModelCacheTag(companyId, className, classPK);
+
+		if (cacheTag == null) {
+			return Collections.emptySet();
+		}
+
+		Set<String> cacheTags = new LinkedHashSet<>();
+
+		cacheTags.add(cacheTag);
+
+		for (String collectionClassName : collectionClassNames) {
+			cacheTags.add(
+				getCollectionCacheTag(
+					companyId, groupId,
+					_portal.getClassNameId(collectionClassName)));
+		}
+
+		cacheTags.add(getOverflowCacheTag(companyId, groupId));
+
+		return cacheTags;
+	}
+
 	private Set<String> _getPurgeCacheTags(Layout layout) {
 		if ((layout == null) || layout.isDraftLayout()) {
 			return Collections.emptySet();
@@ -241,6 +405,38 @@ public class CDNCacheTagBuilderImpl implements CDNCacheTagBuilder {
 		return _getPurgeCacheTags(
 			layout.getCompanyId(), layout.getGroupId(),
 			_getCacheTag(layout.getCompanyId(), "p" + layout.getPlid()));
+	}
+
+	/**
+	 * Returns the cache tags to purge when a page changes from the original
+	 * page to the page. An added page has nothing cached yet, so it only
+	 * purges its site when it appears in the navigation.
+	 */
+	private Set<String> _getPurgeCacheTags(
+		Layout originalLayout, Layout layout) {
+
+		Set<String> cacheTags = new LinkedHashSet<>();
+
+		if (layout == null) {
+			cacheTags.addAll(_getPurgeCacheTags(originalLayout));
+		}
+		else if (originalLayout != null) {
+			cacheTags.addAll(_getPurgeCacheTags(layout));
+		}
+
+		if (_isNavigationChange(originalLayout, layout)) {
+			Layout currentLayout = layout;
+
+			if (currentLayout == null) {
+				currentLayout = originalLayout;
+			}
+
+			cacheTags.add(
+				getGroupCacheTag(
+					currentLayout.getCompanyId(), currentLayout.getGroupId()));
+		}
+
+		return cacheTags;
 	}
 
 	private Set<String> _getPurgeCacheTags(
@@ -258,6 +454,16 @@ public class CDNCacheTagBuilderImpl implements CDNCacheTagBuilder {
 		return cacheTags;
 	}
 
+	private boolean _isApproved(BaseModel<?> baseModel) {
+		if (baseModel == null) {
+			return false;
+		}
+
+		WorkflowedModel workflowedModel = (WorkflowedModel)baseModel;
+
+		return workflowedModel.isApproved();
+	}
+
 	private boolean _isMasterLayout(Layout layout) {
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.
@@ -266,6 +472,60 @@ public class CDNCacheTagBuilderImpl implements CDNCacheTagBuilder {
 		if ((layoutPageTemplateEntry != null) &&
 			(layoutPageTemplateEntry.getType() ==
 				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT)) {
+
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Returns whether the change affects the navigation that every page of the
+	 * site renders: a page appears in or disappears from the navigation, or a
+	 * page in the navigation is moved, reordered, renamed, or gets a new
+	 * friendly URL.
+	 */
+	private boolean _isNavigationChange(Layout originalLayout, Layout layout) {
+		boolean originalNavigationLayout = _isNavigationLayout(originalLayout);
+		boolean navigationLayout = _isNavigationLayout(layout);
+
+		if (!originalNavigationLayout && !navigationLayout) {
+			return false;
+		}
+
+		if ((originalNavigationLayout != navigationLayout) ||
+			(originalLayout.getParentLayoutId() !=
+				layout.getParentLayoutId()) ||
+			(originalLayout.getPriority() != layout.getPriority()) ||
+			!Objects.equals(
+				originalLayout.getFriendlyURL(), layout.getFriendlyURL()) ||
+			!Objects.equals(originalLayout.getName(), layout.getName())) {
+
+			return true;
+		}
+
+		return false;
+	}
+
+	private boolean _isNavigationLayout(Layout layout) {
+		if ((layout == null) || layout.isDraftLayout() || layout.isHidden() ||
+			layout.isPrivateLayout() || layout.isSystem()) {
+
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Returns whether guests see, or saw until the change, a model with the
+	 * status. Approved models are visible, and expired and trashed models were
+	 * visible until they expired or were trashed.
+	 */
+	private boolean _isVisibleStatus(int status) {
+		if ((status == WorkflowConstants.STATUS_APPROVED) ||
+			(status == WorkflowConstants.STATUS_EXPIRED) ||
+			(status == WorkflowConstants.STATUS_IN_TRASH)) {
 
 			return true;
 		}
@@ -287,6 +547,12 @@ public class CDNCacheTagBuilderImpl implements CDNCacheTagBuilder {
 	@Reference
 	private LayoutPageTemplateEntryLocalService
 		_layoutPageTemplateEntryLocalService;
+
+	@Reference
+	private ObjectDefinitionLocalService _objectDefinitionLocalService;
+
+	@Reference
+	private Portal _portal;
 
 	private ServiceTrackerMap<String, CDNCacheTagModelResolver>
 		_serviceTrackerMap;

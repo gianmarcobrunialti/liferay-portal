@@ -14,6 +14,7 @@ import com.liferay.cdn.internal.template.ConfiguredCDNTemplate;
 import com.liferay.cdn.purge.CDNPurgeManager;
 import com.liferay.cdn.purge.CDNPurgeRequest;
 import com.liferay.change.tracking.constants.CTConstants;
+import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.lang.CentralizedThreadLocal;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
@@ -81,55 +82,26 @@ public class CDNPurgeManagerImpl implements CDNPurgeManager {
 
 	@Override
 	public void purge(BaseModel<?> baseModel) {
+		_purge(
+			baseModel, () -> _cdnCacheTagBuilder.getPurgeCacheTags(baseModel));
+	}
 
-		// A model removed inside a publication still carries the production
-		// collection ID, so the thread's collection must be checked as well.
+	@Override
+	public void purge(BaseModel<?> originalBaseModel, BaseModel<?> baseModel) {
+		BaseModel<?> currentBaseModel = baseModel;
 
-		if (!CTCollectionThreadLocal.isProductionMode()) {
+		if (currentBaseModel == null) {
+			currentBaseModel = originalBaseModel;
+		}
+
+		if (currentBaseModel == null) {
 			return;
 		}
 
-		if (baseModel instanceof CTModel) {
-			CTModel<?> ctModel = (CTModel<?>)baseModel;
-
-			if (ctModel.getCtCollectionId() !=
-					CTConstants.CT_COLLECTION_ID_PRODUCTION) {
-
-				return;
-			}
-		}
-
-		ShardedModel shardedModel = (ShardedModel)baseModel;
-
-		long companyId = shardedModel.getCompanyId();
-
-		if (!isEnabled(companyId)) {
-			return;
-		}
-
-		try {
-			Set<String> cacheTags = _cdnCacheTagBuilder.getPurgeCacheTags(
-				baseModel);
-
-			if (cacheTags.isEmpty()) {
-				return;
-			}
-
-			purge(
-				companyId,
-				CDNPurgeRequest.builder(
-				).tags(
-					cacheTags
-				).build());
-		}
-		catch (Exception exception) {
-			_log.error(
-				StringBundler.concat(
-					"Unable to purge the CDN cache tags of ",
-					baseModel.getModelClassName(), " ",
-					baseModel.getPrimaryKeyObj()),
-				exception);
-		}
+		_purge(
+			currentBaseModel,
+			() -> _cdnCacheTagBuilder.getPurgeCacheTags(
+				originalBaseModel, baseModel));
 	}
 
 	@Override
@@ -247,6 +219,59 @@ public class CDNPurgeManagerImpl implements CDNPurgeManager {
 			ThreadLocalCacheManager.clearAll(Lifecycle.REQUEST);
 
 			CentralizedThreadLocal.clearShortLivedCentralizedThreadLocals();
+		}
+	}
+
+	private void _purge(
+		BaseModel<?> baseModel,
+		UnsafeSupplier<Set<String>, Exception> cacheTagsUnsafeSupplier) {
+
+		// A model removed inside a publication still carries the production
+		// collection ID, so the thread's collection must be checked as well.
+
+		if (!CTCollectionThreadLocal.isProductionMode()) {
+			return;
+		}
+
+		if (baseModel instanceof CTModel) {
+			CTModel<?> ctModel = (CTModel<?>)baseModel;
+
+			if (ctModel.getCtCollectionId() !=
+					CTConstants.CT_COLLECTION_ID_PRODUCTION) {
+
+				return;
+			}
+		}
+
+		ShardedModel shardedModel = (ShardedModel)baseModel;
+
+		long companyId = shardedModel.getCompanyId();
+
+		if (!isEnabled(companyId)) {
+			return;
+		}
+
+		try {
+			Set<String> cacheTags = cacheTagsUnsafeSupplier.get();
+
+			if (cacheTags.isEmpty()) {
+				return;
+			}
+
+			purge(
+				companyId,
+				CDNPurgeRequest.builder(
+				).tags(
+					cacheTags
+				).build());
+		}
+		catch (Exception exception) {
+			_log.error(
+				StringBundler.concat(
+					"Unable to purge the CDN cache tags of ",
+					baseModel.getModelClassName(), " ",
+					baseModel.getPrimaryKeyObj()),
+				exception);
 		}
 	}
 
