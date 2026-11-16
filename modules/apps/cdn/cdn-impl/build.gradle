@@ -3,12 +3,15 @@ dependencies {
 	compileOnly group: "jakarta.servlet", name: "jakarta.servlet-api", version: "6.0.0"
 	compileOnly group: "org.osgi", name: "org.osgi.service.component.annotations", version: "1.4.0"
 	compileOnly group: "org.osgi", name: "osgi.core", version: "6.0.0"
+	compileOnly project(":apps:blogs:blogs-api")
 	compileOnly project(":apps:cdn:cdn-api")
 	compileOnly project(":apps:change-tracking:change-tracking-api")
 	compileOnly project(":apps:change-tracking:change-tracking-spi")
 	compileOnly project(":apps:configuration-admin:configuration-admin-api")
 	compileOnly project(":apps:fragment:fragment-api")
+	compileOnly project(":apps:journal:journal-api")
 	compileOnly project(":apps:layout:layout-page-template-api")
+	compileOnly project(":apps:object:object-api")
 	compileOnly project(":apps:portal-configuration:portal-configuration-module-configuration-api")
 	compileOnly project(":apps:portal-security:portal-security-key-api")
 	compileOnly project(":apps:site-navigation:site-navigation-api")
