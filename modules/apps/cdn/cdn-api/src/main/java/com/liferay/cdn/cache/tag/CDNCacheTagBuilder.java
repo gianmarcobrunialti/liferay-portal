@@ -59,4 +59,16 @@ public interface CDNCacheTagBuilder {
 	 */
 	public Set<String> getPurgeCacheTags(BaseModel<?> baseModel);
 
+	/**
+	 * Returns the cache tags to purge when the model changes from the original
+	 * model to the model. The original model is <code>null</code> when the
+	 * model is added, and the model is <code>null</code> when it is removed.
+	 * Knowing both states narrows the purge: a model with a workflow is only
+	 * purged when guests could see either state, and a page also purges its
+	 * site when it is added, removed, moved, renamed, hidden, or shown,
+	 * because every page of the site renders the navigation.
+	 */
+	public Set<String> getPurgeCacheTags(
+		BaseModel<?> originalBaseModel, BaseModel<?> baseModel);
+
 }
