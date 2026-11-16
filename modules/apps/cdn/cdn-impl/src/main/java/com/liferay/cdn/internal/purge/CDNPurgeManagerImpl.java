@@ -14,8 +14,11 @@ import com.liferay.cdn.internal.template.ConfiguredCDNTemplate;
 import com.liferay.cdn.purge.CDNPurgeManager;
 import com.liferay.cdn.purge.CDNPurgeRequest;
 import com.liferay.change.tracking.constants.CTConstants;
+import com.liferay.petra.lang.CentralizedThreadLocal;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
+import com.liferay.portal.kernel.cache.thread.local.Lifecycle;
+import com.liferay.portal.kernel.cache.thread.local.ThreadLocalCacheManager;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -197,6 +200,12 @@ public class CDNPurgeManagerImpl implements CDNPurgeManager {
 		_scheduledExecutorService.shutdownNow();
 	}
 
+	/**
+	 * Dispatches the purge from the coalescer's thread. The thread lives as
+	 * long as the component, so it drops its request scoped caches after each
+	 * dispatch, as message bus threads do. Otherwise, the next dispatch could
+	 * read a stale company configuration.
+	 */
 	private void _dispatch(long companyId, CDNPurgeRequest cdnPurgeRequest) {
 		try {
 			ConfiguredCDNTemplate configuredCDNTemplate =
@@ -233,6 +242,11 @@ public class CDNPurgeManagerImpl implements CDNPurgeManager {
 					"Unable to dispatch CDN purge ", cdnPurgeRequest,
 					" for company ", companyId),
 				exception);
+		}
+		finally {
+			ThreadLocalCacheManager.clearAll(Lifecycle.REQUEST);
+
+			CentralizedThreadLocal.clearShortLivedCentralizedThreadLocals();
 		}
 	}
 
