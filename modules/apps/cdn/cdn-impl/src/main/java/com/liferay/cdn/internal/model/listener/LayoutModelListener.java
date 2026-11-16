@@ -20,13 +20,18 @@ import org.osgi.service.component.annotations.Reference;
 public class LayoutModelListener extends BaseModelListener<Layout> {
 
 	@Override
+	public void onAfterCreate(Layout layout) {
+		_cdnPurgeManager.purge(null, layout);
+	}
+
+	@Override
 	public void onAfterRemove(Layout layout) {
-		_cdnPurgeManager.purge(layout);
+		_cdnPurgeManager.purge(layout, null);
 	}
 
 	@Override
 	public void onAfterUpdate(Layout originalLayout, Layout layout) {
-		_cdnPurgeManager.purge(layout);
+		_cdnPurgeManager.purge(originalLayout, layout);
 	}
 
 	@Reference
