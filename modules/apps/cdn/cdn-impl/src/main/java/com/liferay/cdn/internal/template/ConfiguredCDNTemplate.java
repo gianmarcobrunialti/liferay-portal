@@ -145,6 +145,10 @@ public class ConfiguredCDNTemplate implements CDNTemplate {
 
 	@Override
 	public CDNHTTPRequestTemplate getTagPurgeCDNHTTPRequestTemplate() {
+		if (_cdnConfiguration.urlPurgeOnly()) {
+			return null;
+		}
+
 		return _getCDNHTTPRequestTemplate(
 			_cdnTemplate.getTagPurgeCDNHTTPRequestTemplate(),
 			_cdnConfiguration.tagPurgeBodyTemplate(),

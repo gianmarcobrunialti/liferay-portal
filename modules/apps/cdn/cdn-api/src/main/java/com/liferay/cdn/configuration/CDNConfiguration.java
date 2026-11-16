@@ -198,6 +198,18 @@ public interface CDNConfiguration {
 	)
 	public String urlPurgeMethod();
 
+	/**
+	 * Purges by URL instead of by cache tag, for CDNs that cannot purge by
+	 * cache tag. Each cache tag is converted to the URLs of the public pages
+	 * that carry it, which is also done when the template cannot purge by
+	 * cache tag.
+	 */
+	@Meta.AD(
+		deflt = "false", description = "cdn-url-purge-only-help",
+		name = "url-purge-only", required = false
+	)
+	public boolean urlPurgeOnly();
+
 	@Meta.AD(
 		deflt = "", description = "cdn-url-purge-per-url-help",
 		name = "url-purge-per-url",
