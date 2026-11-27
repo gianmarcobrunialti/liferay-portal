@@ -1132,9 +1132,9 @@
 				{
 					"active": true,
 					"label": {
-						"en_US": "Learn Spring Boot Add Friendly URL"
+						"en_US": "Add Friendly URL"
 					},
-					"name": "LearnSpringBootAddFriendlyURL",
+					"name": "addFriendlyURL",
 					"objectActionExecutorKey": "function#liferay-learn-etc-spring-boot-object-action-friendly-url",
 					"objectActionTriggerKey": "onAfterAdd",
 					"parameters": {
@@ -1144,9 +1144,9 @@
 					"active": true,
 					"conditionExpression": "title != oldValue(\"title\")",
 					"label": {
-						"en_US": "Learn Spring Boot Update Friendly URL"
+						"en_US": "Update Friendly URL"
 					},
-					"name": "LearnSpringBootUpdateFriendlyURL",
+					"name": "updateFriendlyURL",
 					"objectActionExecutorKey": "function#liferay-learn-etc-spring-boot-object-action-friendly-url",
 					"objectActionTriggerKey": "onAfterUpdate",
 					"parameters": {
@@ -3324,9 +3324,9 @@
 				{
 					"active": true,
 					"label": {
-						"en_US": "Learn Spring Boot Add Friendly URL"
+						"en_US": "Add Friendly URL"
 					},
-					"name": "LearnSpringBootAddFriendlyURL",
+					"name": "addFriendlyURL",
 					"objectActionExecutorKey": "function#liferay-learn-etc-spring-boot-object-action-friendly-url",
 					"objectActionTriggerKey": "onAfterAdd",
 					"parameters": {
@@ -3336,9 +3336,9 @@
 					"active": true,
 					"conditionExpression": "title != oldValue(\"title\") OR r_p2s3ModuleToP2S3Lessons_c_p2s3ModuleId != oldValue(\"r_p2s3ModuleToP2S3Lessons_c_p2s3ModuleId\")",
 					"label": {
-						"en_US": "Learn Spring Boot Update Friendly URL"
+						"en_US": "Update Friendly URL"
 					},
-					"name": "LearnSpringBootUpdateFriendlyURL",
+					"name": "updateFriendlyURL",
 					"objectActionExecutorKey": "function#liferay-learn-etc-spring-boot-object-action-friendly-url",
 					"objectActionTriggerKey": "onAfterUpdate",
 					"parameters": {
@@ -3620,9 +3620,9 @@
 				{
 					"active": true,
 					"label": {
-						"en_US": "Learn Spring Boot Add Friendly URL"
+						"en_US": "Add Friendly URL"
 					},
-					"name": "LearnSpringBootAddFriendlyURL",
+					"name": "addFriendlyURL",
 					"objectActionExecutorKey": "function#liferay-learn-etc-spring-boot-object-action-friendly-url",
 					"objectActionTriggerKey": "onAfterAdd",
 					"parameters": {
@@ -3632,9 +3632,9 @@
 					"active": true,
 					"conditionExpression": "title != oldValue(\"title\") OR r_p2s3CourseToP2S3Modules_c_p2s3CourseId != oldValue(\"r_p2s3CourseToP2S3Modules_c_p2s3CourseId\")",
 					"label": {
-						"en_US": "Learn Spring Boot Update Friendly URL"
+						"en_US": "Update Friendly URL"
 					},
-					"name": "LearnSpringBootUpdateFriendlyURL",
+					"name": "updateFriendlyURL",
 					"objectActionExecutorKey": "function#liferay-learn-etc-spring-boot-object-action-friendly-url",
 					"objectActionTriggerKey": "onAfterUpdate",
 					"parameters": {
@@ -3880,9 +3880,9 @@
 				{
 					"active": true,
 					"label": {
-						"en_US": "Learn Spring Boot Add Friendly URL"
+						"en_US": "Add Friendly URL"
 					},
-					"name": "LearnSpringBootAddFriendlyURL",
+					"name": "addFriendlyURL",
 					"objectActionExecutorKey": "function#liferay-learn-etc-spring-boot-object-action-friendly-url",
 					"objectActionTriggerKey": "onAfterAdd",
 					"parameters": {
@@ -3892,9 +3892,9 @@
 					"active": true,
 					"conditionExpression": "title != oldValue(\"title\") OR r_p2s3ModuleToP2S3Quizzes_c_p2s3ModuleId != oldValue(\"r_p2s3ModuleToP2S3Quizzes_c_p2s3ModuleId\")",
 					"label": {
-						"en_US": "Learn Spring Boot Update Friendly URL"
+						"en_US": "Update Friendly URL"
 					},
-					"name": "LearnSpringBootUpdateFriendlyURL",
+					"name": "updateFriendlyURL",
 					"objectActionExecutorKey": "function#liferay-learn-etc-spring-boot-object-action-friendly-url",
 					"objectActionTriggerKey": "onAfterUpdate",
 					"parameters": {
