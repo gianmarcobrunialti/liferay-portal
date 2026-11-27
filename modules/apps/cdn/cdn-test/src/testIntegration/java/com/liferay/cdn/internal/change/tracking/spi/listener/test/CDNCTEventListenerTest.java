@@ -16,6 +16,7 @@ import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.io.StreamUtil;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.test.util.CompanyConfigurationTemporarySwapper;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -24,11 +25,13 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -46,6 +49,7 @@ import java.io.InputStream;
 
 import java.net.InetSocketAddress;
 
+import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -216,6 +220,59 @@ public class CDNCTEventListenerTest {
 		}
 	}
 
+	@FeatureFlag("LPD-107638")
+	@Test
+	public void testOnAfterPublishWithVirtualHost() throws Exception {
+		try (CompanyConfigurationTemporarySwapper
+				cdnCompanyConfigurationTemporarySwapper =
+					_getCDNCompanyConfigurationTemporarySwapper()) {
+
+			// Addition
+
+			CTCollection ctCollection = _addCTCollection();
+
+			try (SafeCloseable safeCloseable =
+					CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+						ctCollection.getCtCollectionId())) {
+
+				_layoutSetLocalService.updateVirtualHosts(
+					_group.getGroupId(), false,
+					new TreeMap<>(
+						HashMapBuilder.put(
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString() + ".com"),
+							StringPool.BLANK
+						).build()));
+			}
+
+			_assertNoPurge();
+
+			_ctCollectionService.publishCTCollection(
+				TestPropsValues.getUserId(), ctCollection.getCtCollectionId());
+
+			_assertPurge("lfr-s" + _group.getGroupId());
+
+			// Deletion
+
+			ctCollection = _addCTCollection();
+
+			try (SafeCloseable safeCloseable =
+					CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+						ctCollection.getCtCollectionId())) {
+
+				_layoutSetLocalService.updateVirtualHosts(
+					_group.getGroupId(), false, new TreeMap<>());
+			}
+
+			_assertNoPurge();
+
+			_ctCollectionService.publishCTCollection(
+				TestPropsValues.getUserId(), ctCollection.getCtCollectionId());
+
+			_assertPurge("lfr-s" + _group.getGroupId());
+		}
+	}
+
 	private CTCollection _addCTCollection() throws Exception {
 		return _ctCollectionLocalService.addCTCollection(
 			null, TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
@@ -278,6 +335,9 @@ public class CDNCTEventListenerTest {
 
 	@Inject
 	private LayoutLocalService _layoutLocalService;
+
+	@Inject
+	private LayoutSetLocalService _layoutSetLocalService;
 
 	@Inject
 	private Portal _portal;

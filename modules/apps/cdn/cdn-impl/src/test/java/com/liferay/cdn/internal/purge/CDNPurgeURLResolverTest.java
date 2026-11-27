@@ -456,6 +456,72 @@ public class CDNPurgeURLResolverTest {
 			).size());
 	}
 
+	@Test
+	public void testGetVirtualHostURLs() {
+		_mockGroup(21L, "/virtual", false, "www.example.com");
+
+		LayoutSet layoutSet = _layoutSetLocalService.fetchLayoutSet(21L, false);
+
+		Mockito.when(
+			layoutSet.getCompanyId()
+		).thenReturn(
+			1L
+		);
+
+		Mockito.when(
+			layoutSet.getGroupId()
+		).thenReturn(
+			21L
+		);
+
+		Mockito.when(
+			_layoutSetLocalService.fetchLayoutSet(30L)
+		).thenReturn(
+			layoutSet
+		);
+
+		Layout layout = _mockLayout(41L, 21L);
+
+		Mockito.when(
+			_layoutLocalService.getLayouts(21L, false, 0, 501, null)
+		).thenReturn(
+			Collections.singletonList(layout)
+		);
+
+		// A virtual host the site no longer has purges the site's pages under
+		// the virtual host
+
+		Assert.assertEquals(
+			SetUtil.fromArray(
+				"https://www.example.org/page", "https://www.example.org/page/",
+				"https://www.example.org/pagina",
+				"https://www.example.org/pagina/",
+				"https://www.example.org/en/page",
+				"https://www.example.org/en/page/",
+				"https://www.example.org/es/pagina",
+				"https://www.example.org/es/pagina/"),
+			_cdnPurgeURLResolver.getVirtualHostURLs(30L, "www.example.org"));
+
+		// A virtual host the site still has is purged through the site's
+		// cache tag
+
+		Assert.assertEquals(
+			Collections.emptySet(),
+			_cdnPurgeURLResolver.getVirtualHostURLs(30L, "www.example.com"));
+
+		// Private pages are not cached
+
+		Mockito.when(
+			layoutSet.isPrivateLayout()
+		).thenReturn(
+			true
+		);
+
+		Assert.assertEquals(
+			Collections.emptySet(),
+			_cdnPurgeURLResolver.getVirtualHostURLs(30L, "www.example.org"));
+	}
+
 	private void _mockGroup(
 		long groupId, String friendlyURL, boolean guest,
 		String virtualHostname) {

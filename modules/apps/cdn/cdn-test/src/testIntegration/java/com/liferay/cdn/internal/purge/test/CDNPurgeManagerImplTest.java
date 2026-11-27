@@ -12,6 +12,7 @@ import com.liferay.cdn.purge.CDNPurgeRequest;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.io.StreamUtil;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.configuration.test.util.CompanyConfigurationTemporarySwapper;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -33,6 +34,7 @@ import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -45,8 +47,10 @@ import java.net.InetSocketAddress;
 
 import java.util.Collections;
 import java.util.Dictionary;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -179,6 +183,33 @@ public class CDNPurgeManagerImplTest {
 		}
 	}
 
+	@FeatureFlag("LPD-107638")
+	@Test
+	public void testPurgeByURLWithVirtualHosts() throws Exception {
+		Group group = GroupTestUtil.addGroup();
+
+		Layout layout = LayoutTestUtil.addTypePortletLayout(group);
+
+		String hostname = StringUtil.toLowerCase(
+			RandomTestUtil.randomString() + ".com");
+
+		_layoutSetLocalService.updateVirtualHosts(
+			group.getGroupId(), false,
+			new TreeMap<>(
+				HashMapBuilder.put(
+					hostname, StringPool.BLANK
+				).build()));
+
+		try {
+			_testPurgeByURLWithVirtualHosts(group, layout, hostname);
+		}
+		finally {
+			_waitForCDNDisabled();
+
+			_groupLocalService.deleteGroup(group);
+		}
+	}
+
 	@FeatureFlag(enable = false, value = "LPD-107638")
 	@Test
 	public void testPurgeWhenFeatureFlagIsDisabled() throws Exception {
@@ -204,6 +235,18 @@ public class CDNPurgeManagerImplTest {
 	private boolean _containsURL(Set<String> urls, String path) {
 		for (String url : urls) {
 			if (url.endsWith(path)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private boolean _containsURL(
+		Set<String> urls, String hostname, String path) {
+
+		for (String url : urls) {
+			if (url.contains("://" + hostname) && url.endsWith(path)) {
 				return true;
 			}
 		}
@@ -321,6 +364,44 @@ public class CDNPurgeManagerImplTest {
 			// The home page is also purged at the site root
 
 			Assert.assertTrue(urls.toString(), _containsURL(urls, sitePath));
+		}
+	}
+
+	private void _testPurgeByURLWithVirtualHosts(
+			Group group, Layout layout, String hostname)
+		throws Exception {
+
+		try (CompanyConfigurationTemporarySwapper
+				companyConfigurationTemporarySwapper =
+					_getCDNCompanyConfigurationTemporarySwapper(
+						TestPropsValues.getCompanyId(),
+						HashMapBuilder.<String, Object>put(
+							"urlPurgeOnly", true
+						).build())) {
+
+			_waitForURLPurgeOnly();
+
+			// Replacing a virtual host purges the site's pages under both the
+			// removed and the added virtual hosts. The pages under the removed
+			// virtual host may be purged with a separate request.
+
+			String newHostname = StringUtil.toLowerCase(
+				RandomTestUtil.randomString() + ".com");
+
+			_layoutSetLocalService.updateVirtualHosts(
+				group.getGroupId(), false,
+				new TreeMap<>(
+					HashMapBuilder.put(
+						newHostname, StringPool.BLANK
+					).build()));
+
+			Set<String> urls = new HashSet<>();
+
+			while (!_containsURL(urls, hostname, layout.getFriendlyURL()) ||
+				   !_containsURL(urls, newHostname, layout.getFriendlyURL())) {
+
+				urls.addAll(_pollURLs());
+			}
 		}
 	}
 

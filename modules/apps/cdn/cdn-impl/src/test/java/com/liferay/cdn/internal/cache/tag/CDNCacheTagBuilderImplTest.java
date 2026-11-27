@@ -31,9 +31,11 @@ import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.ShardedModel;
+import com.liferay.portal.kernel.model.VirtualHost;
 import com.liferay.portal.kernel.model.WorkflowedModel;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -137,6 +139,9 @@ public class CDNCacheTagBuilderImplTest {
 		ReflectionTestUtil.setFieldValue(
 			_cdnCacheTagBuilderImpl, "_layoutPageTemplateEntryLocalService",
 			_layoutPageTemplateEntryLocalService);
+		ReflectionTestUtil.setFieldValue(
+			_cdnCacheTagBuilderImpl, "_layoutSetLocalService",
+			_layoutSetLocalService);
 		ReflectionTestUtil.setFieldValue(
 			_cdnCacheTagBuilderImpl, "_objectDefinitionLocalService",
 			_objectDefinitionLocalService);
@@ -715,6 +720,68 @@ public class CDNCacheTagBuilderImplTest {
 			_cdnCacheTagBuilderImpl.getPurgeCacheTags(privateLayout, null));
 	}
 
+	@Test
+	public void testGetPurgeCacheTagsOfVirtualHostChange() {
+		_mockLayoutSet(30L, 20L, false);
+		_mockLayoutSet(31L, 21L, false);
+		_mockLayoutSet(32L, 22L, true);
+
+		VirtualHost virtualHost = _mockVirtualHost(
+			30L, "www.example.com", "en_US");
+
+		// Add
+
+		Assert.assertEquals(
+			SetUtil.fromArray("ns-s20"),
+			_cdnCacheTagBuilderImpl.getPurgeCacheTags(null, virtualHost));
+
+		// Company virtual hosts and virtual hosts of private pages are not
+		// purged
+
+		Assert.assertEquals(
+			Collections.emptySet(),
+			_cdnCacheTagBuilderImpl.getPurgeCacheTags(
+				null, _mockVirtualHost(0L, "www.example.com", "en_US")));
+		Assert.assertEquals(
+			Collections.emptySet(),
+			_cdnCacheTagBuilderImpl.getPurgeCacheTags(
+				null, _mockVirtualHost(32L, "www.example.com", "en_US")));
+
+		// Update
+
+		Assert.assertEquals(
+			Collections.emptySet(),
+			_cdnCacheTagBuilderImpl.getPurgeCacheTags(
+				virtualHost,
+				_mockVirtualHost(30L, "www.example.com", "en_US")));
+		Assert.assertEquals(
+			SetUtil.fromArray("ns-s20"),
+			_cdnCacheTagBuilderImpl.getPurgeCacheTags(
+				virtualHost,
+				_mockVirtualHost(30L, "www.example.com", "es_ES")));
+		Assert.assertEquals(
+			SetUtil.fromArray("ns-s20"),
+			_cdnCacheTagBuilderImpl.getPurgeCacheTags(
+				virtualHost,
+				_mockVirtualHost(30L, "www.example.org", "en_US")));
+		Assert.assertEquals(
+			SetUtil.fromArray("ns-s20", "ns-s21"),
+			_cdnCacheTagBuilderImpl.getPurgeCacheTags(
+				virtualHost,
+				_mockVirtualHost(31L, "www.example.com", "en_US")));
+		Assert.assertEquals(
+			SetUtil.fromArray("ns-s20"),
+			_cdnCacheTagBuilderImpl.getPurgeCacheTags(
+				virtualHost,
+				_mockVirtualHost(32L, "www.example.com", "en_US")));
+
+		// Remove
+
+		Assert.assertEquals(
+			SetUtil.fromArray("ns-s20"),
+			_cdnCacheTagBuilderImpl.getPurgeCacheTags(virtualHost, null));
+	}
+
 	private void _assertPurgeCacheTags(
 		WorkflowedModel workflowedModel, String... cacheTags) {
 
@@ -806,6 +873,36 @@ public class CDNCacheTagBuilderImplTest {
 		return layout;
 	}
 
+	private void _mockLayoutSet(
+		long layoutSetId, long groupId, boolean privateLayout) {
+
+		LayoutSet layoutSet = Mockito.mock(LayoutSet.class);
+
+		Mockito.when(
+			layoutSet.getCompanyId()
+		).thenReturn(
+			1L
+		);
+
+		Mockito.when(
+			layoutSet.getGroupId()
+		).thenReturn(
+			groupId
+		);
+
+		Mockito.when(
+			layoutSet.isPrivateLayout()
+		).thenReturn(
+			privateLayout
+		);
+
+		Mockito.when(
+			_layoutSetLocalService.fetchLayoutSet(layoutSetId)
+		).thenReturn(
+			layoutSet
+		);
+	}
+
 	private Layout _mockNavigationLayout(
 		long plid, String friendlyURL, String name, int priority,
 		long parentLayoutId) {
@@ -851,6 +948,32 @@ public class CDNCacheTagBuilderImplTest {
 		);
 
 		return layout;
+	}
+
+	private VirtualHost _mockVirtualHost(
+		long layoutSetId, String hostname, String languageId) {
+
+		VirtualHost virtualHost = Mockito.mock(VirtualHost.class);
+
+		Mockito.when(
+			virtualHost.getHostname()
+		).thenReturn(
+			hostname
+		);
+
+		Mockito.when(
+			virtualHost.getLanguageId()
+		).thenReturn(
+			languageId
+		);
+
+		Mockito.when(
+			virtualHost.getLayoutSetId()
+		).thenReturn(
+			layoutSetId
+		);
+
+		return virtualHost;
 	}
 
 	private <T extends WorkflowedModel> T _mockWorkflowedModel(Class<T> clazz) {
@@ -909,6 +1032,8 @@ public class CDNCacheTagBuilderImplTest {
 	private final LayoutPageTemplateEntryLocalService
 		_layoutPageTemplateEntryLocalService = Mockito.mock(
 			LayoutPageTemplateEntryLocalService.class);
+	private final LayoutSetLocalService _layoutSetLocalService = Mockito.mock(
+		LayoutSetLocalService.class);
 	private final ObjectDefinitionLocalService _objectDefinitionLocalService =
 		Mockito.mock(ObjectDefinitionLocalService.class);
 	private final Portal _portal = Mockito.mock(Portal.class);

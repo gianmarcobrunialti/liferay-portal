@@ -77,6 +77,7 @@ import java.net.InetSocketAddress;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -565,6 +566,72 @@ public class CDNModelListenerTest {
 		}
 	}
 
+	@FeatureFlag("LPD-107638")
+	@Test
+	public void testVirtualHostModelListener() throws Throwable {
+		_otherGroup = GroupTestUtil.addGroup();
+
+		String hostname = StringUtil.toLowerCase(
+			RandomTestUtil.randomString() + ".com");
+
+		try (CompanyConfigurationTemporarySwapper
+				cdnCompanyConfigurationTemporarySwapper =
+					_getCDNCompanyConfigurationTemporarySwapper()) {
+
+			// Adding a virtual host purges the site
+
+			_updateVirtualHosts(_group, false, hostname, StringPool.BLANK);
+
+			_assertPurge("lfr-s" + _group.getGroupId());
+
+			// Saving the same virtual hosts does not purge
+
+			_updateVirtualHosts(_group, false, hostname, StringPool.BLANK);
+
+			_assertNoPurge();
+
+			// Changing the language of a virtual host purges the site
+
+			_updateVirtualHosts(
+				_group, false, hostname,
+				LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()));
+
+			_assertPurge("lfr-s" + _group.getGroupId());
+
+			// Moving a virtual host to another site purges both sites
+
+			TransactionInvokerUtil.invoke(
+				_transactionConfig,
+				() -> {
+					_updateVirtualHosts(_group, false, null, null);
+					_updateVirtualHosts(
+						_otherGroup, false, hostname, StringPool.BLANK);
+
+					return null;
+				});
+
+			_assertPurge(
+				"lfr-s" + _group.getGroupId(),
+				"lfr-s" + _otherGroup.getGroupId());
+
+			// Removing a virtual host purges the site
+
+			_updateVirtualHosts(_otherGroup, false, null, null);
+
+			_assertPurge("lfr-s" + _otherGroup.getGroupId());
+
+			// Private pages are not cached
+
+			_updateVirtualHosts(_group, true, hostname, StringPool.BLANK);
+
+			_assertNoPurge();
+
+			_updateVirtualHosts(_group, true, null, null);
+
+			_assertNoPurge();
+		}
+	}
+
 	private void _assertNoPurge() throws Exception {
 		Assert.assertNull(_bodies.poll(2, TimeUnit.SECONDS));
 	}
@@ -611,6 +678,21 @@ public class CDNModelListenerTest {
 			"lfr-l", groupId, "-", _portal.getClassNameId(clazz));
 	}
 
+	private void _updateVirtualHosts(
+			Group group, boolean privateLayout, String hostname,
+			String languageId)
+		throws Exception {
+
+		TreeMap<String, String> virtualHostnames = new TreeMap<>();
+
+		if (hostname != null) {
+			virtualHostnames.put(hostname, languageId);
+		}
+
+		_layoutSetLocalService.updateVirtualHosts(
+			group.getGroupId(), privateLayout, virtualHostnames);
+	}
+
 	private static final TransactionConfig _transactionConfig =
 		TransactionConfig.Factory.create(
 			Propagation.REQUIRED, new Class<?>[] {Exception.class});
@@ -648,6 +730,9 @@ public class CDNModelListenerTest {
 
 	@Inject
 	private ObjectEntryLocalService _objectEntryLocalService;
+
+	@DeleteAfterTestRun
+	private Group _otherGroup;
 
 	@Inject
 	private Portal _portal;
