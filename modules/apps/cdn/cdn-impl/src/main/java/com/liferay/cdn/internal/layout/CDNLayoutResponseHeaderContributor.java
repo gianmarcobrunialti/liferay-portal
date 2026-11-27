@@ -21,14 +21,18 @@ import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.layout.LayoutResponseHeaderContributor;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.servlet.HttpMethods;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -42,9 +46,11 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * Adds the CDN cache tag header to the pages a CDN may cache: public pages
- * requested by guests with GET, outside of a publication. A signed in response
- * never carries cache tags, so even a misconfigured CDN has nothing to index.
+ * Adds the CDN headers to the pages a CDN may cache: public pages requested by
+ * guests with GET, outside of a publication. The cache tag header lets the CDN
+ * purge a page by tag, and the CDN cache control header lets the CDN cache a
+ * page that every guest can share. A signed in response never carries either
+ * header, so even a misconfigured CDN has nothing to index or share.
  *
  * @author Gianmarco Brunialti Masera
  */
@@ -78,15 +84,19 @@ public class CDNLayoutResponseHeaderContributor
 		CDNConfiguration cdnConfiguration =
 			_cdnTemplateRegistry.getCDNConfiguration(companyId);
 
-		if (!cdnConfiguration.emitCacheTags()) {
-			return;
-		}
-
 		ConfiguredCDNTemplate configuredCDNTemplate =
 			_cdnTemplateRegistry.getConfiguredCDNTemplate(
 				companyId, cdnConfiguration);
 
 		if (configuredCDNTemplate == null) {
+			return;
+		}
+
+		_setCDNCacheControlHeader(
+			cdnConfiguration, configuredCDNTemplate, httpServletRequest,
+			httpServletResponse, themeDisplay);
+
+		if (!cdnConfiguration.emitCacheTags()) {
 			return;
 		}
 
@@ -162,6 +172,68 @@ public class CDNLayoutResponseHeaderContributor
 		}
 
 		return modelCacheTags;
+	}
+
+	/**
+	 * Returns whether the response can be shared by every guest that requests
+	 * the same URL: a successful response that sets no cookie, rendered in the
+	 * language that its URL selects. A redirect or an error has nothing to
+	 * share, and a cookie would be handed to every guest. Without a language
+	 * in the URL, the page is shared only in the site's default language,
+	 * because a language taken from the session or a cookie is one guest's
+	 * choice.
+	 */
+	private boolean _isShareable(
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse, ThemeDisplay themeDisplay) {
+
+		if ((httpServletResponse.getStatus() != HttpServletResponse.SC_OK) ||
+			httpServletResponse.containsHeader(HttpHeaders.SET_COOKIE)) {
+
+			return false;
+		}
+
+		HttpSession httpSession = httpServletRequest.getSession(false);
+
+		if ((httpSession != null) && httpSession.isNew()) {
+			return false;
+		}
+
+		String languageId = themeDisplay.getI18nLanguageId();
+
+		if (Validator.isNull(languageId)) {
+			languageId = LocaleUtil.toLanguageId(
+				themeDisplay.getSiteDefaultLocale());
+		}
+
+		return Objects.equals(themeDisplay.getLanguageId(), languageId);
+	}
+
+	/**
+	 * Tells the CDN, and only the CDN, how long it can cache the response.
+	 * Browsers ignore the header and keep following the
+	 * <code>Cache-Control</code> header.
+	 */
+	private void _setCDNCacheControlHeader(
+		CDNConfiguration cdnConfiguration,
+		ConfiguredCDNTemplate configuredCDNTemplate,
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse, ThemeDisplay themeDisplay) {
+
+		String cdnCacheControlHeaderName =
+			configuredCDNTemplate.getCDNCacheControlHeaderName();
+
+		if (Validator.isNull(cdnCacheControlHeaderName) ||
+			(cdnConfiguration.cdnCacheControlMaxAge() <= 0) ||
+			!_isShareable(
+				httpServletRequest, httpServletResponse, themeDisplay)) {
+
+			return;
+		}
+
+		httpServletResponse.setHeader(
+			cdnCacheControlHeaderName,
+			"max-age=" + cdnConfiguration.cdnCacheControlMaxAge());
 	}
 
 	@Reference
