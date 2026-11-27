@@ -46,6 +46,24 @@ public interface CDNConfiguration {
 	public String cacheTagNamespace();
 
 	@Meta.AD(
+		description = "cdn-cache-control-header-name-help",
+		name = "cdn-cache-control-header-name", required = false
+	)
+	public String cdnCacheControlHeaderName();
+
+	/**
+	 * The CDN caches a guest page for this many seconds unless a purge
+	 * removes it earlier. The default is short because the CDN serves stale
+	 * content for up to this long whenever a change is not purged, for example
+	 * when cache tags are not emitted.
+	 */
+	@Meta.AD(
+		deflt = "300", description = "cdn-cache-control-max-age-help",
+		name = "cdn-cache-control-max-age", required = false
+	)
+	public int cdnCacheControlMaxAge();
+
+	@Meta.AD(
 		deflt = "2000", description = "cdn-coalesce-window-ms-help",
 		name = "coalesce-window-ms", required = false
 	)

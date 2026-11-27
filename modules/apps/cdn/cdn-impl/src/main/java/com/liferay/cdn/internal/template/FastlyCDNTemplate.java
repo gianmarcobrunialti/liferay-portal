@@ -25,6 +25,11 @@ import org.osgi.service.component.annotations.Reference;
 @Component(service = CDNTemplate.class)
 public class FastlyCDNTemplate implements CDNTemplate {
 
+	@Override
+	public String getCDNCacheControlHeaderName() {
+		return "Surrogate-Control";
+	}
+
 	/**
 	 * Leaves 2 KB of Fastly's 16 KB Surrogate-Key limit for the keys the edge
 	 * appends to the ones the portal sends.

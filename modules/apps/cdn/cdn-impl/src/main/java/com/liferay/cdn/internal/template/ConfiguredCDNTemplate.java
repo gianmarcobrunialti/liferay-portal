@@ -36,6 +36,13 @@ public class ConfiguredCDNTemplate implements CDNTemplate {
 	}
 
 	@Override
+	public String getCDNCacheControlHeaderName() {
+		return _get(
+			_cdnConfiguration.cdnCacheControlHeaderName(),
+			_cdnTemplate.getCDNCacheControlHeaderName());
+	}
+
+	@Override
 	public int getCacheTagHeaderMaxBytes() {
 		return _get(
 			_cdnConfiguration.maxCacheTagHeaderBytes(),

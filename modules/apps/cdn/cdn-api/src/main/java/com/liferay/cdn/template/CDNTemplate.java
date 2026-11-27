@@ -11,9 +11,11 @@ import java.util.Locale;
  * Describes how to purge one CDN through its HTTP API, and which header the
  * CDN reads cache tags from. The CDN integration has a single generic HTTP
  * purger, and a template only supplies the values it sends, so supporting
- * another CDN takes a template rather than code. Register an implementation as
- * an OSGi service to make it selectable in the CDN configuration. Every value
- * the administrator fills in the configuration overrides the template's value.
+ * another CDN takes a template rather than code. A template also names the
+ * header that tells the CDN how long it can cache a guest page. Register an
+ * implementation as an OSGi service to make it selectable in the CDN
+ * configuration. Every value the administrator fills in the configuration
+ * overrides the template's value.
  *
  * <p>
  * The URL templates, the header values, and the body templates accept the
@@ -28,6 +30,15 @@ import java.util.Locale;
  * @author Gianmarco Brunialti Masera
  */
 public interface CDNTemplate {
+
+	/**
+	 * Returns the name of the response header, targeted at the CDN as RFC
+	 * 9213 describes, that tells the CDN how long it can cache a guest page,
+	 * or <code>null</code> when the CDN reads no such header. The CDN reads the
+	 * header instead of <code>Cache-Control</code>, so browsers keep not
+	 * caching the page.
+	 */
+	public String getCDNCacheControlHeaderName();
 
 	public int getCacheTagHeaderMaxBytes();
 

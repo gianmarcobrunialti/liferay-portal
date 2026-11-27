@@ -29,6 +29,11 @@ import org.osgi.service.component.annotations.Reference;
 public class CustomCDNTemplate implements CDNTemplate {
 
 	@Override
+	public String getCDNCacheControlHeaderName() {
+		return "CDN-Cache-Control";
+	}
+
+	@Override
 	public int getCacheTagHeaderMaxBytes() {
 		return 16384;
 	}
