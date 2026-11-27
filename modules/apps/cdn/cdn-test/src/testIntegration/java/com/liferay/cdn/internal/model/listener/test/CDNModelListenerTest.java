@@ -57,6 +57,7 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
@@ -76,6 +77,7 @@ import java.io.Serializable;
 import java.net.InetSocketAddress;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -354,6 +356,104 @@ public class CDNModelListenerTest {
 
 	@FeatureFlag("LPD-107638")
 	@Test
+	public void testJournalArticleModelListenerWithCheckArticles()
+		throws Exception {
+
+		try (CompanyConfigurationTemporarySwapper
+				cdnCompanyConfigurationTemporarySwapper =
+					_getCDNCompanyConfigurationTemporarySwapper()) {
+
+			// A display date in the future does not purge
+
+			JournalArticle journalArticle1 = _addScheduledJournalArticle();
+			JournalArticle journalArticle2 = _addScheduledJournalArticle();
+
+			_journalArticleLocalService.checkArticles(_group.getCompanyId());
+
+			_assertNoPurge();
+
+			_assertStatus(WorkflowConstants.STATUS_SCHEDULED, journalArticle1);
+			_assertStatus(WorkflowConstants.STATUS_SCHEDULED, journalArticle2);
+
+			// Reaching the display date purges, with one request for all the
+			// articles that the check publishes
+
+			_updateDisplayDate(journalArticle1);
+			_updateDisplayDate(journalArticle2);
+
+			_assertNoPurge();
+
+			_journalArticleLocalService.checkArticles(_group.getCompanyId());
+
+			_assertPurge(
+				"lfr-wc" + journalArticle1.getResourcePrimKey(),
+				"lfr-wc" + journalArticle2.getResourcePrimKey(),
+				_getCollectionTag(_group.getGroupId(), JournalArticle.class),
+				"lfr-x" + _group.getGroupId());
+
+			_assertStatus(WorkflowConstants.STATUS_APPROVED, journalArticle1);
+			_assertStatus(WorkflowConstants.STATUS_APPROVED, journalArticle2);
+
+			// Reaching the expiration date purges
+
+			JournalArticle journalArticle3 = JournalTestUtil.addArticle(
+				_group.getGroupId(),
+				JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+
+			String[] tags = {
+				"lfr-wc" + journalArticle3.getResourcePrimKey(),
+				_getCollectionTag(_group.getGroupId(), JournalArticle.class),
+				"lfr-x" + _group.getGroupId()
+			};
+
+			_assertPurge(tags);
+
+			journalArticle3.setExpirationDate(
+				new Date(System.currentTimeMillis() - Time.HOUR));
+
+			journalArticle3 = _journalArticleLocalService.updateJournalArticle(
+				journalArticle3);
+
+			_assertPurge(tags);
+
+			_journalArticleLocalService.checkArticles(_group.getCompanyId());
+
+			_assertPurge(tags);
+
+			_assertStatus(WorkflowConstants.STATUS_EXPIRED, journalArticle3);
+
+			// Reaching the review date does not purge, because it only
+			// notifies the subscribers
+
+			journalArticle3 = JournalTestUtil.addArticle(
+				_group.getGroupId(),
+				JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+
+			tags = new String[] {
+				"lfr-wc" + journalArticle3.getResourcePrimKey(),
+				_getCollectionTag(_group.getGroupId(), JournalArticle.class),
+				"lfr-x" + _group.getGroupId()
+			};
+
+			_assertPurge(tags);
+
+			journalArticle3.setReviewDate(new Date());
+
+			journalArticle3 = _journalArticleLocalService.updateJournalArticle(
+				journalArticle3);
+
+			_assertPurge(tags);
+
+			_journalArticleLocalService.checkArticles(_group.getCompanyId());
+
+			_assertNoPurge();
+
+			_assertStatus(WorkflowConstants.STATUS_APPROVED, journalArticle3);
+		}
+	}
+
+	@FeatureFlag("LPD-107638")
+	@Test
 	public void testLayoutModelListener() throws Throwable {
 		Layout layout = LayoutTestUtil.addTypeContentPublishedLayout(
 			_group, RandomTestUtil.randomString(),
@@ -565,6 +665,19 @@ public class CDNModelListenerTest {
 		}
 	}
 
+	private JournalArticle _addScheduledJournalArticle() throws Exception {
+		return JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			JournalArticleConstants.CLASS_NAME_ID_DEFAULT, StringPool.BLANK,
+			true, RandomTestUtil.randomLocaleStringMap(),
+			RandomTestUtil.randomLocaleStringMap(),
+			RandomTestUtil.randomLocaleStringMap(), null,
+			LocaleUtil.getDefault(),
+			new Date(System.currentTimeMillis() + Time.DAY), null, true, true,
+			_serviceContext);
+	}
+
 	private void _assertNoPurge() throws Exception {
 		Assert.assertNull(_bodies.poll(2, TimeUnit.SECONDS));
 	}
@@ -582,6 +695,15 @@ public class CDNModelListenerTest {
 				JSONUtil.toStringList(jsonObject.getJSONArray("tags"))));
 
 		_assertNoPurge();
+	}
+
+	private void _assertStatus(int status, JournalArticle journalArticle)
+		throws Exception {
+
+		journalArticle = _journalArticleLocalService.getArticle(
+			journalArticle.getId());
+
+		Assert.assertEquals(status, journalArticle.getStatus());
 	}
 
 	private CompanyConfigurationTemporarySwapper
@@ -609,6 +731,18 @@ public class CDNModelListenerTest {
 	private String _getCollectionTag(long groupId, Class<?> clazz) {
 		return StringBundler.concat(
 			"lfr-l", groupId, "-", _portal.getClassNameId(clazz));
+	}
+
+	private void _updateDisplayDate(JournalArticle journalArticle)
+		throws Exception {
+
+		journalArticle = _journalArticleLocalService.getArticle(
+			journalArticle.getId());
+
+		journalArticle.setDisplayDate(
+			new Date(System.currentTimeMillis() - Time.HOUR));
+
+		_journalArticleLocalService.updateJournalArticle(journalArticle);
 	}
 
 	private static final TransactionConfig _transactionConfig =
