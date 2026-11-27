@@ -58,12 +58,8 @@ public class ObjectActionFriendlyURLRestController extends BaseRestController {
 			return new ResponseEntity<>(json, HttpStatus.OK);
 		}
 
-		long objectEntryId = jsonObject.getLong("classPK");
-
-		_patchFriendlyURL(
-			friendlyURLPath, objectEntryId, objectInfo.getRESTPath());
-
-		_propagateFriendlyURL(friendlyURLPath, objectEntryId, objectName);
+		_updateFriendlyURLPath(
+			friendlyURLPath, jsonObject.getLong("classPK"), objectName);
 
 		return new ResponseEntity<>(json, HttpStatus.OK);
 	}
@@ -78,30 +74,28 @@ public class ObjectActionFriendlyURLRestController extends BaseRestController {
 			return normalizedTitle;
 		}
 
+		long parentObjectEntryId = valuesJSONObject.optLong(
+			objectInfo.getParentRelationshipFieldName());
+
+		if (parentObjectEntryId == 0) {
+			return normalizedTitle;
+		}
+
 		ObjectInfo parentObjectInfo = _objectInfoMap.get(
 			objectInfo.getParentObjectName());
 
-		long parentId = valuesJSONObject.getLong(
-			objectInfo.getParentRelationshipFieldName());
-
-		JSONObject parentJSONObject = new JSONObject(
+		JSONObject parentObjectEntryJSONObject = new JSONObject(
 			get(
 				_getAuthorization(),
 				UriComponentsBuilder.fromPath(
 					parentObjectInfo.getRESTPath()
 				).pathSegment(
-					String.valueOf(parentId)
+					String.valueOf(parentObjectEntryId)
 				).build(
 				).toUri()));
 
-		String parentFriendlyURLPath = _buildFriendlyURLPath(
-			parentObjectInfo, parentJSONObject);
-
-		if (parentFriendlyURLPath.isEmpty()) {
-			return parentFriendlyURLPath;
-		}
-
-		return parentFriendlyURLPath + "/" + normalizedTitle;
+		return parentObjectEntryJSONObject.getString("friendlyUrlPath") + "/" +
+			normalizedTitle;
 	}
 
 	private String _getAuthorization() {
@@ -111,7 +105,7 @@ public class ObjectActionFriendlyURLRestController extends BaseRestController {
 
 	private String _getObjectName(JSONObject jsonObject) {
 		for (String objectName : _objectInfoMap.keySet()) {
-			if (jsonObject.has(_DTO_KEY_PREFIX + objectName)) {
+			if (jsonObject.has("objectEntryDTO" + objectName)) {
 				return objectName;
 			}
 		}
@@ -129,41 +123,34 @@ public class ObjectActionFriendlyURLRestController extends BaseRestController {
 		return title.replaceAll("^-|-$", "");
 	}
 
-	private void _patchFriendlyURL(
-		String friendlyURLPath, long objectEntryId, String restPath) {
-
-		patch(
-			_getAuthorization(),
-			new JSONObject(
-			).put(
-				"friendlyUrlPath", friendlyURLPath
-			).put(
-				"friendlyUrlPath_i18n",
-				new JSONObject(
-				).put(
-					"en_US", friendlyURLPath
-				)
-			).toString(),
-			UriComponentsBuilder.fromPath(
-				restPath
-			).pathSegment(
-				String.valueOf(objectEntryId)
-			).build(
-			).toUri());
-	}
-
-	private void _propagateFriendlyURL(
+	private void _updateFriendlyURLPath(
 		String friendlyURLPath, long objectEntryId, String objectName) {
 
+		ObjectInfo objectInfo = _objectInfoMap.get(objectName);
+
+		JSONObject objectEntryJSONObject = new JSONObject(
+			patch(
+				_getAuthorization(),
+				new JSONObject(
+				).put(
+					"friendlyUrlPath", friendlyURLPath
+				).toString(),
+				UriComponentsBuilder.fromPath(
+					objectInfo.getRESTPath()
+				).pathSegment(
+					String.valueOf(objectEntryId)
+				).build(
+				).toUri()));
+
 		for (Map.Entry<String, ObjectInfo> entry : _objectInfoMap.entrySet()) {
-			String key = entry.getKey();
 			ObjectInfo value = entry.getValue();
 
 			if (!Objects.equals(objectName, value.getParentObjectName())) {
+
 				continue;
 			}
 
-			JSONArray childJSONArray = new JSONObject(
+			JSONArray itemsJSONArray = new JSONObject(
 				get(
 					_getAuthorization(),
 					UriComponentsBuilder.fromPath(
@@ -181,31 +168,25 @@ public class ObjectActionFriendlyURLRestController extends BaseRestController {
 				"items"
 			);
 
-			for (int i = 0; i < childJSONArray.length(); i++) {
-				JSONObject childJSONObject = childJSONArray.getJSONObject(i);
+			for (int i = 0; i < itemsJSONArray.length(); i++) {
+				JSONObject itemJSONObject = itemsJSONArray.getJSONObject(i);
 
-				String normalizedChildTitle = _normalizeTitle(
-					childJSONObject.getString("title"));
+				String normalizedTitle = _normalizeTitle(
+					itemJSONObject.getString("title"));
 
-				if (normalizedChildTitle.isEmpty()) {
+				if (normalizedTitle.isEmpty()) {
 					continue;
 				}
 
-				String childFriendlyURLPath =
-					friendlyURLPath + "/" + normalizedChildTitle;
-				long childObjectEntryId = childJSONObject.getLong("id");
+				String key = entry.getKey();
 
-				_patchFriendlyURL(
-					childFriendlyURLPath, childObjectEntryId,
-					value.getRESTPath());
-
-				_propagateFriendlyURL(
-					childFriendlyURLPath, childObjectEntryId, key);
+				_updateFriendlyURLPath(
+					objectEntryJSONObject.getString("friendlyUrlPath") + "/" +
+						normalizedTitle,
+					itemJSONObject.getLong("id"), key);
 			}
 		}
 	}
-
-	private static final String _DTO_KEY_PREFIX = "objectEntryDTO";
 
 	private static final Map<String, ObjectInfo> _objectInfoMap =
 		TreeMapBuilder.put(
