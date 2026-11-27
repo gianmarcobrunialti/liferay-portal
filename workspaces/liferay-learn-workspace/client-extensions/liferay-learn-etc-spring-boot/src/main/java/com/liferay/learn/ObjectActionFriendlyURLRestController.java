@@ -35,7 +35,7 @@ import org.springframework.web.util.UriComponentsBuilder;
  * @author Caleb Hall
  * @author Francesco Acciaro
  */
-@RequestMapping("/object/action/friendly-url")
+@RequestMapping("/object/action/friendly/url")
 @RestController
 public class ObjectActionFriendlyURLRestController extends BaseRestController {
 
