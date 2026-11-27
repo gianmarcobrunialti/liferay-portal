@@ -8,6 +8,9 @@ package com.liferay.cdn.internal.model.listener.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.service.BlogsEntryLocalService;
+import com.liferay.client.extension.constants.ClientExtensionEntryConstants;
+import com.liferay.client.extension.model.ClientExtensionEntry;
+import com.liferay.client.extension.service.ClientExtensionEntryLocalService;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
@@ -57,6 +60,7 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
@@ -75,8 +79,10 @@ import java.io.Serializable;
 
 import java.net.InetSocketAddress;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -171,6 +177,76 @@ public class CDNModelListenerTest {
 			_assertPurge(tags);
 
 			_blogsEntryLocalService.deleteEntry(blogsEntry.getEntryId());
+
+			_assertNoPurge();
+		}
+	}
+
+	@FeatureFlag("LPD-107638")
+	@Test
+	public void testClientExtensionEntryModelListener() throws Throwable {
+		try (CompanyConfigurationTemporarySwapper
+				cdnCompanyConfigurationTemporarySwapper =
+					_getCDNCompanyConfigurationTemporarySwapper()) {
+
+			ClientExtensionEntry clientExtensionEntry =
+				_addClientExtensionEntry();
+
+			String tag = "lfr-c" + TestPropsValues.getCompanyId();
+
+			_assertPurge(tag);
+
+			clientExtensionEntry =
+				_clientExtensionEntryLocalService.updateClientExtensionEntry(
+					TestPropsValues.getUserId(),
+					clientExtensionEntry.getClientExtensionEntryId(),
+					clientExtensionEntry.getDescription(),
+					clientExtensionEntry.getNameMap(),
+					clientExtensionEntry.getProperties(),
+					clientExtensionEntry.getSourceCodeURL(),
+					_getTypeSettings());
+
+			_assertPurge(tag);
+
+			_clientExtensionEntryLocalService.deleteClientExtensionEntry(
+				clientExtensionEntry);
+
+			_assertPurge(tag);
+
+			List<ClientExtensionEntry> clientExtensionEntries =
+				TransactionInvokerUtil.invoke(
+					_transactionConfig,
+					() -> Arrays.asList(
+						_addClientExtensionEntry(), _addClientExtensionEntry(),
+						_addClientExtensionEntry()));
+
+			_assertPurge(tag);
+
+			for (ClientExtensionEntry curClientExtensionEntry :
+					clientExtensionEntries) {
+
+				_clientExtensionEntryLocalService.deleteClientExtensionEntry(
+					curClientExtensionEntry);
+			}
+
+			_assertPurge(tag);
+		}
+	}
+
+	@FeatureFlag(enable = false, value = "LPD-107638")
+	@Test
+	public void testClientExtensionEntryModelListenerWhenFeatureFlagIsDisabled()
+		throws Exception {
+
+		try (CompanyConfigurationTemporarySwapper
+				cdnCompanyConfigurationTemporarySwapper =
+					_getCDNCompanyConfigurationTemporarySwapper()) {
+
+			ClientExtensionEntry clientExtensionEntry =
+				_addClientExtensionEntry();
+
+			_clientExtensionEntryLocalService.deleteClientExtensionEntry(
+				clientExtensionEntry);
 
 			_assertNoPurge();
 		}
@@ -565,6 +641,14 @@ public class CDNModelListenerTest {
 		}
 	}
 
+	private ClientExtensionEntry _addClientExtensionEntry() throws Exception {
+		return _clientExtensionEntryLocalService.addClientExtensionEntry(
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+			StringPool.BLANK, RandomTestUtil.randomLocaleStringMap(),
+			StringPool.BLANK, StringPool.BLANK,
+			ClientExtensionEntryConstants.TYPE_GLOBAL_CSS, _getTypeSettings());
+	}
+
 	private void _assertNoPurge() throws Exception {
 		Assert.assertNull(_bodies.poll(2, TimeUnit.SECONDS));
 	}
@@ -576,6 +660,7 @@ public class CDNModelListenerTest {
 
 		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(body);
 
+		Assert.assertTrue(jsonObject.getBoolean("soft"));
 		Assert.assertEquals(
 			SetUtil.fromArray(tags),
 			SetUtil.fromList(
@@ -611,6 +696,16 @@ public class CDNModelListenerTest {
 			"lfr-l", groupId, "-", _portal.getClassNameId(clazz));
 	}
 
+	private String _getTypeSettings() {
+		return UnicodePropertiesBuilder.create(
+			true
+		).put(
+			"url",
+			StringBundler.concat(
+				"https://", RandomTestUtil.randomString(), ".com/global.css")
+		).buildString();
+	}
+
 	private static final TransactionConfig _transactionConfig =
 		TransactionConfig.Factory.create(
 			Propagation.REQUIRED, new Class<?>[] {Exception.class});
@@ -619,6 +714,9 @@ public class CDNModelListenerTest {
 	private BlogsEntryLocalService _blogsEntryLocalService;
 
 	private final BlockingQueue<String> _bodies = new LinkedBlockingQueue<>();
+
+	@Inject
+	private ClientExtensionEntryLocalService _clientExtensionEntryLocalService;
 
 	@Inject
 	private DLAppLocalService _dlAppLocalService;
