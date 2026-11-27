@@ -19,6 +19,14 @@ import org.osgi.service.component.annotations.Reference;
  * expiring, trashing, or deleting an approved version purge the web content,
  * while saving a draft does not.
  *
+ * <p>
+ * The scheduled check of web content updates the article versions as well:
+ * it approves the scheduled versions whose display date is reached and
+ * expires the approved versions whose expiration date is reached, so both
+ * purge here. A review date only notifies the subscribers, which guests never
+ * see.
+ * </p>
+ *
  * @author Gianmarco Brunialti Masera
  */
 @Component(service = ModelListener.class)
