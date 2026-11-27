@@ -2,6 +2,7 @@ dependencies {
 	compileOnly group: "com.liferay.jakarta.portlet", name: "com.liferay.jakarta.portlet-api", version: "4.0.0"
 	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.kernel", version: "default"
 	compileOnly group: "jakarta.servlet", name: "jakarta.servlet-api", version: "6.0.0"
+	compileOnly group: "org.osgi", name: "org.osgi.service.cm", version: "1.6.0"
 	compileOnly group: "org.osgi", name: "org.osgi.service.component.annotations", version: "1.4.0"
 	compileOnly group: "org.osgi", name: "osgi.core", version: "6.0.0"
 	compileOnly project(":apps:asset:asset-publisher-api")
@@ -9,6 +10,8 @@ dependencies {
 	compileOnly project(":apps:cdn:cdn-api")
 	compileOnly project(":apps:change-tracking:change-tracking-api")
 	compileOnly project(":apps:change-tracking:change-tracking-spi")
+	compileOnly project(":apps:client-extension:client-extension-api")
+	compileOnly project(":apps:client-extension:client-extension-type-api")
 	compileOnly project(":apps:configuration-admin:configuration-admin-api")
 	compileOnly project(":apps:fragment:fragment-api")
 	compileOnly project(":apps:info:info-api")
@@ -20,6 +23,7 @@ dependencies {
 	compileOnly project(":apps:portal-configuration:portal-configuration-module-configuration-api")
 	compileOnly project(":apps:portal-security:portal-security-key-api")
 	compileOnly project(":apps:site-navigation:site-navigation-api")
+	compileOnly project(":apps:static:osgi:osgi-util")
 	compileOnly project(":apps:style-book:style-book-api")
 	compileOnly project(":core:osgi-service-tracker-collections")
 	compileOnly project(":core:petra:petra-function")

@@ -9,6 +9,7 @@ import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.cdn.cache.tag.CDNCacheTagBuilder;
 import com.liferay.cdn.cache.tag.CDNCacheTagModelResolver;
 import com.liferay.cdn.configuration.CDNConfiguration;
+import com.liferay.client.extension.model.ClientExtensionEntry;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileVersion;
 import com.liferay.fragment.model.FragmentEntry;
@@ -136,6 +137,17 @@ public class CDNCacheTagBuilderImpl implements CDNCacheTagBuilder {
 
 				return cacheTags;
 			}
+		}
+
+		// Client extensions add scripts, styles, and elements to any guest
+		// page, so the company cache tag is purged
+
+		if (baseModel instanceof ClientExtensionEntry) {
+			ClientExtensionEntry clientExtensionEntry =
+				(ClientExtensionEntry)baseModel;
+
+			return Collections.singleton(
+				getCompanyCacheTag(clientExtensionEntry.getCompanyId()));
 		}
 
 		if (baseModel instanceof DLFileEntry) {
