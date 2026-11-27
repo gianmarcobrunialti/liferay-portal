@@ -68,7 +68,7 @@ public class ObjectActionFriendlyURLRestController extends BaseRestController {
 		ObjectInfo objectInfo, JSONObject valuesJSONObject) {
 
 		String normalizedTitle = _normalizeTitle(
-			valuesJSONObject.getString("title"));
+			valuesJSONObject.optString("title"));
 
 		if (normalizedTitle.isEmpty() || !objectInfo.hasParent()) {
 			return normalizedTitle;
@@ -172,7 +172,7 @@ public class ObjectActionFriendlyURLRestController extends BaseRestController {
 				JSONObject itemJSONObject = itemsJSONArray.getJSONObject(i);
 
 				String normalizedTitle = _normalizeTitle(
-					itemJSONObject.getString("title"));
+					itemJSONObject.optString("title"));
 
 				if (normalizedTitle.isEmpty()) {
 					continue;
