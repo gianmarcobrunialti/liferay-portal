@@ -16,15 +16,14 @@ import java.text.Normalizer;
 import java.util.Map;
 import java.util.Objects;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,50 +39,31 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class ObjectActionFriendlyURLRestController extends BaseRestController {
 
 	@PostMapping
-	public ResponseEntity<String> post(@RequestBody String json) {
+	public ResponseEntity<String> post(
+		@AuthenticationPrincipal Jwt jwt, @RequestBody String json) {
+
 		JSONObject jsonObject = new JSONObject(json);
 
 		String objectName = _getObjectName(jsonObject);
 
-		if (objectName == null) {
-			return new ResponseEntity<>(
-				"Unsupported Object", HttpStatus.BAD_REQUEST);
+		JSONObject objectEntryJSONObject = jsonObject.getJSONObject(
+			"objectEntry");
+
+		ObjectInfo objectInfo = _objectInfoMap.get(objectName);
+
+		String friendlyURLPath = _buildFriendlyURLPath(
+			objectInfo, objectEntryJSONObject.getJSONObject("values"));
+
+		if (friendlyURLPath.isEmpty()) {
+			return new ResponseEntity<>(json, HttpStatus.OK);
 		}
 
-		try {
-			JSONObject objectEntryJSONObject = jsonObject.getJSONObject(
-				"objectEntry");
+		long objectEntryId = jsonObject.getLong("classPK");
 
-			JSONObject valuesJSONObject = objectEntryJSONObject.getJSONObject(
-				"values");
+		_patchFriendlyURL(
+			friendlyURLPath, objectEntryId, objectInfo.getRESTPath());
 
-			ObjectInfo objectInfo = _objectInfoMap.get(objectName);
-
-			String friendlyURLPath = _buildFriendlyURLPath(
-				objectInfo, valuesJSONObject);
-
-			if (friendlyURLPath.isEmpty() ||
-				Objects.equals(
-					friendlyURLPath,
-					jsonObject.getJSONObject(
-						_DTO_KEY_PREFIX + objectName
-					).optString(
-						"friendlyUrlPath"
-					))) {
-
-				return new ResponseEntity<>(json, HttpStatus.OK);
-			}
-
-			long objectEntryId = objectEntryJSONObject.getLong("id");
-
-			_patchFriendlyURL(
-				friendlyURLPath, objectEntryId, objectInfo.getRESTPath());
-
-			_propagateFriendlyURL(friendlyURLPath, objectEntryId, objectName);
-		}
-		catch (Exception exception) {
-			_log.error("Unable to update friendly URL", exception);
-		}
+		_propagateFriendlyURL(friendlyURLPath, objectEntryId, objectName);
 
 		return new ResponseEntity<>(json, HttpStatus.OK);
 	}
@@ -226,9 +206,6 @@ public class ObjectActionFriendlyURLRestController extends BaseRestController {
 	}
 
 	private static final String _DTO_KEY_PREFIX = "objectEntryDTO";
-
-	private static final Log _log = LogFactory.getLog(
-		ObjectActionFriendlyURLRestController.class);
 
 	private static final Map<String, ObjectInfo> _objectInfoMap =
 		TreeMapBuilder.put(
