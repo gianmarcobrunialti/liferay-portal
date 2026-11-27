@@ -33,6 +33,12 @@ public class ConfiguredCDNTemplateTest {
 	@Before
 	public void setUp() {
 		Mockito.when(
+			_cdnTemplate.getCDNCacheControlHeaderName()
+		).thenReturn(
+			"Surrogate-Control"
+		);
+
+		Mockito.when(
 			_cdnTemplate.getCacheTagHeaderMaxBytes()
 		).thenReturn(
 			16384
@@ -136,6 +142,9 @@ public class ConfiguredCDNTemplateTest {
 	@Test
 	public void testGetValues() {
 		Assert.assertEquals(
+			"Surrogate-Control",
+			_configuredCDNTemplate.getCDNCacheControlHeaderName());
+		Assert.assertEquals(
 			16384, _configuredCDNTemplate.getCacheTagHeaderMaxBytes());
 		Assert.assertEquals(
 			" ", _configuredCDNTemplate.getCacheTagHeaderSeparator());
@@ -148,6 +157,12 @@ public class ConfiguredCDNTemplateTest {
 			_cdnConfiguration.cacheTagHeaderSeparator()
 		).thenReturn(
 			","
+		);
+
+		Mockito.when(
+			_cdnConfiguration.cdnCacheControlHeaderName()
+		).thenReturn(
+			"CDN-Cache-Control"
 		);
 
 		Mockito.when(
@@ -174,6 +189,9 @@ public class ConfiguredCDNTemplateTest {
 			"false"
 		);
 
+		Assert.assertEquals(
+			"CDN-Cache-Control",
+			_configuredCDNTemplate.getCDNCacheControlHeaderName());
 		Assert.assertEquals(
 			8192, _configuredCDNTemplate.getCacheTagHeaderMaxBytes());
 		Assert.assertEquals(

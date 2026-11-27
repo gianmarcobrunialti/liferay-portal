@@ -70,6 +70,9 @@ public class FastlyCDNTemplateTest {
 	@Test
 	public void testGetCacheTagHeaderMaxBytes() {
 		Assert.assertEquals(
+			"Surrogate-Control",
+			_configuredCDNTemplate.getCDNCacheControlHeaderName());
+		Assert.assertEquals(
 			14336, _configuredCDNTemplate.getCacheTagHeaderMaxBytes());
 		Assert.assertEquals(
 			"Surrogate-Key", _configuredCDNTemplate.getCacheTagHeaderName());

@@ -70,6 +70,9 @@ public class CloudflareCDNTemplateTest {
 	@Test
 	public void testGetCacheTagHeaderMaxBytes() {
 		Assert.assertEquals(
+			"CDN-Cache-Control",
+			_configuredCDNTemplate.getCDNCacheControlHeaderName());
+		Assert.assertEquals(
 			16384, _configuredCDNTemplate.getCacheTagHeaderMaxBytes());
 		Assert.assertEquals(
 			"Cache-Tag", _configuredCDNTemplate.getCacheTagHeaderName());

@@ -13,6 +13,7 @@ import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.io.StreamUtil;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.test.util.CompanyConfigurationTemporarySwapper;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
@@ -37,6 +38,10 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.junit.Assert;
@@ -117,6 +122,54 @@ public class CDNLayoutResponseHeaderContributorTest {
 				_getCacheTags(portletLayout, false));
 
 			Assert.assertNull(_getCacheTags(contentLayout, true));
+
+			Map<String, List<String>> headerFields = _getHeaderFields(
+				contentLayout, null, false);
+
+			Assert.assertNull(headerFields.get("CDN-Cache-Control"));
+
+			String cookie = _getCookie(headerFields);
+
+			headerFields = _getHeaderFields(contentLayout, cookie, false);
+
+			Assert.assertEquals(
+				Collections.singletonList("max-age=300"),
+				headerFields.get("CDN-Cache-Control"));
+			Assert.assertNull(headerFields.get("Set-Cookie"));
+
+			headerFields = _getHeaderFields(contentLayout, cookie, true);
+
+			Assert.assertNull(headerFields.get("CDN-Cache-Control"));
+		}
+	}
+
+	@FeatureFlag("LPD-107638")
+	@Test
+	public void testContributeWhenCDNIsNotConfigured() throws Exception {
+		Layout layout = LayoutTestUtil.addTypeContentPublishedLayout(
+			_group, RandomTestUtil.randomString(),
+			WorkflowConstants.STATUS_APPROVED);
+
+		String cookie = _getCookie(_getHeaderFields(layout, null, false));
+
+		try (CompanyConfigurationTemporarySwapper
+				companyConfigurationTemporarySwapper =
+					new CompanyConfigurationTemporarySwapper(
+						TestPropsValues.getCompanyId(),
+						"com.liferay.cdn.configuration.CDNConfiguration",
+						HashMapDictionaryBuilder.<String, Object>put(
+							"emitCacheTags", true
+						).put(
+							"enabled", false
+						).put(
+							"templateKey", "custom"
+						).build())) {
+
+			Map<String, List<String>> headerFields = _getHeaderFields(
+				layout, cookie, false);
+
+			Assert.assertNull(headerFields.get("Cache-Tag"));
+			Assert.assertNull(headerFields.get("CDN-Cache-Control"));
 		}
 	}
 
@@ -133,10 +186,59 @@ public class CDNLayoutResponseHeaderContributorTest {
 						TestPropsValues.getCompanyId())) {
 
 			Assert.assertNull(_getCacheTags(layout, false));
+
+			Map<String, List<String>> headerFields = _getHeaderFields(
+				layout, _getCookie(_getHeaderFields(layout, null, false)),
+				false);
+
+			Assert.assertNull(headerFields.get("CDN-Cache-Control"));
 		}
 	}
 
 	private Set<String> _getCacheTags(Layout layout, boolean signedIn)
+		throws Exception {
+
+		Map<String, List<String>> headerFields = _getHeaderFields(
+			layout, null, signedIn);
+
+		List<String> cacheTagHeaderValues = headerFields.get("Cache-Tag");
+
+		if (cacheTagHeaderValues == null) {
+			return null;
+		}
+
+		return SetUtil.fromArray(StringUtil.split(cacheTagHeaderValues.get(0)));
+	}
+
+	private CompanyConfigurationTemporarySwapper
+			_getCompanyConfigurationTemporarySwapper(long companyId)
+		throws Exception {
+
+		return new CompanyConfigurationTemporarySwapper(
+			companyId, "com.liferay.cdn.configuration.CDNConfiguration",
+			HashMapDictionaryBuilder.<String, Object>put(
+				"emitCacheTags", true
+			).put(
+				"enabled", true
+			).put(
+				"templateKey", "custom"
+			).build());
+	}
+
+	private String _getCookie(Map<String, List<String>> headerFields) {
+		List<String> cookies = new ArrayList<>();
+
+		for (String setCookieHeaderValue : headerFields.get("Set-Cookie")) {
+			cookies.add(
+				StringUtil.extractFirst(
+					setCookieHeaderValue, StringPool.SEMICOLON));
+		}
+
+		return StringUtil.merge(cookies, "; ");
+	}
+
+	private Map<String, List<String>> _getHeaderFields(
+			Layout layout, String cookie, boolean signedIn)
 		throws Exception {
 
 		URL url = new URL(
@@ -153,38 +255,20 @@ public class CDNLayoutResponseHeaderContributorTest {
 				"Basic " + Base64.encode("test@liferay.com:test".getBytes()));
 		}
 
+		if (cookie != null) {
+			httpURLConnection.setRequestProperty("Cookie", cookie);
+		}
+
 		try (InputStream inputStream = httpURLConnection.getInputStream()) {
 			Assert.assertEquals(200, httpURLConnection.getResponseCode());
 
 			StreamUtil.toByteArray(inputStream);
 
-			String cacheTagHeaderValue = httpURLConnection.getHeaderField(
-				"Cache-Tag");
-
-			if (cacheTagHeaderValue == null) {
-				return null;
-			}
-
-			return SetUtil.fromArray(StringUtil.split(cacheTagHeaderValue));
+			return httpURLConnection.getHeaderFields();
 		}
 		finally {
 			httpURLConnection.disconnect();
 		}
-	}
-
-	private CompanyConfigurationTemporarySwapper
-			_getCompanyConfigurationTemporarySwapper(long companyId)
-		throws Exception {
-
-		return new CompanyConfigurationTemporarySwapper(
-			companyId, "com.liferay.cdn.configuration.CDNConfiguration",
-			HashMapDictionaryBuilder.<String, Object>put(
-				"emitCacheTags", true
-			).put(
-				"enabled", true
-			).put(
-				"templateKey", "custom"
-			).build());
 	}
 
 	@DeleteAfterTestRun
