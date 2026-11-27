@@ -34,6 +34,7 @@ import com.liferay.portal.kernel.messaging.MessageBus;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.ShardedModel;
+import com.liferay.portal.kernel.model.VirtualHost;
 import com.liferay.portal.kernel.model.change.tracking.CTModel;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
@@ -296,7 +297,9 @@ public class CDNPurgeManagerImpl implements CDNPurgeManager {
 	 * Purges the cache tags of the model. When the CDN purges by URL, the
 	 * URLs of the pages among the models are read now, because a removed page
 	 * cannot be read once the transaction commits, and a page whose friendly
-	 * URL changed is still cached under the original friendly URL.
+	 * URL changed is still cached under the original friendly URL. A virtual
+	 * host among the models is purged by URL after the commit instead, when
+	 * its site no longer has it.
 	 */
 	private void _purge(
 		BaseModel<?> baseModel,
@@ -320,9 +323,18 @@ public class CDNPurgeManagerImpl implements CDNPurgeManager {
 			}
 		}
 
-		ShardedModel shardedModel = (ShardedModel)baseModel;
+		long companyId = 0;
 
-		long companyId = shardedModel.getCompanyId();
+		if (baseModel instanceof VirtualHost) {
+			VirtualHost virtualHost = (VirtualHost)baseModel;
+
+			companyId = virtualHost.getCompanyId();
+		}
+		else {
+			ShardedModel shardedModel = (ShardedModel)baseModel;
+
+			companyId = shardedModel.getCompanyId();
+		}
 
 		try {
 			ConfiguredCDNTemplate configuredCDNTemplate =
@@ -347,13 +359,15 @@ public class CDNPurgeManagerImpl implements CDNPurgeManager {
 
 			if (_isURLPurge(configuredCDNTemplate)) {
 				for (BaseModel<?> urlBaseModel : urlBaseModels) {
-					if (!(urlBaseModel instanceof Layout)) {
-						continue;
+					if (urlBaseModel instanceof Layout) {
+						builder.urls(
+							_cdnPurgeURLResolver.getLayoutURLs(
+								(Layout)urlBaseModel));
 					}
-
-					builder.urls(
-						_cdnPurgeURLResolver.getLayoutURLs(
-							(Layout)urlBaseModel));
+					else if (urlBaseModel instanceof VirtualHost) {
+						_purgeVirtualHostURLs(
+							companyId, (VirtualHost)urlBaseModel);
+					}
 				}
 			}
 
@@ -367,6 +381,47 @@ public class CDNPurgeManagerImpl implements CDNPurgeManager {
 					baseModel.getPrimaryKeyObj()),
 				exception);
 		}
+	}
+
+	/**
+	 * Purges the URLs of the pages of the virtual host's site under the
+	 * virtual host once the transaction commits, when the site no longer has
+	 * the virtual host. The URLs are read on the purge thread, because they
+	 * span every page of the site.
+	 */
+	private void _purgeVirtualHostURLs(
+		long companyId, VirtualHost virtualHost) {
+
+		TransactionCallbackUtil.registerCommitCallback(
+			() -> {
+				_scheduledExecutorService.execute(
+					() -> {
+						try {
+							purge(
+								companyId,
+								CDNPurgeRequest.builder(
+								).urls(
+									_cdnPurgeURLResolver.getVirtualHostURLs(
+										virtualHost.getLayoutSetId(),
+										virtualHost.getHostname())
+								).build());
+						}
+						catch (Exception exception) {
+							_log.error(
+								"Unable to purge the URLs of virtual host " +
+									virtualHost.getHostname(),
+								exception);
+						}
+						finally {
+							ThreadLocalCacheManager.clearAll(Lifecycle.REQUEST);
+
+							CentralizedThreadLocal.
+								clearShortLivedCentralizedThreadLocals();
+						}
+					});
+
+				return null;
+			});
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

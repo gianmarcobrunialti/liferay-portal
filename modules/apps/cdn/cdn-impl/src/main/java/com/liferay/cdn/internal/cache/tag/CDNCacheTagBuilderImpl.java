@@ -29,10 +29,12 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutSet;
+import com.liferay.portal.kernel.model.VirtualHost;
 import com.liferay.portal.kernel.model.WorkflowedModel;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -212,6 +214,21 @@ public class CDNCacheTagBuilderImpl implements CDNCacheTagBuilder {
 					styleBookEntry.getGroupId()));
 		}
 
+		// Company virtual hosts do not belong to a layout set
+
+		if (baseModel instanceof VirtualHost) {
+			VirtualHost virtualHost = (VirtualHost)baseModel;
+
+			LayoutSet layoutSet = _layoutSetLocalService.fetchLayoutSet(
+				virtualHost.getLayoutSetId());
+
+			if (layoutSet == null) {
+				return Collections.emptySet();
+			}
+
+			return getPurgeCacheTags(layoutSet);
+		}
+
 		return Collections.emptySet();
 	}
 
@@ -232,6 +249,11 @@ public class CDNCacheTagBuilderImpl implements CDNCacheTagBuilder {
 		if (currentBaseModel instanceof Layout) {
 			return _getPurgeCacheTags(
 				(Layout)originalBaseModel, (Layout)baseModel);
+		}
+
+		if (currentBaseModel instanceof VirtualHost) {
+			return _getPurgeCacheTags(
+				(VirtualHost)originalBaseModel, (VirtualHost)baseModel);
 		}
 
 		if (currentBaseModel instanceof WorkflowedModel) {
@@ -454,6 +476,42 @@ public class CDNCacheTagBuilderImpl implements CDNCacheTagBuilder {
 		return cacheTags;
 	}
 
+	/**
+	 * Returns the cache tags to purge when a virtual host changes from the
+	 * original virtual host to the virtual host. Every page of a site is
+	 * cached under each of the site's virtual hosts in the virtual host's
+	 * language, so adding, removing, or moving a virtual host, or changing its
+	 * language, purges the sites that have or had it. Saving a site's virtual
+	 * hosts also updates the ones it keeps unchanged, which purges nothing.
+	 */
+	private Set<String> _getPurgeCacheTags(
+		VirtualHost originalVirtualHost, VirtualHost virtualHost) {
+
+		if ((originalVirtualHost != null) && (virtualHost != null) &&
+			Objects.equals(
+				originalVirtualHost.getHostname(), virtualHost.getHostname()) &&
+			Objects.equals(
+				originalVirtualHost.getLanguageId(),
+				virtualHost.getLanguageId()) &&
+			(originalVirtualHost.getLayoutSetId() ==
+				virtualHost.getLayoutSetId())) {
+
+			return Collections.emptySet();
+		}
+
+		Set<String> cacheTags = new LinkedHashSet<>();
+
+		if (originalVirtualHost != null) {
+			cacheTags.addAll(getPurgeCacheTags(originalVirtualHost));
+		}
+
+		if (virtualHost != null) {
+			cacheTags.addAll(getPurgeCacheTags(virtualHost));
+		}
+
+		return cacheTags;
+	}
+
 	private boolean _isApproved(BaseModel<?> baseModel) {
 		if (baseModel == null) {
 			return false;
@@ -547,6 +605,9 @@ public class CDNCacheTagBuilderImpl implements CDNCacheTagBuilder {
 	@Reference
 	private LayoutPageTemplateEntryLocalService
 		_layoutPageTemplateEntryLocalService;
+
+	@Reference
+	private LayoutSetLocalService _layoutSetLocalService;
 
 	@Reference
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;

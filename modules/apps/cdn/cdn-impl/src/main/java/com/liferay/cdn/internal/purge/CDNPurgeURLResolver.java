@@ -183,6 +183,35 @@ public class CDNPurgeURLResolver {
 		).build();
 	}
 
+	/**
+	 * Returns the URLs a guest could reach the public pages of the layout
+	 * set's site with through a virtual host the layout set no longer has, or
+	 * an empty set when the layout set is private or still has the virtual
+	 * host. The site's cache tag converts to the URLs of the virtual hosts the
+	 * layout set has when the purge is sent, so the pages cached under a
+	 * removed or moved virtual host must be purged by their URLs.
+	 */
+	public Set<String> getVirtualHostURLs(long layoutSetId, String hostname) {
+		LayoutSet layoutSet = _layoutSetLocalService.fetchLayoutSet(
+			layoutSetId);
+
+		if ((layoutSet == null) || layoutSet.isPrivateLayout()) {
+			return Collections.emptySet();
+		}
+
+		Map<String, String> virtualHostnames = layoutSet.getVirtualHostnames();
+
+		if (virtualHostnames.containsKey(hostname)) {
+			return Collections.emptySet();
+		}
+
+		URLCollector urlCollector = new URLCollector(layoutSet.getCompanyId());
+
+		urlCollector.addVirtualHostURLs(layoutSet.getGroupId(), hostname);
+
+		return urlCollector.getURLs();
+	}
+
 	private static final int _MAX_GROUPS = 100;
 
 	private static final int _MAX_LAYOUTS = 500;
@@ -344,6 +373,25 @@ public class CDNPurgeURLResolver {
 			}
 
 			return false;
+		}
+
+		public void addVirtualHostURLs(long groupId, String hostname) {
+			Site site = _getSite(groupId);
+
+			if (site == null) {
+				return;
+			}
+
+			_sites.put(
+				groupId,
+				new Site(
+					null, site._homePlid, site._locales,
+					Collections.singletonList(
+						new String[] {
+							_getPortalURL(hostname), StringPool.BLANK
+						})));
+
+			_addGroupURLs(groupId, false);
 		}
 
 		public Set<String> getURLs() {

@@ -30,6 +30,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutSet;
+import com.liferay.portal.kernel.model.VirtualHost;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.SetUtil;
@@ -254,7 +255,8 @@ public class CDNCTEventListener implements CTEventListener {
 		FragmentEntryLink.class.getName(), JournalArticle.class.getName(),
 		Layout.class.getName(), LayoutSet.class.getName(),
 		SiteNavigationMenu.class.getName(),
-		SiteNavigationMenuItem.class.getName(), StyleBookEntry.class.getName());
+		SiteNavigationMenuItem.class.getName(), StyleBookEntry.class.getName(),
+		VirtualHost.class.getName());
 
 	private final Map<Long, Set<String>> _beforePublishCacheTagsMap =
 		new ConcurrentHashMap<>();
