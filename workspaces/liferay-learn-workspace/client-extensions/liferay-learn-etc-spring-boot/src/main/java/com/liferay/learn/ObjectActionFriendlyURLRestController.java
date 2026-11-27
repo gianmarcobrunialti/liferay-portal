@@ -146,7 +146,6 @@ public class ObjectActionFriendlyURLRestController extends BaseRestController {
 			ObjectInfo value = entry.getValue();
 
 			if (!Objects.equals(objectName, value.getParentObjectName())) {
-
 				continue;
 			}
 
@@ -158,8 +157,8 @@ public class ObjectActionFriendlyURLRestController extends BaseRestController {
 					).queryParam(
 						"filter",
 						StringBundler.concat(
-							value.getParentRelationshipFieldName(),
-							" eq '", objectEntryId, "'")
+							value.getParentRelationshipFieldName(), " eq '",
+							objectEntryId, "'")
 					).queryParam(
 						"pageSize", -1
 					).build(
@@ -178,12 +177,10 @@ public class ObjectActionFriendlyURLRestController extends BaseRestController {
 					continue;
 				}
 
-				String key = entry.getKey();
-
 				_updateFriendlyURLPath(
 					objectEntryJSONObject.getString("friendlyUrlPath") + "/" +
 						normalizedTitle,
-					itemJSONObject.getLong("id"), key);
+					itemJSONObject.getLong("id"), entry.getKey());
 			}
 		}
 	}
