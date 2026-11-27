@@ -78,7 +78,7 @@ public class CDNSignedInMarkerTest {
 		Assert.assertEquals("Lax", cookie.getAttribute("SameSite"));
 		Assert.assertEquals(-1, cookie.getMaxAge());
 		Assert.assertEquals("/", cookie.getPath());
-		Assert.assertEquals("1", cookie.getValue());
+		Assert.assertEquals("true", cookie.getValue());
 		Assert.assertTrue(cookie.isHttpOnly());
 	}
 
@@ -118,7 +118,7 @@ public class CDNSignedInMarkerTest {
 		Cookie cookie = mockHttpServletResponse.getCookie(_COOKIE_NAME);
 
 		Assert.assertNotNull(cookie);
-		Assert.assertEquals("1", cookie.getValue());
+		Assert.assertEquals("true", cookie.getValue());
 
 		// Signed in user with the marker
 
@@ -161,7 +161,8 @@ public class CDNSignedInMarkerTest {
 		httpURLConnection.setInstanceFollowRedirects(false);
 
 		if (marker) {
-			httpURLConnection.setRequestProperty("Cookie", _COOKIE_NAME + "=1");
+			httpURLConnection.setRequestProperty(
+				"Cookie", _COOKIE_NAME + "=true");
 		}
 
 		try (InputStream inputStream = httpURLConnection.getInputStream()) {
@@ -197,7 +198,7 @@ public class CDNSignedInMarkerTest {
 			WebKeys.COMPANY_ID, TestPropsValues.getCompanyId());
 
 		if (marker) {
-			mockHttpServletRequest.setCookies(new Cookie(_COOKIE_NAME, "1"));
+			mockHttpServletRequest.setCookies(new Cookie(_COOKIE_NAME, "true"));
 		}
 
 		if (signedIn) {

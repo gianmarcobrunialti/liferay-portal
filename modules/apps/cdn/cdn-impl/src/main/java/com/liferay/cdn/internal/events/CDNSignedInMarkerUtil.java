@@ -53,7 +53,8 @@ public class CDNSignedInMarkerUtil {
 			return;
 		}
 
-		httpServletResponse.addCookie(_createCookie("1", -1, secure));
+		httpServletResponse.addCookie(
+			_createCookie(StringPool.TRUE, -1, secure));
 
 		httpServletRequest.setAttribute(_COOKIE_ADDED, Boolean.TRUE);
 	}
