@@ -37,6 +37,7 @@ import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.ShardedModel;
 import com.liferay.portal.kernel.model.change.tracking.CTModel;
 import com.liferay.portal.kernel.service.CompanyLocalService;
@@ -323,6 +324,35 @@ public class CDNPurgeManagerImpl implements CDNPurgeManager {
 	}
 
 	/**
+	 * Returns whether the model belongs to the staging group of a site with
+	 * local staging. Guests only see the live group, so the CDN never caches
+	 * the staging group, and only the changes a publication imports into the
+	 * live group are purged.
+	 */
+	private boolean _isStagingGroup(BaseModel<?> baseModel) {
+		long groupId = 0;
+
+		if (baseModel instanceof GroupedModel) {
+			GroupedModel groupedModel = (GroupedModel)baseModel;
+
+			groupId = groupedModel.getGroupId();
+		}
+		else if (baseModel instanceof LayoutSet) {
+			LayoutSet layoutSet = (LayoutSet)baseModel;
+
+			groupId = layoutSet.getGroupId();
+		}
+
+		Group group = _groupLocalService.fetchGroup(groupId);
+
+		if ((group != null) && group.isStagingGroup()) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
 	 * Returns whether the CDN purges by URL only, so cache tags must be
 	 * converted to URLs.
 	 */
@@ -376,7 +406,7 @@ public class CDNPurgeManagerImpl implements CDNPurgeManager {
 					companyId,
 					_cdnTemplateRegistry.getCDNConfiguration(companyId));
 
-			if (configuredCDNTemplate == null) {
+			if ((configuredCDNTemplate == null) || _isStagingGroup(baseModel)) {
 				return;
 			}
 
