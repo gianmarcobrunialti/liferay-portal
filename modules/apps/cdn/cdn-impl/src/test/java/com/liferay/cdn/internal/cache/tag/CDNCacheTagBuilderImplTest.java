@@ -735,13 +735,24 @@ public class CDNCacheTagBuilderImplTest {
 			SetUtil.fromArray("ns-s20"),
 			_cdnCacheTagBuilderImpl.getPurgeCacheTags(null, virtualHost));
 
-		// Company virtual hosts and virtual hosts of private pages are not
-		// purged
+		// A company virtual host purges the company
+
+		VirtualHost companyVirtualHost = _mockVirtualHost(
+			0L, "www.example.com", "en_US");
+
+		Mockito.when(
+			companyVirtualHost.getCompanyId()
+		).thenReturn(
+			1L
+		);
 
 		Assert.assertEquals(
-			Collections.emptySet(),
+			SetUtil.fromArray("ns-c1"),
 			_cdnCacheTagBuilderImpl.getPurgeCacheTags(
-				null, _mockVirtualHost(0L, "www.example.com", "en_US")));
+				null, companyVirtualHost));
+
+		// Virtual hosts of private pages are not purged
+
 		Assert.assertEquals(
 			Collections.emptySet(),
 			_cdnCacheTagBuilderImpl.getPurgeCacheTags(

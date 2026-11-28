@@ -67,9 +67,9 @@ public interface CDNCacheTagBuilder {
 	 * purged when guests could see either state, and a page also purges its
 	 * site when it is added, removed, moved, renamed, hidden, or shown,
 	 * because every page of the site renders the navigation. A virtual host
-	 * of a site's public pages purges the site when it is added, removed,
-	 * moved, or changes its language, and an unchanged virtual host purges
-	 * nothing.
+	 * of a site's public pages purges the site, and a company virtual host
+	 * purges the company, when it is added, removed, moved, or changes its
+	 * language. An unchanged virtual host purges nothing.
 	 */
 	public Set<String> getPurgeCacheTags(
 		BaseModel<?> originalBaseModel, BaseModel<?> baseModel);

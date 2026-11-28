@@ -214,10 +214,16 @@ public class CDNCacheTagBuilderImpl implements CDNCacheTagBuilder {
 					styleBookEntry.getGroupId()));
 		}
 
-		// Company virtual hosts do not belong to a layout set
-
 		if (baseModel instanceof VirtualHost) {
 			VirtualHost virtualHost = (VirtualHost)baseModel;
+
+			// A company virtual host serves the default site and every site
+			// reached through "/web/<site>"
+
+			if (virtualHost.getLayoutSetId() == 0) {
+				return Collections.singleton(
+					getCompanyCacheTag(virtualHost.getCompanyId()));
+			}
 
 			LayoutSet layoutSet = _layoutSetLocalService.fetchLayoutSet(
 				virtualHost.getLayoutSetId());

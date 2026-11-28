@@ -8,6 +8,7 @@ package com.liferay.cdn.internal.model.listener.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.service.BlogsEntryLocalService;
+import com.liferay.counter.kernel.service.CounterLocalService;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
@@ -37,10 +38,12 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.VirtualHost;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.VirtualHostLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
@@ -629,6 +632,24 @@ public class CDNModelListenerTest {
 			_updateVirtualHosts(_group, true, null, null);
 
 			_assertNoPurge();
+
+			// Adding or removing a company virtual host purges the company
+
+			VirtualHost virtualHost =
+				_virtualHostLocalService.createVirtualHost(
+					_counterLocalService.increment());
+
+			virtualHost.setCompanyId(TestPropsValues.getCompanyId());
+			virtualHost.setHostname(
+				StringUtil.toLowerCase(RandomTestUtil.randomString() + ".com"));
+
+			virtualHost = _virtualHostLocalService.addVirtualHost(virtualHost);
+
+			_assertPurge("lfr-c" + TestPropsValues.getCompanyId());
+
+			_virtualHostLocalService.deleteVirtualHost(virtualHost);
+
+			_assertPurge("lfr-c" + TestPropsValues.getCompanyId());
 		}
 	}
 
@@ -703,6 +724,9 @@ public class CDNModelListenerTest {
 	private final BlockingQueue<String> _bodies = new LinkedBlockingQueue<>();
 
 	@Inject
+	private CounterLocalService _counterLocalService;
+
+	@Inject
 	private DLAppLocalService _dlAppLocalService;
 
 	@Inject
@@ -748,5 +772,8 @@ public class CDNModelListenerTest {
 
 	@Inject
 	private SiteNavigationMenuLocalService _siteNavigationMenuLocalService;
+
+	@Inject
+	private VirtualHostLocalService _virtualHostLocalService;
 
 }
