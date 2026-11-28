@@ -7,10 +7,12 @@ package com.liferay.cdn.internal.purge;
 
 import com.liferay.cdn.purge.CDNPurgeRequest;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -136,6 +138,59 @@ public class CDNPurgeCoalescerTest {
 			Mockito.any(Runnable.class), Mockito.eq(0L),
 			Mockito.eq(TimeUnit.MILLISECONDS)
 		);
+	}
+
+	@Test
+	public void testAddWithGroupTags() {
+		long companyId = RandomTestUtil.randomLong();
+
+		_cdnPurgeCoalescer.add(
+			companyId,
+			CDNPurgeRequest.builder(
+			).tags(
+				"c1"
+			).tags(
+				1, Arrays.asList("p11", "p12")
+			).build(),
+			0);
+		_cdnPurgeCoalescer.add(
+			companyId,
+			CDNPurgeRequest.builder(
+			).tags(
+				1, Arrays.asList("p12", "p13")
+			).tags(
+				2, Arrays.asList("p21")
+			).build(),
+			0);
+
+		ArgumentCaptor<Runnable> argumentCaptor = ArgumentCaptor.forClass(
+			Runnable.class);
+
+		Mockito.verify(
+			_scheduledExecutorService
+		).schedule(
+			argumentCaptor.capture(), Mockito.eq(0L),
+			Mockito.eq(TimeUnit.MILLISECONDS)
+		);
+
+		Runnable runnable = argumentCaptor.getValue();
+
+		runnable.run();
+
+		CDNPurgeRequest cdnPurgeRequest = _cdnPurgeRequests.get(0);
+
+		Assert.assertEquals(
+			HashMapBuilder.put(
+				0L, SetUtil.fromArray("c1")
+			).put(
+				1L, SetUtil.fromArray("p11", "p12", "p13")
+			).put(
+				2L, SetUtil.fromArray("p21")
+			).build(),
+			cdnPurgeRequest.getGroupTags());
+		Assert.assertEquals(
+			SetUtil.fromArray("c1", "p11", "p12", "p13", "p21"),
+			cdnPurgeRequest.getTags());
 	}
 
 	@Test

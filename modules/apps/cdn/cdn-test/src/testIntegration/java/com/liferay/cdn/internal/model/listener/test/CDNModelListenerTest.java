@@ -354,6 +354,34 @@ public class CDNModelListenerTest {
 
 	@FeatureFlag("LPD-107638")
 	@Test
+	public void testJournalArticleModelListenerWithMaxTagsPerRequest()
+		throws Throwable {
+
+		try (CompanyConfigurationTemporarySwapper
+				cdnCompanyConfigurationTemporarySwapper =
+					_getCDNCompanyConfigurationTemporarySwapper(3)) {
+
+			// Two web content articles purge four cache tags, which do not fit
+			// in one request, so their site is purged instead
+
+			TransactionInvokerUtil.invoke(
+				_transactionConfig,
+				() -> {
+					for (int i = 0; i < 2; i++) {
+						JournalTestUtil.addArticle(
+							_group.getGroupId(),
+							JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+					}
+
+					return null;
+				});
+
+			_assertPurge("lfr-s" + _group.getGroupId());
+		}
+	}
+
+	@FeatureFlag("LPD-107638")
+	@Test
 	public void testLayoutModelListener() throws Throwable {
 		Layout layout = LayoutTestUtil.addTypeContentPublishedLayout(
 			_group, RandomTestUtil.randomString(),
@@ -588,6 +616,13 @@ public class CDNModelListenerTest {
 			_getCDNCompanyConfigurationTemporarySwapper()
 		throws Exception {
 
+		return _getCDNCompanyConfigurationTemporarySwapper(0);
+	}
+
+	private CompanyConfigurationTemporarySwapper
+			_getCDNCompanyConfigurationTemporarySwapper(int maxTagsPerRequest)
+		throws Exception {
+
 		InetSocketAddress inetSocketAddress = _httpServer.getAddress();
 
 		return new CompanyConfigurationTemporarySwapper(
@@ -601,6 +636,8 @@ public class CDNModelListenerTest {
 				"endpoint",
 				StringBundler.concat(
 					"http://127.0.0.1:", inetSocketAddress.getPort(), "/purge")
+			).put(
+				"maxTagsPerRequest", maxTagsPerRequest
 			).put(
 				"templateKey", "custom"
 			).build());

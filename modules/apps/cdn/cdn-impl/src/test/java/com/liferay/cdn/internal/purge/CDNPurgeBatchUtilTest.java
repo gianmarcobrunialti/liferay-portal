@@ -12,9 +12,11 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.function.LongFunction;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -47,7 +49,8 @@ public class CDNPurgeBatchUtilTest {
 				).urls(
 					RandomTestUtil.randomString(), RandomTestUtil.randomString()
 				).build(),
-				_mockCDNTemplate(256, 1, false, true, true));
+				_mockCDNTemplate(256, 1, false, true, true),
+				_groupCacheTagLongFunction);
 
 		Assert.assertEquals(
 			cdnPurgeRequests.toString(), 5, cdnPurgeRequests.size());
@@ -85,22 +88,66 @@ public class CDNPurgeBatchUtilTest {
 	}
 
 	@Test
+	public void testGetCDNPurgeRequestsWithGroupTags() {
+		List<CDNPurgeRequest> cdnPurgeRequests =
+			CDNPurgeBatchUtil.getCDNPurgeRequests(
+				CDNPurgeRequest.builder(
+				).soft(
+					false
+				).tags(
+					"c1", "p1", "p2", "p3"
+				).tags(
+					1, Arrays.asList("p11", "p12")
+				).tags(
+					2, Arrays.asList("p21", "p22", "p23")
+				).tags(
+					3, Arrays.asList("p31", "p32", "p33", "p34")
+				).build(),
+				_mockCDNTemplate(3, 0, true, true, false),
+				_groupCacheTagLongFunction);
+
+		Assert.assertEquals(
+			cdnPurgeRequests.toString(), 4, cdnPurgeRequests.size());
+
+		List<String> batchTags = new ArrayList<>();
+
+		for (CDNPurgeRequest cdnPurgeRequest : cdnPurgeRequests) {
+			Assert.assertFalse(cdnPurgeRequest.isPurgeAll());
+			Assert.assertFalse(cdnPurgeRequest.isSoft());
+
+			batchTags.addAll(cdnPurgeRequest.getTags());
+		}
+
+		Assert.assertEquals(
+			Arrays.asList(
+				"c1", "p1", "p2", "p3", "p11", "p12", "p21", "p22", "p23",
+				"s3"),
+			batchTags);
+	}
+
+	@Test
 	public void testGetCDNPurgeRequestsWithPurgeAll() {
 		CDNPurgeRequest cdnPurgeRequest = CDNPurgeRequest.builder(
 		).purgeAll(
 			true
 		).tags(
 			RandomTestUtil.randomString()
+		).tags(
+			RandomTestUtil.randomLong(),
+			Arrays.asList(
+				RandomTestUtil.randomString(), RandomTestUtil.randomString())
 		).build();
 
 		Assert.assertEquals(
 			Collections.emptyList(),
 			CDNPurgeBatchUtil.getCDNPurgeRequests(
-				cdnPurgeRequest, _mockCDNTemplate(0, 0, false, false, false)));
+				cdnPurgeRequest, _mockCDNTemplate(0, 0, false, false, false),
+				_groupCacheTagLongFunction));
 
 		List<CDNPurgeRequest> cdnPurgeRequests =
 			CDNPurgeBatchUtil.getCDNPurgeRequests(
-				cdnPurgeRequest, _mockCDNTemplate(0, 0, true, true, false));
+				cdnPurgeRequest, _mockCDNTemplate(0, 0, true, true, false),
+				_groupCacheTagLongFunction);
 
 		Assert.assertEquals(
 			cdnPurgeRequests.toString(), 1, cdnPurgeRequests.size());
@@ -122,7 +169,8 @@ public class CDNPurgeBatchUtilTest {
 				).urls(
 					RandomTestUtil.randomString()
 				).build(),
-				_mockCDNTemplate(0, 1, false, false, true));
+				_mockCDNTemplate(0, 1, false, false, true),
+				_groupCacheTagLongFunction);
 
 		Assert.assertEquals(
 			cdnPurgeRequests.toString(), 1, cdnPurgeRequests.size());
@@ -179,5 +227,8 @@ public class CDNPurgeBatchUtilTest {
 
 		return cdnTemplate;
 	}
+
+	private final LongFunction<String> _groupCacheTagLongFunction =
+		groupId -> "s" + groupId;
 
 }
