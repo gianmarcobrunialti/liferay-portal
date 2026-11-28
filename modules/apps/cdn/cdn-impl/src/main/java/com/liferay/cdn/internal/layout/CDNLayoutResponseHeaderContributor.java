@@ -9,6 +9,7 @@ import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.cdn.cache.tag.CDNCacheTagBuilder;
 import com.liferay.cdn.configuration.CDNConfiguration;
 import com.liferay.cdn.internal.cache.tag.CDNCacheTagHeaderUtil;
+import com.liferay.cdn.internal.cacheability.CDNCacheabilityRuleRegistry;
 import com.liferay.cdn.internal.template.CDNTemplateRegistry;
 import com.liferay.cdn.internal.template.ConfiguredCDNTemplate;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
@@ -94,7 +95,7 @@ public class CDNLayoutResponseHeaderContributor
 
 		_setCDNCacheControlHeader(
 			cdnConfiguration, configuredCDNTemplate, httpServletRequest,
-			httpServletResponse, themeDisplay);
+			httpServletResponse, layout, themeDisplay);
 
 		if (!cdnConfiguration.emitCacheTags()) {
 			return;
@@ -120,12 +121,15 @@ public class CDNLayoutResponseHeaderContributor
 
 	@Activate
 	protected void activate(BundleContext bundleContext) {
+		_cdnCacheabilityRuleRegistry = new CDNCacheabilityRuleRegistry(
+			bundleContext);
 		_cdnTemplateRegistry = new CDNTemplateRegistry(
 			bundleContext, _configurationProvider);
 	}
 
 	@Deactivate
 	protected void deactivate() {
+		_cdnCacheabilityRuleRegistry.close();
 		_cdnTemplateRegistry.close();
 	}
 
@@ -177,7 +181,8 @@ public class CDNLayoutResponseHeaderContributor
 	/**
 	 * Returns whether the response can be shared by every guest that requests
 	 * the same URL: a successful response that sets no cookie, rendered in the
-	 * language that its URL selects. A redirect or an error has nothing to
+	 * language that its URL selects, and that no cacheability rule vetoes. A
+	 * redirect or an error has nothing to
 	 * share, and a cookie would be handed to every guest. Without a language
 	 * in the URL, the page is shared only in the site's default language,
 	 * because a language taken from the session or a cookie is one guest's
@@ -185,7 +190,8 @@ public class CDNLayoutResponseHeaderContributor
 	 */
 	private boolean _isShareable(
 		HttpServletRequest httpServletRequest,
-		HttpServletResponse httpServletResponse, ThemeDisplay themeDisplay) {
+		HttpServletResponse httpServletResponse, Layout layout,
+		ThemeDisplay themeDisplay) {
 
 		if ((httpServletResponse.getStatus() != HttpServletResponse.SC_OK) ||
 			httpServletResponse.containsHeader(HttpHeaders.SET_COOKIE)) {
@@ -206,7 +212,12 @@ public class CDNLayoutResponseHeaderContributor
 				themeDisplay.getSiteDefaultLocale());
 		}
 
-		return Objects.equals(themeDisplay.getLanguageId(), languageId);
+		if (!Objects.equals(themeDisplay.getLanguageId(), languageId)) {
+			return false;
+		}
+
+		return _cdnCacheabilityRuleRegistry.isShareable(
+			httpServletRequest, httpServletResponse, layout);
 	}
 
 	/**
@@ -218,7 +229,8 @@ public class CDNLayoutResponseHeaderContributor
 		CDNConfiguration cdnConfiguration,
 		ConfiguredCDNTemplate configuredCDNTemplate,
 		HttpServletRequest httpServletRequest,
-		HttpServletResponse httpServletResponse, ThemeDisplay themeDisplay) {
+		HttpServletResponse httpServletResponse, Layout layout,
+		ThemeDisplay themeDisplay) {
 
 		String cdnCacheControlHeaderName =
 			configuredCDNTemplate.getCDNCacheControlHeaderName();
@@ -226,7 +238,8 @@ public class CDNLayoutResponseHeaderContributor
 		if (Validator.isNull(cdnCacheControlHeaderName) ||
 			(cdnConfiguration.cdnCacheControlMaxAge() <= 0) ||
 			!_isShareable(
-				httpServletRequest, httpServletResponse, themeDisplay)) {
+				httpServletRequest, httpServletResponse, layout,
+				themeDisplay)) {
 
 			return;
 		}
@@ -242,6 +255,7 @@ public class CDNLayoutResponseHeaderContributor
 	@Reference
 	private CDNCacheTagBuilder _cdnCacheTagBuilder;
 
+	private CDNCacheabilityRuleRegistry _cdnCacheabilityRuleRegistry;
 	private CDNTemplateRegistry _cdnTemplateRegistry;
 
 	@Reference
