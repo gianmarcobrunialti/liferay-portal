@@ -14,6 +14,8 @@ import com.liferay.cdn.internal.template.ConfiguredCDNTemplate;
 import com.liferay.cdn.purge.CDNPurgeManager;
 import com.liferay.cdn.purge.CDNPurgeRequest;
 import com.liferay.change.tracking.constants.CTConstants;
+import com.liferay.document.library.kernel.model.DLFileEntry;
+import com.liferay.document.library.kernel.model.DLFileVersion;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.fragment.service.FragmentEntryLocalService;
 import com.liferay.layout.display.page.LayoutDisplayPageProviderRegistry;
@@ -32,6 +34,8 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.MessageBus;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.ShardedModel;
 import com.liferay.portal.kernel.model.change.tracking.CTModel;
@@ -46,6 +50,7 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -140,16 +145,22 @@ public class CDNPurgeManagerImpl implements CDNPurgeManager {
 				return;
 			}
 
-			CDNPurgeRequest coalescedCDNPurgeRequest = CDNPurgeRequest.builder(
+			CDNPurgeRequest.Builder builder = CDNPurgeRequest.builder(
 			).purgeAll(
 				cdnPurgeRequest.isPurgeAll()
 			).soft(
 				cdnPurgeRequest.isSoft() && cdnConfiguration.softPurge()
-			).tags(
-				cdnPurgeRequest.getTags()
 			).urls(
 				cdnPurgeRequest.getURLs()
-			).build();
+			);
+
+			Map<Long, Set<String>> groupTags = cdnPurgeRequest.getGroupTags();
+
+			for (Map.Entry<Long, Set<String>> entry : groupTags.entrySet()) {
+				builder.tags(entry.getKey(), entry.getValue());
+			}
+
+			CDNPurgeRequest coalescedCDNPurgeRequest = builder.build();
 
 			TransactionCallbackUtil.registerCommitCallback(
 				() -> {
@@ -231,7 +242,8 @@ public class CDNPurgeManagerImpl implements CDNPurgeManager {
 						_getCDNPurgeRequest(
 							companyId, cdnConfiguration, cdnPurgeRequest,
 							configuredCDNTemplate),
-						configuredCDNTemplate)) {
+						configuredCDNTemplate,
+						groupId -> _getGroupCacheTag(companyId, groupId))) {
 
 				_messageBus.sendMessage(
 					CDNConstants.DESTINATION_NAME_CDN_PURGE,
@@ -274,6 +286,40 @@ public class CDNPurgeManagerImpl implements CDNPurgeManager {
 		return _cdnPurgeURLResolver.getURLCDNPurgeRequest(
 			companyId, cdnConfiguration.cacheTagNamespace(), cdnPurgeRequest,
 			configuredCDNTemplate.getPurgeAllCDNHTTPRequestTemplate() != null);
+	}
+
+	/**
+	 * Returns the cache tag to purge instead of the cache tags of the group.
+	 * Every site can show the content of the company's global site, so the
+	 * global site purges the company.
+	 */
+	private String _getGroupCacheTag(long companyId, long groupId) {
+		Group group = _groupLocalService.fetchGroup(groupId);
+
+		if ((group != null) && group.isCompany()) {
+			return _cdnCacheTagBuilder.getCompanyCacheTag(companyId);
+		}
+
+		return _cdnCacheTagBuilder.getGroupCacheTag(companyId, groupId);
+	}
+
+	/**
+	 * Returns the ID of the site whose pages carry the site's cache tag
+	 * wherever they carry the model's cache tags, or <code>0</code> when there
+	 * is none. Documents are downloaded without the site's cache tag, and the
+	 * entries of company scoped object definitions belong to no site.
+	 */
+	private long _getGroupId(BaseModel<?> baseModel) {
+		if (!(baseModel instanceof GroupedModel) ||
+			(baseModel instanceof DLFileEntry) ||
+			(baseModel instanceof DLFileVersion)) {
+
+			return 0;
+		}
+
+		GroupedModel groupedModel = (GroupedModel)baseModel;
+
+		return groupedModel.getGroupId();
 	}
 
 	/**
@@ -342,7 +388,7 @@ public class CDNPurgeManagerImpl implements CDNPurgeManager {
 
 			CDNPurgeRequest.Builder builder = CDNPurgeRequest.builder(
 			).tags(
-				cacheTags
+				_getGroupId(baseModel), cacheTags
 			);
 
 			if (_isURLPurge(configuredCDNTemplate)) {

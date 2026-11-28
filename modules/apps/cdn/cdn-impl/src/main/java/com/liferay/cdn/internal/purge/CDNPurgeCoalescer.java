@@ -11,6 +11,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
@@ -20,7 +21,9 @@ import java.util.function.BiConsumer;
  * request. A single publication rewrites many rows, and each row change asks
  * for a purge of the same content, so sending them one by one floods the CDN
  * API with duplicates. Hard and soft requests are merged separately because
- * they cannot share one CDN call.
+ * they cannot share one CDN call. The cache tags keep the site they belong to,
+ * so the sites with more cache tags than one CDN call holds can be purged
+ * instead.
  *
  * @author Gianmarco Brunialti Masera
  */
@@ -65,11 +68,13 @@ public class CDNPurgeCoalescer {
 				builder.purgeAll(true);
 			}
 
-			builder.tags(
-				cdnPurgeRequest.getTags()
-			).urls(
-				cdnPurgeRequest.getURLs()
-			);
+			Map<Long, Set<String>> groupTags = cdnPurgeRequest.getGroupTags();
+
+			for (Map.Entry<Long, Set<String>> entry : groupTags.entrySet()) {
+				builder.tags(entry.getKey(), entry.getValue());
+			}
+
+			builder.urls(cdnPurgeRequest.getURLs());
 		}
 	}
 

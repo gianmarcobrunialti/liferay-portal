@@ -13,19 +13,25 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.LongFunction;
 
 /**
- * Splits a purge request into the requests a CDN accepts in one call.
+ * Splits a purge request into the requests a CDN accepts in one call. A site
+ * with more cache tags than one call holds is purged by the site's cache tag
+ * instead.
  *
  * @author Gianmarco Brunialti Masera
  */
 public class CDNPurgeBatchUtil {
 
 	public static List<CDNPurgeRequest> getCDNPurgeRequests(
-		CDNPurgeRequest cdnPurgeRequest, CDNTemplate cdnTemplate) {
+		CDNPurgeRequest cdnPurgeRequest, CDNTemplate cdnTemplate,
+		LongFunction<String> groupCacheTagLongFunction) {
 
 		if (cdnPurgeRequest.isPurgeAll()) {
 			if (cdnTemplate.getPurgeAllCDNHTTPRequestTemplate() != null) {
@@ -52,9 +58,13 @@ public class CDNPurgeBatchUtil {
 		Set<String> tags = cdnPurgeRequest.getTags();
 
 		if (cdnTemplate.getTagPurgeCDNHTTPRequestTemplate() != null) {
+			int maxTagsPerRequest = cdnTemplate.getMaxTagsPerRequest();
+
 			_addCDNPurgeRequests(
-				cdnPurgeRequests, cdnTemplate.getMaxTagsPerRequest(),
-				cdnPurgeRequest.isSoft(), tags,
+				cdnPurgeRequests, maxTagsPerRequest, cdnPurgeRequest.isSoft(),
+				_getTags(
+					cdnPurgeRequest, groupCacheTagLongFunction,
+					maxTagsPerRequest),
 				(builder, batchTags) -> builder.tags(batchTags));
 		}
 		else if (!tags.isEmpty() && _log.isWarnEnabled()) {
@@ -121,6 +131,47 @@ public class CDNPurgeBatchUtil {
 		biConsumer.accept(builder, batchValues);
 
 		return builder.build();
+	}
+
+	/**
+	 * Returns the request's cache tags, with the cache tags of each site that
+	 * has more cache tags than one request holds replaced by the site's cache
+	 * tag. One purge of the site costs less than many requests to the CDN.
+	 */
+	private static Set<String> _getTags(
+		CDNPurgeRequest cdnPurgeRequest,
+		LongFunction<String> groupCacheTagLongFunction, int maxTagsPerRequest) {
+
+		Set<String> tags = new LinkedHashSet<>();
+
+		Map<Long, Set<String>> groupTags = cdnPurgeRequest.getGroupTags();
+
+		for (Map.Entry<Long, Set<String>> entry : groupTags.entrySet()) {
+			long groupId = entry.getKey();
+			Set<String> groupCacheTags = entry.getValue();
+
+			if ((groupId == 0) ||
+				(groupCacheTags.size() <= maxTagsPerRequest)) {
+
+				tags.addAll(groupCacheTags);
+
+				continue;
+			}
+
+			String groupCacheTag = groupCacheTagLongFunction.apply(groupId);
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					StringBundler.concat(
+						"Purging site ", groupId, " with cache tag \"",
+						groupCacheTag, "\" instead of ", groupCacheTags.size(),
+						" cache tags"));
+			}
+
+			tags.add(groupCacheTag);
+		}
+
+		return tags;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
