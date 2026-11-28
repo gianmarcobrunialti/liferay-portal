@@ -37,6 +37,12 @@ public interface CDNTemplate {
 	 * or <code>null</code> when the CDN reads no such header. The CDN reads the
 	 * header instead of <code>Cache-Control</code>, so browsers keep not
 	 * caching the page.
+	 *
+	 * <p>
+	 * A response that carries the header can still set the session, cookie
+	 * support, and guest language cookies that DXP sets for every guest, so
+	 * the CDN must never store <code>Set-Cookie</code> in the copy it caches.
+	 * </p>
 	 */
 	public String getCDNCacheControlHeaderName();
 

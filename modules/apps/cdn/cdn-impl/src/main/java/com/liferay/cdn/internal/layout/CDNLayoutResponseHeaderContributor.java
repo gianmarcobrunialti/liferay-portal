@@ -12,9 +12,11 @@ import com.liferay.cdn.internal.cache.tag.CDNCacheTagHeaderUtil;
 import com.liferay.cdn.internal.cacheability.CDNCacheabilityRuleRegistry;
 import com.liferay.cdn.internal.template.CDNTemplateRegistry;
 import com.liferay.cdn.internal.template.ConfiguredCDNTemplate;
+import com.liferay.petra.string.CharPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.cdn.CDNCacheTagsUtil;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
+import com.liferay.portal.kernel.cookies.constants.CookiesConstants;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionList;
@@ -28,13 +30,16 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.ServletResponseWrapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -179,14 +184,76 @@ public class CDNLayoutResponseHeaderContributor
 	}
 
 	/**
+	 * Returns whether the response sets a cookie other than the session,
+	 * cookie support, and guest language cookies that DXP sets on nearly every
+	 * guest response. The cookies are read from the response of the servlet
+	 * container, which every wrapper passes its cookies to, because a wrapper
+	 * only knows the cookies added through it, and the servlet container adds
+	 * the session cookie itself. A cookie whose name cannot be read counts as
+	 * another cookie.
+	 */
+	private boolean _hasCookies(HttpServletResponse httpServletResponse) {
+		ServletResponse servletResponse = httpServletResponse;
+
+		while (servletResponse instanceof ServletResponseWrapper) {
+			ServletResponseWrapper servletResponseWrapper =
+				(ServletResponseWrapper)servletResponse;
+
+			servletResponse = servletResponseWrapper.getResponse();
+		}
+
+		if (!(servletResponse instanceof HttpServletResponse)) {
+			return httpServletResponse.containsHeader(HttpHeaders.SET_COOKIE);
+		}
+
+		HttpServletResponse containerHttpServletResponse =
+			(HttpServletResponse)servletResponse;
+
+		Collection<String> setCookieHeaderValues =
+			containerHttpServletResponse.getHeaders(HttpHeaders.SET_COOKIE);
+
+		if (setCookieHeaderValues.isEmpty()) {
+			return httpServletResponse.containsHeader(HttpHeaders.SET_COOKIE);
+		}
+
+		for (String setCookieHeaderValue : setCookieHeaderValues) {
+			String name = StringUtil.extractFirst(
+				setCookieHeaderValue, CharPool.EQUAL);
+
+			if ((name == null) ||
+				!_ignoredCookieNames.contains(StringUtil.trim(name))) {
+
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Returns whether the response can be shared by every guest that requests
-	 * the same URL: a successful response that sets no cookie, rendered in the
-	 * language that its URL selects, and that no cacheability rule vetoes. A
-	 * redirect or an error has nothing to
-	 * share, and a cookie would be handed to every guest. Without a language
-	 * in the URL, the page is shared only in the site's default language,
-	 * because a language taken from the session or a cookie is one guest's
-	 * choice.
+	 * the same URL: a successful response that sets no cookie of its own,
+	 * whose URLs do not carry the session ID, rendered in the language that
+	 * its URL selects, and that no cacheability rule vetoes. A redirect or an
+	 * error has nothing to share, and a cookie of its own would be handed to
+	 * every guest. Without a language in the URL, the page is shared only in
+	 * the site's default language, because a language taken from the session
+	 * or a cookie is one guest's choice.
+	 *
+	 * <p>
+	 * The session, cookie support, and guest language cookies are ignored,
+	 * because DXP sets them on nearly every guest response, and on every
+	 * response to a guest without cookies, which is how a CDN forwards a
+	 * request to fill its cache. Ignoring them is safe only because the CDN
+	 * never stores <code>Set-Cookie</code> in a cached copy: otherwise, every
+	 * guest served from the cache would receive the session of the guest whose
+	 * request filled it. Fastly must remove the header in
+	 * <code>vcl_fetch</code>, as the liferay.com service does, and any other
+	 * CDN or edge emulator must do the same. A new session does not make the
+	 * response less shareable: it holds nothing yet, so the page is rendered
+	 * exactly as for any other guest, as long as its URLs do not carry the
+	 * session ID.
+	 * </p>
 	 */
 	private boolean _isShareable(
 		HttpServletRequest httpServletRequest,
@@ -194,14 +261,9 @@ public class CDNLayoutResponseHeaderContributor
 		ThemeDisplay themeDisplay) {
 
 		if ((httpServletResponse.getStatus() != HttpServletResponse.SC_OK) ||
-			httpServletResponse.containsHeader(HttpHeaders.SET_COOKIE)) {
+			themeDisplay.isAddSessionIdToURL() ||
+			_hasCookies(httpServletResponse)) {
 
-			return false;
-		}
-
-		HttpSession httpSession = httpServletRequest.getSession(false);
-
-		if ((httpSession != null) && httpSession.isNew()) {
 			return false;
 		}
 
@@ -248,6 +310,11 @@ public class CDNLayoutResponseHeaderContributor
 			cdnCacheControlHeaderName,
 			"max-age=" + cdnConfiguration.cdnCacheControlMaxAge());
 	}
+
+	private static final Set<String> _ignoredCookieNames = SetUtil.fromArray(
+		CookiesConstants.NAME_COOKIE_SUPPORT,
+		CookiesConstants.NAME_GUEST_LANGUAGE_ID,
+		CookiesConstants.NAME_JSESSIONID);
 
 	@Reference
 	private AssetEntryLocalService _assetEntryLocalService;
