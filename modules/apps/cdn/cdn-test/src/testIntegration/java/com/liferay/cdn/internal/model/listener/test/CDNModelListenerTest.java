@@ -13,6 +13,13 @@ import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.kernel.service.DLTrashLocalService;
+import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
+import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.dynamic.data.mapping.model.DDMTemplate;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
+import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalService;
+import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
+import com.liferay.dynamic.data.mapping.test.util.DDMTemplateTestUtil;
 import com.liferay.fragment.constants.FragmentConstants;
 import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.service.FragmentEntryLocalService;
@@ -38,6 +45,7 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -62,6 +70,7 @@ import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.portlet.display.template.PortletDisplayTemplate;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 import com.liferay.site.navigation.constants.SiteNavigationConstants;
 import com.liferay.site.navigation.model.SiteNavigationMenu;
@@ -174,6 +183,151 @@ public class CDNModelListenerTest {
 
 			_assertNoPurge();
 		}
+	}
+
+	@FeatureFlag("LPD-107638")
+	@Test
+	public void testDDMStructureModelListener() throws Exception {
+		DDMStructure ddmStructure = DDMStructureTestUtil.addStructure(
+			_group.getGroupId(), JournalArticle.class.getName());
+
+		JournalArticle journalArticle =
+			JournalTestUtil.addArticleWithXMLContent(
+				_group.getGroupId(),
+				DDMStructureTestUtil.getSampleStructuredContent(),
+				ddmStructure.getStructureKey(), null);
+
+		DDMStructure formDDMStructure = DDMStructureTestUtil.addStructure(
+			_group.getGroupId(), DDMFormInstance.class.getName());
+
+		try (CompanyConfigurationTemporarySwapper
+				cdnCompanyConfigurationTemporarySwapper =
+					_getCDNCompanyConfigurationTemporarySwapper()) {
+
+			// Updating a form structure does not purge
+
+			formDDMStructure.setDescription(RandomTestUtil.randomString());
+
+			_ddmStructureLocalService.updateDDMStructure(formDDMStructure);
+
+			_assertNoPurge();
+
+			// Updating a web content structure purges its web content
+
+			ddmStructure.setDescription(RandomTestUtil.randomString());
+
+			_ddmStructureLocalService.updateDDMStructure(ddmStructure);
+
+			_assertPurge(
+				"lfr-wc" + journalArticle.getResourcePrimKey(),
+				_getCollectionTag(_group.getGroupId(), JournalArticle.class),
+				"lfr-x" + _group.getGroupId());
+		}
+	}
+
+	@FeatureFlag("LPD-107638")
+	@Test
+	public void testDDMStructureModelListenerWithMaxTagsPerRequest()
+		throws Exception {
+
+		DDMStructure ddmStructure = DDMStructureTestUtil.addStructure(
+			_group.getGroupId(), JournalArticle.class.getName());
+
+		for (int i = 0; i < 3; i++) {
+			JournalTestUtil.addArticleWithXMLContent(
+				_group.getGroupId(),
+				DDMStructureTestUtil.getSampleStructuredContent(),
+				ddmStructure.getStructureKey(), null);
+		}
+
+		try (CompanyConfigurationTemporarySwapper
+				cdnCompanyConfigurationTemporarySwapper =
+					_getCDNCompanyConfigurationTemporarySwapper(2)) {
+
+			ddmStructure.setDescription(RandomTestUtil.randomString());
+
+			_ddmStructureLocalService.updateDDMStructure(ddmStructure);
+
+			_assertPurge("lfr-s" + _group.getGroupId());
+		}
+	}
+
+	@FeatureFlag("LPD-107638")
+	@Test
+	public void testDDMTemplateModelListener() throws Exception {
+		JournalArticle journalArticle = JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+
+		DDMTemplate widgetDDMTemplate = DDMTemplateTestUtil.addTemplate(
+			_group.getGroupId(), 0,
+			_portal.getClassNameId(PortletDisplayTemplate.class));
+
+		try (CompanyConfigurationTemporarySwapper
+				cdnCompanyConfigurationTemporarySwapper =
+					_getCDNCompanyConfigurationTemporarySwapper()) {
+
+			// Updating a web content template purges the web content of its
+			// structure
+
+			DDMTemplate ddmTemplate = journalArticle.getDDMTemplate();
+
+			ddmTemplate.setScript(RandomTestUtil.randomString());
+
+			_ddmTemplateLocalService.updateDDMTemplate(ddmTemplate);
+
+			_assertPurge(
+				"lfr-wc" + journalArticle.getResourcePrimKey(),
+				_getCollectionTag(_group.getGroupId(), JournalArticle.class),
+				"lfr-x" + _group.getGroupId());
+
+			// Updating a widget template does not purge
+
+			widgetDDMTemplate.setScript(RandomTestUtil.randomString());
+
+			_ddmTemplateLocalService.updateDDMTemplate(widgetDDMTemplate);
+
+			_assertNoPurge();
+		}
+	}
+
+	@FeatureFlag("LPD-107638")
+	@Test
+	public void testDDMTemplateModelListenerWithGlobalTemplate()
+		throws Exception {
+
+		ServiceContext serviceContext = (ServiceContext)_serviceContext.clone();
+
+		Group companyGroup = _groupLocalService.getCompanyGroup(
+			TestPropsValues.getCompanyId());
+
+		serviceContext.setAttribute("ddmGroupId", companyGroup.getGroupId());
+
+		JournalArticle journalArticle = JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID, serviceContext);
+
+		DDMStructure ddmStructure = journalArticle.getDDMStructure();
+
+		DDMTemplate ddmTemplate = journalArticle.getDDMTemplate();
+
+		try (CompanyConfigurationTemporarySwapper
+				cdnCompanyConfigurationTemporarySwapper =
+					_getCDNCompanyConfigurationTemporarySwapper()) {
+
+			ddmTemplate.setScript(RandomTestUtil.randomString());
+
+			ddmTemplate = _ddmTemplateLocalService.updateDDMTemplate(
+				ddmTemplate);
+
+			_assertPurge("lfr-c" + TestPropsValues.getCompanyId());
+		}
+
+		_journalArticleLocalService.deleteArticle(journalArticle);
+
+		_ddmTemplateLocalService.deleteTemplate(ddmTemplate);
+
+		_ddmStructureLocalService.deleteStructure(ddmStructure);
 	}
 
 	@FeatureFlag("LPD-107638")
@@ -658,6 +812,12 @@ public class CDNModelListenerTest {
 	private final BlockingQueue<String> _bodies = new LinkedBlockingQueue<>();
 
 	@Inject
+	private DDMStructureLocalService _ddmStructureLocalService;
+
+	@Inject
+	private DDMTemplateLocalService _ddmTemplateLocalService;
+
+	@Inject
 	private DLAppLocalService _dlAppLocalService;
 
 	@Inject
@@ -668,6 +828,9 @@ public class CDNModelListenerTest {
 
 	@DeleteAfterTestRun
 	private Group _group;
+
+	@Inject
+	private GroupLocalService _groupLocalService;
 
 	private HttpServer _httpServer;
 
