@@ -21,26 +21,35 @@ import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.test.util.JournalTestUtil;
+import com.liferay.launch.set.publisher.LaunchSetPublisher;
 import com.liferay.layout.test.util.ContentLayoutTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.object.field.builder.TextObjectFieldBuilder;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
+import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.test.util.ObjectDefinitionTestUtil;
 import com.liferay.petra.io.StreamUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.test.util.CompanyConfigurationTemporarySwapper;
+import com.liferay.portal.kernel.backgroundtask.BackgroundTask;
+import com.liferay.portal.kernel.backgroundtask.BackgroundTaskManager;
+import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskConstants;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.messaging.Message;
+import com.liferay.portal.kernel.messaging.MessageBus;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
@@ -54,9 +63,11 @@ import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
@@ -76,7 +87,10 @@ import java.io.Serializable;
 import java.net.InetSocketAddress;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -126,11 +140,25 @@ public class CDNModelListenerTest {
 
 		_serviceContext = ServiceContextTestUtil.getServiceContext(
 			_group.getGroupId(), TestPropsValues.getUserId());
+
+		ServiceContextThreadLocal.pushServiceContext(_serviceContext);
 	}
 
 	@After
-	public void tearDown() {
+	public void tearDown() throws Exception {
 		_httpServer.stop(0);
+
+		if (_launchSetObjectEntry != null) {
+			_deleteBackgroundTasks();
+
+			_launchSetPublisher.unschedulePublish(
+				_launchSetObjectEntry.getObjectEntryId());
+
+			_objectEntryLocalService.deleteObjectEntry(
+				_launchSetObjectEntry.getObjectEntryId());
+		}
+
+		ServiceContextThreadLocal.popServiceContext();
 	}
 
 	@FeatureFlag("LPD-107638")
@@ -493,6 +521,169 @@ public class CDNModelListenerTest {
 
 	@FeatureFlag("LPD-107638")
 	@Test
+	public void testModelListenersWithLaunchSetPublish() throws Throwable {
+		JournalArticle journalArticle = JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+		Layout layout = LayoutTestUtil.addTypeContentPublishedLayout(
+			_group, RandomTestUtil.randomString(),
+			WorkflowConstants.STATUS_APPROVED);
+		JournalArticle discardedJournalArticle = JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+
+		try (CompanyConfigurationTemporarySwapper
+				cdnCompanyConfigurationTemporarySwapper =
+					_getCDNCompanyConfigurationTemporarySwapper()) {
+
+			// Adding and editing launch drafts does not purge
+
+			_addLaunchSetObjectEntry(journalArticle, layout);
+
+			_assertNoPurge();
+
+			// Discarding a launch draft does not purge
+
+			ObjectEntry launchEntryObjectEntry = _addLaunchEntryObjectEntry(
+				JournalArticle.class.getName(),
+				discardedJournalArticle.getResourcePrimKey(),
+				String.valueOf(discardedJournalArticle.getVersion()));
+
+			_objectEntryLocalService.deleteObjectEntry(
+				launchEntryObjectEntry.getObjectEntryId());
+
+			_assertNoPurge();
+
+			// Scheduling and unscheduling a launch set does not purge
+
+			_launchSetPublisher.schedulePublish(
+				new Date(System.currentTimeMillis() + Time.DAY),
+				_launchSetObjectEntry.getObjectEntryId(),
+				TestPropsValues.getUserId());
+
+			_launchSetPublisher.unschedulePublish(
+				_launchSetObjectEntry.getObjectEntryId());
+
+			_assertNoPurge();
+
+			// Publishing purges every launched item in one request after the
+			// commit, as the publish action runs in a single transaction
+
+			TransactionInvokerUtil.invoke(
+				_transactionConfig,
+				() -> {
+					_launchSetPublisher.publish(
+						_launchSetObjectEntry.getObjectEntryId());
+
+					Assert.assertNull(_bodies.poll(1, TimeUnit.SECONDS));
+
+					return null;
+				});
+
+			_assertPurge(_getLaunchSetPublishTags(journalArticle, layout));
+		}
+	}
+
+	@FeatureFlag("LPD-107638")
+	@Test
+	public void testModelListenersWithLaunchSetPublishFailure()
+		throws Exception {
+
+		JournalArticle journalArticle = JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+		Layout layout = LayoutTestUtil.addTypeContentPublishedLayout(
+			_group, RandomTestUtil.randomString(),
+			WorkflowConstants.STATUS_APPROVED);
+
+		try (CompanyConfigurationTemporarySwapper
+				cdnCompanyConfigurationTemporarySwapper =
+					_getCDNCompanyConfigurationTemporarySwapper()) {
+
+			_addLaunchSetObjectEntry(journalArticle, layout);
+
+			_assertNoPurge();
+
+			Assert.assertThrows(
+				PortalException.class,
+				() -> TransactionInvokerUtil.invoke(
+					_transactionConfig,
+					() -> {
+						_launchSetPublisher.publish(
+							_launchSetObjectEntry.getObjectEntryId());
+
+						throw new PortalException();
+					}));
+
+			_assertNoPurge();
+
+			JournalArticle latestJournalArticle =
+				_journalArticleLocalService.getLatestArticle(
+					journalArticle.getResourcePrimKey(),
+					WorkflowConstants.STATUS_APPROVED);
+
+			Assert.assertEquals(
+				journalArticle.getId(), latestJournalArticle.getId());
+		}
+	}
+
+	@FeatureFlag("LPD-107638")
+	@Test
+	public void testModelListenersWithLaunchSetScheduledPublish()
+		throws Exception {
+
+		JournalArticle journalArticle = JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+		Layout layout = LayoutTestUtil.addTypeContentPublishedLayout(
+			_group, RandomTestUtil.randomString(),
+			WorkflowConstants.STATUS_APPROVED);
+
+		try (CompanyConfigurationTemporarySwapper
+				cdnCompanyConfigurationTemporarySwapper =
+					_getCDNCompanyConfigurationTemporarySwapper()) {
+
+			_addLaunchSetObjectEntry(journalArticle, layout);
+
+			_launchSetPublisher.schedulePublish(
+				new Date(System.currentTimeMillis() + Time.DAY),
+				_launchSetObjectEntry.getObjectEntryId(),
+				TestPropsValues.getUserId());
+
+			_assertNoPurge();
+
+			// The scheduler delivers the message on a thread with no company,
+			// user, permission checker, or service context
+
+			Message message = new Message();
+
+			message.put("companyId", TestPropsValues.getCompanyId());
+			message.put(
+				"launchSetId", _launchSetObjectEntry.getObjectEntryId());
+			message.put("userId", TestPropsValues.getUserId());
+
+			Thread thread = new Thread(
+				() -> _messageBus.sendMessage(
+					"liferay/launch_set_scheduled_publish", message));
+
+			thread.start();
+
+			thread.join();
+
+			_assertPurge(_getLaunchSetPublishTags(journalArticle, layout));
+
+			ObjectEntry launchSetObjectEntry =
+				_objectEntryLocalService.getObjectEntry(
+					_launchSetObjectEntry.getObjectEntryId());
+
+			Assert.assertEquals(
+				WorkflowConstants.STATUS_APPROVED,
+				launchSetObjectEntry.getStatus());
+		}
+	}
+
+	@FeatureFlag("LPD-107638")
+	@Test
 	public void testObjectEntryModelListener() throws Exception {
 		_objectDefinition = ObjectDefinitionTestUtil.publishObjectDefinition(
 			Collections.singletonList(
@@ -565,6 +756,86 @@ public class CDNModelListenerTest {
 		}
 	}
 
+	private ObjectEntry _addLaunchEntryObjectEntry(
+			String className, long classPK, String baseVersionKey)
+		throws Exception {
+
+		ObjectEntry objectEntry = _addObjectEntry(
+			"LaunchEntry",
+			HashMapBuilder.<String, Serializable>put(
+				"baseVersionKey", baseVersionKey
+			).put(
+				"className", className
+			).put(
+				"classPK", classPK
+			).put(
+				"r_launchSetToLaunchEntries_c_launchSetId",
+				_launchSetObjectEntry.getObjectEntryId()
+			).build());
+
+		return _objectEntryLocalService.getObjectEntry(
+			objectEntry.getObjectEntryId());
+	}
+
+	private void _addLaunchSetObjectEntry(
+			JournalArticle journalArticle, Layout layout)
+		throws Exception {
+
+		_launchSetObjectEntry = _addObjectEntry(
+			"LaunchSet",
+			HashMapBuilder.<String, Serializable>put(
+				"name", RandomTestUtil.randomString()
+			).build());
+
+		ObjectEntry launchEntryObjectEntry = _addLaunchEntryObjectEntry(
+			JournalArticle.class.getName(), journalArticle.getResourcePrimKey(),
+			String.valueOf(journalArticle.getVersion()));
+
+		JournalArticle launchDraftJournalArticle =
+			_journalArticleLocalService.getLatestArticle(
+				MapUtil.getLong(launchEntryObjectEntry.getValues(), "draftId"),
+				WorkflowConstants.STATUS_ANY, false);
+
+		JournalTestUtil.updateArticle(
+			launchDraftJournalArticle, RandomTestUtil.randomString(),
+			launchDraftJournalArticle.getContent(), true, false,
+			_serviceContext);
+
+		launchEntryObjectEntry = _addLaunchEntryObjectEntry(
+			Layout.class.getName(), layout.getPlid(),
+			String.valueOf(layout.getPlid()));
+
+		Layout launchDraftLayout = _layoutLocalService.getLayout(
+			MapUtil.getLong(launchEntryObjectEntry.getValues(), "draftId"));
+
+		ContentLayoutTestUtil.addFragmentEntryLinkToLayout(
+			StringPool.BLANK, StringPool.BLANK, StringPool.BLANK, null, null,
+			"<div>" + RandomTestUtil.randomString() + "</div>",
+			StringPool.BLANK, launchDraftLayout, StringPool.BLANK,
+			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
+				launchDraftLayout.getPlid()),
+			FragmentConstants.TYPE_COMPONENT);
+	}
+
+	private ObjectEntry _addObjectEntry(
+			String objectDefinitionName, Map<String, Serializable> values)
+		throws Exception {
+
+		ObjectDefinition objectDefinition =
+			_objectDefinitionLocalService.getObjectDefinition(
+				TestPropsValues.getCompanyId(), objectDefinitionName);
+
+		ServiceContext serviceContext = (ServiceContext)_serviceContext.clone();
+
+		serviceContext.setWorkflowAction(WorkflowConstants.ACTION_SAVE_DRAFT);
+
+		return _objectEntryLocalService.addObjectEntry(
+			0, TestPropsValues.getUserId(),
+			objectDefinition.getObjectDefinitionId(), 0,
+			LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()), values,
+			serviceContext);
+	}
+
 	private void _assertNoPurge() throws Exception {
 		Assert.assertNull(_bodies.poll(2, TimeUnit.SECONDS));
 	}
@@ -582,6 +853,25 @@ public class CDNModelListenerTest {
 				JSONUtil.toStringList(jsonObject.getJSONArray("tags"))));
 
 		_assertNoPurge();
+	}
+
+	private void _deleteBackgroundTasks() throws Exception {
+		for (BackgroundTask backgroundTask :
+				_backgroundTaskManager.getBackgroundTasks(
+					BackgroundTaskConstants.GROUP_ID_DEFAULT,
+					"com.liferay.launch.internal.background.task." +
+						"LaunchSetScheduledPublishBackgroundTaskExecutor")) {
+
+			if (!Objects.equals(
+					backgroundTask.getName(),
+					String.valueOf(_launchSetObjectEntry.getObjectEntryId()))) {
+
+				continue;
+			}
+
+			_backgroundTaskManager.deleteBackgroundTask(
+				backgroundTask.getBackgroundTaskId());
+		}
 	}
 
 	private CompanyConfigurationTemporarySwapper
@@ -611,9 +901,35 @@ public class CDNModelListenerTest {
 			"lfr-l", groupId, "-", _portal.getClassNameId(clazz));
 	}
 
+	/**
+	 * Returns the cache tags that publishing a launch set of the web content
+	 * and the page purges. Approving the launch set purges the launch set
+	 * object entry as well, although no page shows it.
+	 */
+	private String[] _getLaunchSetPublishTags(
+			JournalArticle journalArticle, Layout layout)
+		throws Exception {
+
+		ObjectDefinition objectDefinition =
+			_objectDefinitionLocalService.getObjectDefinition(
+				_launchSetObjectEntry.getObjectDefinitionId());
+
+		return new String[] {
+			"lfr-l0-" + _portal.getClassNameId(objectDefinition.getClassName()),
+			"lfr-o" + _launchSetObjectEntry.getObjectEntryId(),
+			"lfr-p" + layout.getPlid(),
+			"lfr-wc" + journalArticle.getResourcePrimKey(),
+			_getCollectionTag(_group.getGroupId(), JournalArticle.class),
+			"lfr-x0", "lfr-x" + _group.getGroupId()
+		};
+	}
+
 	private static final TransactionConfig _transactionConfig =
 		TransactionConfig.Factory.create(
 			Propagation.REQUIRED, new Class<?>[] {Exception.class});
+
+	@Inject
+	private BackgroundTaskManager _backgroundTaskManager;
 
 	@Inject
 	private BlogsEntryLocalService _blogsEntryLocalService;
@@ -637,14 +953,25 @@ public class CDNModelListenerTest {
 	@Inject
 	private JournalArticleLocalService _journalArticleLocalService;
 
+	private ObjectEntry _launchSetObjectEntry;
+
+	@Inject
+	private LaunchSetPublisher _launchSetPublisher;
+
 	@Inject
 	private LayoutLocalService _layoutLocalService;
 
 	@Inject
 	private LayoutSetLocalService _layoutSetLocalService;
 
+	@Inject
+	private MessageBus _messageBus;
+
 	@DeleteAfterTestRun
 	private ObjectDefinition _objectDefinition;
+
+	@Inject
+	private ObjectDefinitionLocalService _objectDefinitionLocalService;
 
 	@Inject
 	private ObjectEntryLocalService _objectEntryLocalService;
