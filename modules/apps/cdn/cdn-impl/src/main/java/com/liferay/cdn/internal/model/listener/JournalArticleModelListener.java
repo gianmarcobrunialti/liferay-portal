@@ -17,7 +17,9 @@ import org.osgi.service.component.annotations.Reference;
  * Purges web content when guests could see the article version before or
  * after the change. Approving a version, including a scheduled one, and
  * expiring, trashing, or deleting an approved version purge the web content,
- * while saving a draft does not.
+ * while saving a draft does not. A launch edits a draft copy of the article,
+ * which never purges, and publishing the launch approves a new version of the
+ * article, which purges it.
  *
  * @author Gianmarco Brunialti Masera
  */

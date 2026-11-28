@@ -14,6 +14,11 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
+ * Purges a public page when it changes, and its site when the navigation
+ * changes. Draft layouts, including the copies that a launch edits, purge
+ * nothing. Publishing a draft, by hand or through a launch, updates the public
+ * layout and purges it.
+ *
  * @author Gianmarco Brunialti Masera
  */
 @Component(service = ModelListener.class)
