@@ -41,6 +41,8 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PrefsProps;
+import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
@@ -94,6 +96,16 @@ import java.util.regex.Pattern;
  * without a trailing slash, and at the site root for the site's home page.
  * </p>
  *
+ * <p>
+ * A virtual host bound to one of the site's languages still serves every
+ * language of the site under the language's prefix, and the language selector
+ * links to those URLs. Without a language prefix, the host serves a page in its
+ * language only when the locale is never prepended to friendly URLs, so it is
+ * purged under the page's friendly URL in its language only. Otherwise, the
+ * language served without a prefix depends on the guest's session and cookies,
+ * so every localized path is purged.
+ * </p>
+ *
  * @author Gianmarco Brunialti Masera
  */
 public class CDNPurgeURLResolver {
@@ -109,7 +121,7 @@ public class CDNPurgeURLResolver {
 		LayoutSetLocalService layoutSetLocalService,
 		ObjectDefinitionLocalService objectDefinitionLocalService,
 		ObjectEntryLocalService objectEntryLocalService, Portal portal,
-		boolean secure) {
+		PrefsProps prefsProps, boolean secure) {
 
 		_companyLocalService = companyLocalService;
 		_fragmentEntryLinkLocalService = fragmentEntryLinkLocalService;
@@ -124,6 +136,7 @@ public class CDNPurgeURLResolver {
 		_objectDefinitionLocalService = objectDefinitionLocalService;
 		_objectEntryLocalService = objectEntryLocalService;
 		_portal = portal;
+		_prefsProps = prefsProps;
 		_secure = secure;
 	}
 
@@ -222,24 +235,44 @@ public class CDNPurgeURLResolver {
 	private final ObjectDefinitionLocalService _objectDefinitionLocalService;
 	private final ObjectEntryLocalService _objectEntryLocalService;
 	private final Portal _portal;
+	private final PrefsProps _prefsProps;
 	private final boolean _secure;
 
 	private static class Site {
 
 		public Site(
-			String companyURL, long homePlid, Set<Locale> locales,
-			List<String[]> siteURLs) {
+			SiteURL companySiteURL, long homePlid, Set<Locale> locales,
+			List<SiteURL> siteURLs) {
 
-			_companyURL = companyURL;
+			_companySiteURL = companySiteURL;
 			_homePlid = homePlid;
 			_locales = locales;
 			_siteURLs = siteURLs;
 		}
 
-		private final String _companyURL;
+		private final SiteURL _companySiteURL;
 		private final long _homePlid;
 		private final Set<Locale> _locales;
-		private final List<String[]> _siteURLs;
+		private final List<SiteURL> _siteURLs;
+
+	}
+
+	/**
+	 * The URL of a site's pages on one host. The locale is the language the
+	 * host serves every page in without a language prefix, or null when the
+	 * guest's session and cookies decide it.
+	 */
+	private static class SiteURL {
+
+		public SiteURL(Locale locale, String portalURL, String sitePath) {
+			_locale = locale;
+			_portalURL = portalURL;
+			_sitePath = sitePath;
+		}
+
+		private final Locale _locale;
+		private final String _portalURL;
+		private final String _sitePath;
 
 	}
 
@@ -247,6 +280,9 @@ public class CDNPurgeURLResolver {
 
 		public URLCollector(long companyId) {
 			_companyId = companyId;
+
+			_localePrependFriendlyURLStyle = _prefsProps.getInteger(
+				companyId, PropsKeys.LOCALE_PREPEND_FRIENDLY_URL_STYLE);
 		}
 
 		public void addLayoutURLs(Layout layout) {
@@ -264,7 +300,7 @@ public class CDNPurgeURLResolver {
 
 			_addURLs(
 				site._siteURLs, site._locales, layout.getFriendlyURLMap(),
-				layout.getFriendlyURL());
+				layout.getFriendlyURL(), true);
 
 			if (layout.getPlid() != site._homePlid) {
 				return;
@@ -276,13 +312,13 @@ public class CDNPurgeURLResolver {
 
 			_addURLs(
 				site._siteURLs, site._locales, Collections.emptyMap(),
-				StringPool.SLASH);
+				StringPool.SLASH, true);
 
-			if (site._companyURL != null) {
+			if (site._companySiteURL != null) {
 				_addURLs(
-					Collections.singletonList(
-						new String[] {site._companyURL, StringPool.BLANK}),
-					site._locales, Collections.emptyMap(), StringPool.SLASH);
+					Collections.singletonList(site._companySiteURL),
+					site._locales, Collections.emptyMap(), StringPool.SLASH,
+					true);
 			}
 		}
 
@@ -407,7 +443,11 @@ public class CDNPurgeURLResolver {
 				paths.put(locale, urlSeparator + urlTitle);
 			}
 
-			_addURLs(site._siteURLs, site._locales, paths, null);
+			// The display page resolves the URL title with the locale of the
+			// guest's session first, so a host bound to a language may serve
+			// the URL title of any language
+
+			_addURLs(site._siteURLs, site._locales, paths, null, false);
 		}
 
 		private void _addFragmentEntryURLs(long fragmentEntryId) {
@@ -561,13 +601,15 @@ public class CDNPurgeURLResolver {
 
 		/**
 		 * Adds the URLs of a path that can be localized. Without a language
-		 * prefix, every localized path is served. With the prefix of a
-		 * language, the path of that language is served, or the default path
-		 * when the path is not localized to that language.
+		 * prefix, every localized path is served, unless the path follows the
+		 * request's locale and the host serves every page in its language.
+		 * With the prefix of a language, the path of that language is served,
+		 * or the default path when the path is not localized to that language.
 		 */
 		private void _addURLs(
-			List<String[]> siteURLs, Set<Locale> locales,
-			Map<Locale, String> localizedPaths, String defaultPath) {
+			List<SiteURL> siteURLs, Set<Locale> locales,
+			Map<Locale, String> localizedPaths, String defaultPath,
+			boolean localePath) {
 
 			Set<String> paths = new LinkedHashSet<>();
 
@@ -577,21 +619,25 @@ public class CDNPurgeURLResolver {
 
 			_addPath(paths, defaultPath);
 
-			_addURLs(siteURLs, StringPool.BLANK, paths);
+			for (SiteURL siteURL : siteURLs) {
+				if (localePath && (siteURL._locale != null)) {
+					_addURLs(
+						siteURL, StringPool.BLANK,
+						_getPaths(
+							siteURL._locale, localizedPaths, defaultPath));
+				}
+				else {
+					_addURLs(siteURL, StringPool.BLANK, paths);
+				}
+			}
 
 			for (Locale locale : locales) {
-				String path = localizedPaths.get(locale);
-
-				if (Validator.isNull(path)) {
-					path = defaultPath;
-				}
-
-				paths = new LinkedHashSet<>();
-
-				_addPath(paths, path);
+				paths = _getPaths(locale, localizedPaths, defaultPath);
 
 				for (String languagePrefix : _getLanguagePrefixes(locale)) {
-					_addURLs(siteURLs, languagePrefix, paths);
+					for (SiteURL siteURL : siteURLs) {
+						_addURLs(siteURL, languagePrefix, paths);
+					}
 				}
 			}
 		}
@@ -601,14 +647,13 @@ public class CDNPurgeURLResolver {
 		 * portal URL and the site path.
 		 */
 		private void _addURLs(
-			List<String[]> siteURLs, String languagePrefix, Set<String> paths) {
+			SiteURL siteURL, String languagePrefix, Set<String> paths) {
 
 			for (String path : paths) {
-				for (String[] siteURL : siteURLs) {
-					_addURL(
-						StringBundler.concat(
-							siteURL[0], languagePrefix, siteURL[1], path));
-				}
+				_addURL(
+					StringBundler.concat(
+						siteURL._portalURL, languagePrefix, siteURL._sitePath,
+						path));
 			}
 		}
 
@@ -625,6 +670,27 @@ public class CDNPurgeURLResolver {
 			languagePrefixes.add(StringPool.SLASH + locale.getLanguage());
 
 			return languagePrefixes;
+		}
+
+		/**
+		 * Returns the path served in the language, with and without a trailing
+		 * slash.
+		 */
+		private Set<String> _getPaths(
+			Locale locale, Map<Locale, String> localizedPaths,
+			String defaultPath) {
+
+			Set<String> paths = new LinkedHashSet<>();
+
+			String path = localizedPaths.get(locale);
+
+			if (Validator.isNull(path)) {
+				path = defaultPath;
+			}
+
+			_addPath(paths, path);
+
+			return paths;
 		}
 
 		private String _getPortalURL(String hostname) {
@@ -647,7 +713,7 @@ public class CDNPurgeURLResolver {
 				return null;
 			}
 
-			List<String[]> siteURLs = new ArrayList<>();
+			List<SiteURL> siteURLs = new ArrayList<>();
 
 			LayoutSet layoutSet = _layoutSetLocalService.fetchLayoutSet(
 				group.getGroupId(), false);
@@ -656,15 +722,18 @@ public class CDNPurgeURLResolver {
 				Map<String, String> virtualHostnames =
 					layoutSet.getVirtualHostnames();
 
-				for (String virtualHostname : virtualHostnames.keySet()) {
+				for (Map.Entry<String, String> entry :
+						virtualHostnames.entrySet()) {
+
 					siteURLs.add(
-						new String[] {
-							_getPortalURL(virtualHostname), StringPool.BLANK
-						});
+						new SiteURL(
+							_getVirtualHostLocale(
+								group.getGroupId(), entry.getValue()),
+							_getPortalURL(entry.getKey()), StringPool.BLANK));
 				}
 			}
 
-			String companyURL = null;
+			SiteURL companySiteURL = null;
 
 			if (siteURLs.isEmpty()) {
 				String portalURL = _getPortalURL(null);
@@ -674,19 +743,19 @@ public class CDNPurgeURLResolver {
 				}
 
 				siteURLs.add(
-					new String[] {
-						portalURL,
+					new SiteURL(
+						null, portalURL,
 						_portal.getPathFriendlyURLPublic() +
-							group.getFriendlyURL()
-					});
+							group.getFriendlyURL()));
 
 				if (group.isGuest()) {
-					companyURL = portalURL;
+					companySiteURL = new SiteURL(
+						null, portalURL, StringPool.BLANK);
 				}
 			}
 
 			return new Site(
-				companyURL,
+				companySiteURL,
 				_layoutLocalService.getDefaultPlid(group.getGroupId(), false),
 				_language.getAvailableLocales(group.getGroupId()), siteURLs);
 		}
@@ -711,8 +780,27 @@ public class CDNPurgeURLResolver {
 			return site;
 		}
 
+		/**
+		 * Returns the language a virtual host serves every page in without a
+		 * language prefix, or null when the guest's session and cookies decide
+		 * it. The host's language applies only when it is one of the site's
+		 * languages, and it decides the page path only when the locale is never
+		 * prepended to friendly URLs.
+		 */
+		private Locale _getVirtualHostLocale(long groupId, String languageId) {
+			if ((_localePrependFriendlyURLStyle != 0) ||
+				Validator.isNull(languageId) ||
+				!_language.isAvailableLocale(groupId, languageId)) {
+
+				return null;
+			}
+
+			return LocaleUtil.fromLanguageId(languageId, false);
+		}
+
 		private final long _companyId;
 		private final Set<Long> _groupIds = new LinkedHashSet<>();
+		private final int _localePrependFriendlyURLStyle;
 		private final Map<Long, Site> _sites = new HashMap<>();
 		private boolean _truncated;
 		private final Set<String> _urls = new LinkedHashSet<>();

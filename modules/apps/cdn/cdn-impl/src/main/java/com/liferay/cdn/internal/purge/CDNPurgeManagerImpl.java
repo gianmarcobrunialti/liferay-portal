@@ -43,6 +43,7 @@ import com.liferay.portal.kernel.transaction.TransactionCallbackUtil;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.NamedThreadFactory;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PrefsProps;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 
@@ -188,7 +189,7 @@ public class CDNPurgeManagerImpl implements CDNPurgeManager {
 			_layoutClassedModelUsageLocalService,
 			_layoutDisplayPageProviderRegistry, _layoutLocalService,
 			_layoutSetLocalService, _objectDefinitionLocalService,
-			_objectEntryLocalService, _portal,
+			_objectEntryLocalService, _portal, _prefsProps,
 			Http.HTTPS.equals(PropsUtil.get(PropsKeys.WEB_SERVER_PROTOCOL)));
 	}
 
@@ -422,6 +423,9 @@ public class CDNPurgeManagerImpl implements CDNPurgeManager {
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private PrefsProps _prefsProps;
 
 	private ScheduledExecutorService _scheduledExecutorService;
 
