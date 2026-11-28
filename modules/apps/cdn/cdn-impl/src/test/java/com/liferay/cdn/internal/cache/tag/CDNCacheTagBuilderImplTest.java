@@ -45,6 +45,7 @@ import com.liferay.site.navigation.model.SiteNavigationMenuItem;
 import com.liferay.style.book.model.StyleBookEntry;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 
@@ -715,6 +716,30 @@ public class CDNCacheTagBuilderImplTest {
 			_cdnCacheTagBuilderImpl.getPurgeCacheTags(privateLayout, null));
 	}
 
+	@Test
+	public void testGetPurgeCacheTagsOfLayoutSetChange() {
+		String themeId = RandomTestUtil.randomString();
+
+		LayoutSet layoutSet = _mockLayoutSet(
+			themeId, RandomTestUtil.nextDate());
+
+		// Touch
+
+		Assert.assertEquals(
+			Collections.emptySet(),
+			_cdnCacheTagBuilderImpl.getPurgeCacheTags(
+				layoutSet, _mockLayoutSet(themeId, RandomTestUtil.nextDate())));
+
+		// Update
+
+		Assert.assertEquals(
+			SetUtil.fromArray("ns-s20"),
+			_cdnCacheTagBuilderImpl.getPurgeCacheTags(
+				layoutSet,
+				_mockLayoutSet(
+					RandomTestUtil.randomString(), RandomTestUtil.nextDate())));
+	}
+
 	private void _assertPurgeCacheTags(
 		WorkflowedModel workflowedModel, String... cacheTags) {
 
@@ -804,6 +829,38 @@ public class CDNCacheTagBuilderImplTest {
 		);
 
 		return layout;
+	}
+
+	private LayoutSet _mockLayoutSet(String themeId, Date modifiedDate) {
+		LayoutSet layoutSet = Mockito.mock(LayoutSet.class);
+
+		Mockito.when(
+			layoutSet.getCompanyId()
+		).thenReturn(
+			1L
+		);
+
+		Mockito.when(
+			layoutSet.getGroupId()
+		).thenReturn(
+			20L
+		);
+
+		Mockito.when(
+			layoutSet.getModelAttributes()
+		).thenReturn(
+			HashMapBuilder.<String, Object>put(
+				"groupId", 20L
+			).put(
+				"modifiedDate", modifiedDate
+			).put(
+				"mvccVersion", RandomTestUtil.randomLong()
+			).put(
+				"themeId", themeId
+			).build()
+		);
+
+		return layoutSet;
 	}
 
 	private Layout _mockNavigationLayout(

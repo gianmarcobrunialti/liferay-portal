@@ -12,6 +12,7 @@ import com.liferay.cdn.purge.CDNPurgeRequest;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.io.StreamUtil;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.configuration.test.util.CompanyConfigurationTemporarySwapper;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -307,7 +308,10 @@ public class CDNPurgeManagerImplTest {
 			// A site change purges the URLs of every page of the site
 
 			_layoutSetLocalService.updateSettings(
-				group.getGroupId(), false, RandomTestUtil.randomString());
+				group.getGroupId(), false,
+				StringBundler.concat(
+					RandomTestUtil.randomString(), StringPool.EQUAL,
+					RandomTestUtil.randomString()));
 
 			urls = _pollURLs();
 

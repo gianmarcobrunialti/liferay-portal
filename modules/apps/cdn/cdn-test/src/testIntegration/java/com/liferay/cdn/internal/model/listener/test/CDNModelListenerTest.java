@@ -13,6 +13,14 @@ import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.kernel.service.DLTrashLocalService;
+import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationParameterMapFactoryUtil;
+import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationSettingsMapFactoryUtil;
+import com.liferay.exportimport.kernel.configuration.constants.ExportImportConfigurationConstants;
+import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
+import com.liferay.exportimport.kernel.service.ExportImportConfigurationLocalService;
+import com.liferay.exportimport.kernel.service.ExportImportLocalService;
+import com.liferay.exportimport.kernel.staging.StagingUtil;
+import com.liferay.exportimport.test.util.ExportImportTestUtil;
 import com.liferay.fragment.constants.FragmentConstants;
 import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.service.FragmentEntryLocalService;
@@ -32,12 +40,17 @@ import com.liferay.petra.io.StreamUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.test.util.CompanyConfigurationTemporarySwapper;
+import com.liferay.portal.kernel.exception.ModelListenerException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.model.BaseModelListener;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.ModelListener;
+import com.liferay.portal.kernel.model.PortletPreferences;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -57,6 +70,7 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.TimeZoneUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
@@ -70,6 +84,7 @@ import com.liferay.site.navigation.service.SiteNavigationMenuLocalService;
 
 import com.sun.net.httpserver.HttpServer;
 
+import java.io.File;
 import java.io.InputStream;
 import java.io.Serializable;
 
@@ -88,6 +103,11 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * @author Gianmarco Brunialti Masera
@@ -354,6 +374,39 @@ public class CDNModelListenerTest {
 
 	@FeatureFlag("LPD-107638")
 	@Test
+	public void testJournalArticleModelListenerWithLocalStaging()
+		throws Exception {
+
+		Group stagingGroup = _enableLocalStaging();
+
+		try (CompanyConfigurationTemporarySwapper
+				cdnCompanyConfigurationTemporarySwapper =
+					_getCDNCompanyConfigurationTemporarySwapper(3)) {
+
+			for (int i = 0; i < 2; i++) {
+				JournalTestUtil.addArticle(
+					stagingGroup.getGroupId(),
+					JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+			}
+
+			_assertNoPurge();
+
+			// Publishing two web content articles purges four cache tags,
+			// which do not fit in one request, so the live site is purged
+			// instead
+
+			StagingUtil.publishLayouts(
+				TestPropsValues.getUserId(), stagingGroup.getGroupId(),
+				_group.getGroupId(), false,
+				ExportImportConfigurationParameterMapFactoryUtil.
+					buildFullPublishParameterMap());
+
+			_assertPurge("lfr-s" + _group.getGroupId());
+		}
+	}
+
+	@FeatureFlag("LPD-107638")
+	@Test
 	public void testJournalArticleModelListenerWithMaxTagsPerRequest()
 		throws Throwable {
 
@@ -423,6 +476,147 @@ public class CDNModelListenerTest {
 
 			_assertPurge(
 				"lfr-p" + layout.getPlid(), "lfr-x" + _group.getGroupId());
+		}
+	}
+
+	@FeatureFlag("LPD-107638")
+	@Test
+	public void testLayoutModelListenerWithLayoutImport() throws Throwable {
+		Layout layout = LayoutTestUtil.addTypePortletLayout(_group);
+
+		File file = ExportImportTestUtil.exportLayoutsAsFile(_group, layout);
+
+		layout.setTitle(RandomTestUtil.randomString());
+
+		layout = _layoutLocalService.updateLayout(layout);
+
+		ExportImportConfiguration exportImportConfiguration =
+			_exportImportConfigurationLocalService.
+				addDraftExportImportConfiguration(
+					TestPropsValues.getUserId(),
+					ExportImportConfigurationConstants.TYPE_IMPORT_LAYOUT,
+					ExportImportConfigurationSettingsMapFactoryUtil.
+						buildImportLayoutSettingsMap(
+							TestPropsValues.getUserId(), _group.getGroupId(),
+							false, null,
+							ExportImportConfigurationParameterMapFactoryUtil.
+								buildParameterMap(),
+							LocaleUtil.US, TimeZoneUtil.GMT));
+
+		try (CompanyConfigurationTemporarySwapper
+				cdnCompanyConfigurationTemporarySwapper =
+					_getCDNCompanyConfigurationTemporarySwapper()) {
+
+			// An import that rolls back does not purge
+
+			String message = RandomTestUtil.randomString();
+
+			try {
+				TransactionInvokerUtil.invoke(
+					_transactionConfig,
+					() -> {
+						_exportImportLocalService.importLayouts(
+							exportImportConfiguration, file);
+
+						throw new Exception(message);
+					});
+
+				Assert.fail();
+			}
+			catch (Exception exception) {
+				Assert.assertEquals(message, exception.getMessage());
+			}
+
+			_assertNoPurge();
+
+			// An import purges the pages it changes once it commits, and
+			// updating the layout set without changes does not purge the site
+
+			TransactionInvokerUtil.invoke(
+				_transactionConfig,
+				() -> {
+					_exportImportLocalService.importLayouts(
+						exportImportConfiguration, file);
+
+					Assert.assertNull(_bodies.poll(1, TimeUnit.SECONDS));
+
+					return null;
+				});
+
+			_assertPurge(
+				"lfr-p" + layout.getPlid(), "lfr-x" + _group.getGroupId());
+		}
+	}
+
+	@FeatureFlag("LPD-107638")
+	@Test
+	public void testLayoutModelListenerWithLocalStaging() throws Exception {
+		Group stagingGroup = _enableLocalStaging();
+
+		Layout stagingLayout = LayoutTestUtil.addTypePortletLayout(
+			stagingGroup);
+
+		LayoutTestUtil.addPortletToLayout(stagingLayout, _PORTLET_ID);
+
+		stagingLayout = _layoutLocalService.getLayout(stagingLayout.getPlid());
+
+		StagingUtil.publishLayouts(
+			TestPropsValues.getUserId(), stagingGroup.getGroupId(),
+			_group.getGroupId(), false,
+			ExportImportConfigurationParameterMapFactoryUtil.
+				buildFullPublishParameterMap());
+
+		Layout liveLayout = _layoutLocalService.getLayoutByUuidAndGroupId(
+			stagingLayout.getUuid(), _group.getGroupId(), false);
+
+		try (CompanyConfigurationTemporarySwapper
+				cdnCompanyConfigurationTemporarySwapper =
+					_getCDNCompanyConfigurationTemporarySwapper()) {
+
+			// Editing a page of the staging group does not purge
+
+			stagingLayout.setTitle(RandomTestUtil.randomString());
+
+			stagingLayout = _layoutLocalService.updateLayout(stagingLayout);
+
+			_assertNoPurge();
+
+			// A page that fails to publish does not purge
+
+			ServiceRegistration<?> serviceRegistration = _registerModelListener(
+				liveLayout.getPlid());
+
+			try {
+				StagingUtil.publishLayouts(
+					TestPropsValues.getUserId(), stagingGroup.getGroupId(),
+					_group.getGroupId(), false,
+					new long[] {stagingLayout.getLayoutId()},
+					ExportImportConfigurationParameterMapFactoryUtil.
+						buildFullPublishParameterMap());
+			}
+			finally {
+				serviceRegistration.unregister();
+			}
+
+			Layout failedLiveLayout = _layoutLocalService.getLayout(
+				liveLayout.getPlid());
+
+			Assert.assertEquals(
+				liveLayout.getTitle(), failedLiveLayout.getTitle());
+
+			_assertNoPurge();
+
+			// A publication only purges the live pages it changes
+
+			StagingUtil.publishLayouts(
+				TestPropsValues.getUserId(), stagingGroup.getGroupId(),
+				_group.getGroupId(), false,
+				new long[] {stagingLayout.getLayoutId()},
+				ExportImportConfigurationParameterMapFactoryUtil.
+					buildFullPublishParameterMap());
+
+			_assertPurge(
+				"lfr-p" + liveLayout.getPlid(), "lfr-x" + _group.getGroupId());
 		}
 	}
 
@@ -508,14 +702,23 @@ public class CDNModelListenerTest {
 					_getCDNCompanyConfigurationTemporarySwapper()) {
 
 			_layoutSetLocalService.updateSettings(
-				_group.getGroupId(), true, RandomTestUtil.randomString());
+				_group.getGroupId(), true, _getSettings());
 
 			_assertNoPurge();
 
+			String settings = _getSettings();
+
 			_layoutSetLocalService.updateSettings(
-				_group.getGroupId(), false, RandomTestUtil.randomString());
+				_group.getGroupId(), false, settings);
 
 			_assertPurge("lfr-s" + _group.getGroupId());
+
+			// Updating a layout set without changes does not purge
+
+			_layoutSetLocalService.updateSettings(
+				_group.getGroupId(), false, settings);
+
+			_assertNoPurge();
 		}
 	}
 
@@ -612,6 +815,14 @@ public class CDNModelListenerTest {
 		_assertNoPurge();
 	}
 
+	private Group _enableLocalStaging() throws Exception {
+		GroupTestUtil.enableLocalStaging(_group);
+
+		_group = _groupLocalService.getGroup(_group.getGroupId());
+
+		return _group.getStagingGroup();
+	}
+
 	private CompanyConfigurationTemporarySwapper
 			_getCDNCompanyConfigurationTemporarySwapper()
 		throws Exception {
@@ -648,6 +859,38 @@ public class CDNModelListenerTest {
 			"lfr-l", groupId, "-", _portal.getClassNameId(clazz));
 	}
 
+	private String _getSettings() {
+		return StringBundler.concat(
+			RandomTestUtil.randomString(), StringPool.EQUAL,
+			RandomTestUtil.randomString());
+	}
+
+	private ServiceRegistration<?> _registerModelListener(long plid) {
+		Bundle bundle = FrameworkUtil.getBundle(CDNModelListenerTest.class);
+
+		BundleContext bundleContext = bundle.getBundleContext();
+
+		return bundleContext.registerService(
+			ModelListener.class,
+			new BaseModelListener<PortletPreferences>() {
+
+				@Override
+				public void onBeforeUpdate(
+					PortletPreferences originalPortletPreferences,
+					PortletPreferences portletPreferences) {
+
+					if (portletPreferences.getPlid() == plid) {
+						throw new ModelListenerException();
+					}
+				}
+
+			},
+			null);
+	}
+
+	private static final String _PORTLET_ID =
+		"com_liferay_journal_content_web_portlet_JournalContentPortlet";
+
 	private static final TransactionConfig _transactionConfig =
 		TransactionConfig.Factory.create(
 			Propagation.REQUIRED, new Class<?>[] {Exception.class});
@@ -664,10 +907,20 @@ public class CDNModelListenerTest {
 	private DLTrashLocalService _dlTrashLocalService;
 
 	@Inject
+	private ExportImportConfigurationLocalService
+		_exportImportConfigurationLocalService;
+
+	@Inject
+	private ExportImportLocalService _exportImportLocalService;
+
+	@Inject
 	private FragmentEntryLocalService _fragmentEntryLocalService;
 
 	@DeleteAfterTestRun
 	private Group _group;
+
+	@Inject
+	private GroupLocalService _groupLocalService;
 
 	private HttpServer _httpServer;
 
