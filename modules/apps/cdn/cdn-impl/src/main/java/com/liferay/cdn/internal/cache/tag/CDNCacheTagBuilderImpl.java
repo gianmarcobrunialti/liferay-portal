@@ -42,6 +42,7 @@ import com.liferay.style.book.model.StyleBookEntry;
 
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -232,6 +233,12 @@ public class CDNCacheTagBuilderImpl implements CDNCacheTagBuilder {
 		if (currentBaseModel instanceof Layout) {
 			return _getPurgeCacheTags(
 				(Layout)originalBaseModel, (Layout)baseModel);
+		}
+
+		if ((currentBaseModel instanceof LayoutSet) &&
+			_isTouched(originalBaseModel, baseModel)) {
+
+			return Collections.emptySet();
 		}
 
 		if (currentBaseModel instanceof WorkflowedModel) {
@@ -512,6 +519,40 @@ public class CDNCacheTagBuilderImpl implements CDNCacheTagBuilder {
 			layout.isPrivateLayout() || layout.isSystem()) {
 
 			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Returns whether the update only touched the model, changing nothing but
+	 * its modified date and MVCC version. Publishing or importing a page
+	 * updates the site's layout set this way, which must not purge every page
+	 * of the site.
+	 */
+	private boolean _isTouched(
+		BaseModel<?> originalBaseModel, BaseModel<?> baseModel) {
+
+		if ((originalBaseModel == null) || (baseModel == null)) {
+			return false;
+		}
+
+		Map<String, Object> originalModelAttributes =
+			originalBaseModel.getModelAttributes();
+		Map<String, Object> modelAttributes = baseModel.getModelAttributes();
+
+		for (Map.Entry<String, Object> entry : modelAttributes.entrySet()) {
+			String key = entry.getKey();
+
+			if (key.equals("modifiedDate") || key.equals("mvccVersion")) {
+				continue;
+			}
+
+			if (!Objects.equals(
+					entry.getValue(), originalModelAttributes.get(key))) {
+
+				return false;
+			}
 		}
 
 		return true;

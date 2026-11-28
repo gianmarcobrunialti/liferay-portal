@@ -23,7 +23,7 @@ public class LayoutSetModelListener extends BaseModelListener<LayoutSet> {
 	public void onAfterUpdate(
 		LayoutSet originalLayoutSet, LayoutSet layoutSet) {
 
-		_cdnPurgeManager.purge(layoutSet);
+		_cdnPurgeManager.purge(originalLayoutSet, layoutSet);
 	}
 
 	@Reference
