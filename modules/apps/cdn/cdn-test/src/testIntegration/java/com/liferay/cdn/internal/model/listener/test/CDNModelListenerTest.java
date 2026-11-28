@@ -37,9 +37,17 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.ResourceConstants;
+import com.liferay.portal.kernel.model.ResourcePermission;
+import com.liferay.portal.kernel.model.Role;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -75,8 +83,10 @@ import java.io.Serializable;
 
 import java.net.InetSocketAddress;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -572,6 +582,324 @@ public class CDNModelListenerTest {
 
 	@FeatureFlag("LPD-107638")
 	@Test
+	public void testResourcePermissionModelListener() throws Exception {
+		Layout layout = LayoutTestUtil.addTypePortletLayout(_group);
+
+		_setGuestResourcePermissions(
+			Layout.class.getName(), layout.getPlid(), ActionKeys.VIEW);
+
+		JournalArticle journalArticle = JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+
+		_setGuestResourcePermissions(
+			JournalArticle.class.getName(), journalArticle.getResourcePrimKey(),
+			ActionKeys.ADD_DISCUSSION);
+
+		FileEntry fileEntry = _dlAppLocalService.addFileEntry(
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			RandomTestUtil.randomString() + ".txt", ContentTypes.TEXT_PLAIN,
+			RandomTestUtil.randomBytes(), null, null, null, _serviceContext);
+
+		ResourcePermission resourcePermission = _fetchGuestResourcePermission(
+			DLFileEntry.class.getName(), fileEntry.getFileEntryId());
+
+		if (resourcePermission != null) {
+			_resourcePermissionLocalService.deleteResourcePermission(
+				resourcePermission);
+		}
+
+		_objectDefinition = ObjectDefinitionTestUtil.publishObjectDefinition(
+			Collections.singletonList(
+				new TextObjectFieldBuilder(
+				).labelMap(
+					RandomTestUtil.randomLocaleStringMap()
+				).name(
+					"name"
+				).build()));
+
+		ObjectEntry objectEntry = _objectEntryLocalService.addObjectEntry(
+			0, TestPropsValues.getUserId(),
+			_objectDefinition.getObjectDefinitionId(), 0, null,
+			HashMapBuilder.<String, Serializable>put(
+				"name", RandomTestUtil.randomString()
+			).build(),
+			_serviceContext);
+
+		_setGuestResourcePermissions(
+			_objectDefinition.getClassName(), objectEntry.getObjectEntryId(),
+			ActionKeys.VIEW);
+
+		try (CompanyConfigurationTemporarySwapper
+				cdnCompanyConfigurationTemporarySwapper =
+					_getCDNCompanyConfigurationTemporarySwapper()) {
+
+			// Changing another guest action does not purge
+
+			_setGuestResourcePermissions(
+				JournalArticle.class.getName(),
+				journalArticle.getResourcePrimKey());
+
+			_assertNoPurge();
+
+			// Changing the View action of another role does not purge
+
+			Role role = _roleLocalService.getRole(
+				TestPropsValues.getCompanyId(), RoleConstants.SITE_MEMBER);
+
+			_resourcePermissionLocalService.removeResourcePermission(
+				TestPropsValues.getCompanyId(), JournalArticle.class.getName(),
+				ResourceConstants.SCOPE_INDIVIDUAL,
+				String.valueOf(journalArticle.getResourcePrimKey()),
+				role.getRoleId(), ActionKeys.VIEW);
+
+			_assertNoPurge();
+
+			// Granting guests access to a document purges the document
+
+			String[] tags = {
+				"lfr-d" + fileEntry.getFileEntryId(),
+				_getCollectionTag(_group.getGroupId(), DLFileEntry.class),
+				_getCollectionTag(_group.getGroupId(), FileEntry.class),
+				"lfr-x" + _group.getGroupId()
+			};
+
+			_setGuestResourcePermissions(
+				DLFileEntry.class.getName(), fileEntry.getFileEntryId(),
+				ActionKeys.VIEW);
+
+			_assertPurge(tags);
+
+			// Deleting the guest access to a document purges the document
+
+			_resourcePermissionLocalService.deleteResourcePermission(
+				_fetchGuestResourcePermission(
+					DLFileEntry.class.getName(), fileEntry.getFileEntryId()));
+
+			_assertPurge(tags);
+
+			// Granting guests access to web content purges the web content
+
+			_setGuestResourcePermissions(
+				JournalArticle.class.getName(),
+				journalArticle.getResourcePrimKey(), ActionKeys.VIEW);
+
+			_assertPurge(
+				"lfr-wc" + journalArticle.getResourcePrimKey(),
+				_getCollectionTag(_group.getGroupId(), JournalArticle.class),
+				"lfr-x" + _group.getGroupId());
+
+			// Revoking the guest access to an object entry purges the object
+			// entry
+
+			_setGuestResourcePermissions(
+				_objectDefinition.getClassName(),
+				objectEntry.getObjectEntryId());
+
+			_assertPurge(
+				"lfr-o" + objectEntry.getObjectEntryId(),
+				"lfr-l0-" +
+					_portal.getClassNameId(_objectDefinition.getClassName()),
+				"lfr-x0");
+
+			// Revoking the guest access to a page purges the page and the
+			// navigation of every page
+
+			_setGuestResourcePermissions(
+				Layout.class.getName(), layout.getPlid());
+
+			_assertPurge(
+				"lfr-p" + layout.getPlid(), "lfr-s" + _group.getGroupId(),
+				"lfr-x" + _group.getGroupId());
+		}
+	}
+
+	@FeatureFlag("LPD-107638")
+	@Test
+	public void testResourcePermissionModelListenerWithCompanyAndGroupScopes()
+		throws Exception {
+
+		_objectDefinition = ObjectDefinitionTestUtil.publishObjectDefinition(
+			Collections.singletonList(
+				new TextObjectFieldBuilder(
+				).labelMap(
+					RandomTestUtil.randomLocaleStringMap()
+				).name(
+					"name"
+				).build()));
+
+		Group companyGroup = _groupLocalService.getCompanyGroup(
+			TestPropsValues.getCompanyId());
+		Role guestRole = _roleLocalService.getRole(
+			TestPropsValues.getCompanyId(), RoleConstants.GUEST);
+		Role userRole = _roleLocalService.getRole(
+			TestPropsValues.getCompanyId(), RoleConstants.USER);
+
+		try (CompanyConfigurationTemporarySwapper
+				cdnCompanyConfigurationTemporarySwapper =
+					_getCDNCompanyConfigurationTemporarySwapper()) {
+
+			// Granting another role View on every object entry of the company
+			// does not purge
+
+			_resourcePermissionLocalService.setResourcePermissions(
+				TestPropsValues.getCompanyId(),
+				_objectDefinition.getClassName(),
+				ResourceConstants.SCOPE_COMPANY,
+				String.valueOf(TestPropsValues.getCompanyId()),
+				userRole.getRoleId(), new String[] {ActionKeys.VIEW});
+
+			_assertNoPurge();
+
+			// Granting guests View on every object entry of the company purges
+			// the company
+
+			_resourcePermissionLocalService.setResourcePermissions(
+				TestPropsValues.getCompanyId(),
+				_objectDefinition.getClassName(),
+				ResourceConstants.SCOPE_COMPANY,
+				String.valueOf(TestPropsValues.getCompanyId()),
+				guestRole.getRoleId(), new String[] {ActionKeys.VIEW});
+
+			_assertPurge("lfr-c" + TestPropsValues.getCompanyId());
+
+			// Deleting the guest access to every object entry of the company
+			// purges the company
+
+			_resourcePermissionLocalService.deleteResourcePermission(
+				_resourcePermissionLocalService.fetchResourcePermission(
+					TestPropsValues.getCompanyId(),
+					_objectDefinition.getClassName(),
+					ResourceConstants.SCOPE_COMPANY,
+					String.valueOf(TestPropsValues.getCompanyId()),
+					guestRole.getRoleId()));
+
+			_assertPurge("lfr-c" + TestPropsValues.getCompanyId());
+
+			// Deleting another role's access to every object entry of the
+			// company does not purge
+
+			_resourcePermissionLocalService.deleteResourcePermission(
+				_resourcePermissionLocalService.fetchResourcePermission(
+					TestPropsValues.getCompanyId(),
+					_objectDefinition.getClassName(),
+					ResourceConstants.SCOPE_COMPANY,
+					String.valueOf(TestPropsValues.getCompanyId()),
+					userRole.getRoleId()));
+
+			_assertNoPurge();
+
+			// Granting guests View on every page of a site purges the site
+
+			_resourcePermissionLocalService.setResourcePermissions(
+				TestPropsValues.getCompanyId(), Layout.class.getName(),
+				ResourceConstants.SCOPE_GROUP,
+				String.valueOf(_group.getGroupId()), guestRole.getRoleId(),
+				new String[] {ActionKeys.VIEW});
+
+			_assertPurge("lfr-s" + _group.getGroupId());
+
+			// Deleting the guest access to every page of a site purges the
+			// site
+
+			_resourcePermissionLocalService.deleteResourcePermission(
+				_resourcePermissionLocalService.fetchResourcePermission(
+					TestPropsValues.getCompanyId(), Layout.class.getName(),
+					ResourceConstants.SCOPE_GROUP,
+					String.valueOf(_group.getGroupId()),
+					guestRole.getRoleId()));
+
+			_assertPurge("lfr-s" + _group.getGroupId());
+
+			// Granting guests View on every object entry of the global site
+			// purges the company
+
+			_resourcePermissionLocalService.setResourcePermissions(
+				TestPropsValues.getCompanyId(),
+				_objectDefinition.getClassName(), ResourceConstants.SCOPE_GROUP,
+				String.valueOf(companyGroup.getGroupId()),
+				guestRole.getRoleId(), new String[] {ActionKeys.VIEW});
+
+			_assertPurge("lfr-c" + TestPropsValues.getCompanyId());
+
+			_resourcePermissionLocalService.deleteResourcePermission(
+				_resourcePermissionLocalService.fetchResourcePermission(
+					TestPropsValues.getCompanyId(),
+					_objectDefinition.getClassName(),
+					ResourceConstants.SCOPE_GROUP,
+					String.valueOf(companyGroup.getGroupId()),
+					guestRole.getRoleId()));
+
+			_assertPurge("lfr-c" + TestPropsValues.getCompanyId());
+		}
+	}
+
+	@FeatureFlag("LPD-107638")
+	@Test
+	public void testResourcePermissionModelListenerWithMaxTagsPerRequest()
+		throws Throwable {
+
+		List<JournalArticle> journalArticles = new ArrayList<>();
+
+		for (int i = 0; i < 3; i++) {
+			journalArticles.add(
+				JournalTestUtil.addArticle(
+					_group.getGroupId(),
+					JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID));
+		}
+
+		try (CompanyConfigurationTemporarySwapper
+				cdnCompanyConfigurationTemporarySwapper =
+					_getCDNCompanyConfigurationTemporarySwapper(4)) {
+
+			// Revoking the guest access to three web content articles purges
+			// five cache tags, which do not fit in one request, so their site
+			// is purged instead
+
+			TransactionInvokerUtil.invoke(
+				_transactionConfig,
+				() -> {
+					for (JournalArticle journalArticle : journalArticles) {
+						_setGuestResourcePermissions(
+							JournalArticle.class.getName(),
+							journalArticle.getResourcePrimKey());
+					}
+
+					return null;
+				});
+
+			_assertPurge("lfr-s" + _group.getGroupId());
+
+			// Granting the guest access to two web content articles purges
+			// four cache tags with one request
+
+			JournalArticle journalArticle1 = journalArticles.get(0);
+			JournalArticle journalArticle2 = journalArticles.get(1);
+
+			TransactionInvokerUtil.invoke(
+				_transactionConfig,
+				() -> {
+					_setGuestResourcePermissions(
+						JournalArticle.class.getName(),
+						journalArticle1.getResourcePrimKey(), ActionKeys.VIEW);
+					_setGuestResourcePermissions(
+						JournalArticle.class.getName(),
+						journalArticle2.getResourcePrimKey(), ActionKeys.VIEW);
+
+					return null;
+				});
+
+			_assertPurge(
+				"lfr-wc" + journalArticle1.getResourcePrimKey(),
+				"lfr-wc" + journalArticle2.getResourcePrimKey(),
+				_getCollectionTag(_group.getGroupId(), JournalArticle.class),
+				"lfr-x" + _group.getGroupId());
+		}
+	}
+
+	@FeatureFlag("LPD-107638")
+	@Test
 	public void testSiteNavigationMenuItemModelListener() throws Exception {
 		SiteNavigationMenu siteNavigationMenu =
 			_siteNavigationMenuLocalService.addSiteNavigationMenu(
@@ -612,6 +940,19 @@ public class CDNModelListenerTest {
 		_assertNoPurge();
 	}
 
+	private ResourcePermission _fetchGuestResourcePermission(
+			String name, long primKey)
+		throws Exception {
+
+		Role role = _roleLocalService.getRole(
+			TestPropsValues.getCompanyId(), RoleConstants.GUEST);
+
+		return _resourcePermissionLocalService.fetchResourcePermission(
+			TestPropsValues.getCompanyId(), name,
+			ResourceConstants.SCOPE_INDIVIDUAL, String.valueOf(primKey),
+			role.getRoleId());
+	}
+
 	private CompanyConfigurationTemporarySwapper
 			_getCDNCompanyConfigurationTemporarySwapper()
 		throws Exception {
@@ -648,6 +989,19 @@ public class CDNModelListenerTest {
 			"lfr-l", groupId, "-", _portal.getClassNameId(clazz));
 	}
 
+	private void _setGuestResourcePermissions(
+			String name, long primKey, String... actionIds)
+		throws Exception {
+
+		Role role = _roleLocalService.getRole(
+			TestPropsValues.getCompanyId(), RoleConstants.GUEST);
+
+		_resourcePermissionLocalService.setResourcePermissions(
+			TestPropsValues.getCompanyId(), name,
+			ResourceConstants.SCOPE_INDIVIDUAL, String.valueOf(primKey),
+			role.getRoleId(), actionIds);
+	}
+
 	private static final TransactionConfig _transactionConfig =
 		TransactionConfig.Factory.create(
 			Propagation.REQUIRED, new Class<?>[] {Exception.class});
@@ -669,6 +1023,9 @@ public class CDNModelListenerTest {
 	@DeleteAfterTestRun
 	private Group _group;
 
+	@Inject
+	private GroupLocalService _groupLocalService;
+
 	private HttpServer _httpServer;
 
 	@Inject
@@ -688,6 +1045,12 @@ public class CDNModelListenerTest {
 
 	@Inject
 	private Portal _portal;
+
+	@Inject
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Inject
+	private RoleLocalService _roleLocalService;
 
 	@Inject
 	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
