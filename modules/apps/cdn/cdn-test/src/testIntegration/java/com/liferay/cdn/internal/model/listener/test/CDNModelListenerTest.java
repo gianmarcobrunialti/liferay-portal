@@ -8,18 +8,25 @@ package com.liferay.cdn.internal.model.listener.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.service.BlogsEntryLocalService;
+import com.liferay.bulk.selection.BulkSelection;
+import com.liferay.bulk.selection.BulkSelectionAction;
+import com.liferay.bulk.selection.BulkSelectionFactory;
+import com.liferay.bulk.selection.BulkSelectionFactoryRegistry;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.kernel.service.DLTrashLocalService;
+import com.liferay.document.library.kernel.service.DLTrashService;
 import com.liferay.fragment.constants.FragmentConstants;
 import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.service.FragmentEntryLocalService;
 import com.liferay.journal.constants.JournalArticleConstants;
 import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalArticle;
+import com.liferay.journal.model.JournalFolder;
 import com.liferay.journal.service.JournalArticleLocalService;
+import com.liferay.journal.service.JournalFolderLocalService;
 import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.layout.test.util.ContentLayoutTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
@@ -38,6 +45,7 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -178,6 +186,47 @@ public class CDNModelListenerTest {
 
 	@FeatureFlag("LPD-107638")
 	@Test
+	public void testBlogsEntryModelListenerWithBulkMoveToTrash()
+		throws Throwable {
+
+		BlogsEntry blogsEntry1 = _blogsEntryLocalService.addEntry(
+			TestPropsValues.getUserId(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), _serviceContext);
+		BlogsEntry blogsEntry2 = _blogsEntryLocalService.addEntry(
+			TestPropsValues.getUserId(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), _serviceContext);
+
+		try (CompanyConfigurationTemporarySwapper
+				cdnCompanyConfigurationTemporarySwapper =
+					_getCDNCompanyConfigurationTemporarySwapper()) {
+
+			// The Blogs application moves the selected entries to the trash
+			// one by one
+
+			TransactionInvokerUtil.invoke(
+				_transactionConfig,
+				() -> {
+					for (BlogsEntry blogsEntry :
+							new BlogsEntry[] {blogsEntry1, blogsEntry2}) {
+
+						_blogsEntryLocalService.moveEntryToTrash(
+							TestPropsValues.getUserId(),
+							blogsEntry.getEntryId());
+					}
+
+					return null;
+				});
+
+			_assertPurge(
+				"lfr-b" + blogsEntry1.getEntryId(),
+				"lfr-b" + blogsEntry2.getEntryId(),
+				_getCollectionTag(_group.getGroupId(), BlogsEntry.class),
+				"lfr-x" + _group.getGroupId());
+		}
+	}
+
+	@FeatureFlag("LPD-107638")
+	@Test
 	public void testDLFileEntryModelListener() throws Exception {
 		try (CompanyConfigurationTemporarySwapper
 				cdnCompanyConfigurationTemporarySwapper =
@@ -218,6 +267,38 @@ public class CDNModelListenerTest {
 			_dlAppLocalService.deleteFileEntry(fileEntry.getFileEntryId());
 
 			_assertPurge(tags);
+		}
+	}
+
+	@FeatureFlag("LPD-107638")
+	@Test
+	public void testDLFileVersionModelListenerWithFolderMoveToTrash()
+		throws Exception {
+
+		Folder folder = _dlAppLocalService.addFolder(
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			_serviceContext);
+
+		FileEntry fileEntry1 = _addFileEntry(folder.getFolderId());
+		FileEntry fileEntry2 = _addFileEntry(folder.getFolderId());
+
+		try (CompanyConfigurationTemporarySwapper
+				cdnCompanyConfigurationTemporarySwapper =
+					_getCDNCompanyConfigurationTemporarySwapper()) {
+
+			// Moving a folder to the trash moves the versions of its documents
+			// to the trash without the document services
+
+			_dlTrashService.moveFolderToTrash(folder.getFolderId());
+
+			_assertPurge(
+				"lfr-d" + fileEntry1.getFileEntryId(),
+				"lfr-d" + fileEntry2.getFileEntryId(),
+				_getCollectionTag(_group.getGroupId(), DLFileEntry.class),
+				_getCollectionTag(_group.getGroupId(), FileEntry.class),
+				"lfr-x" + _group.getGroupId());
 		}
 	}
 
@@ -349,6 +430,34 @@ public class CDNModelListenerTest {
 				_serviceContext);
 
 			_assertPurge(tags);
+		}
+	}
+
+	@FeatureFlag("LPD-107638")
+	@Test
+	public void testJournalArticleModelListenerWithFolderMoveToTrash()
+		throws Exception {
+
+		JournalFolder journalFolder = JournalTestUtil.addFolder(
+			_group.getGroupId(), RandomTestUtil.randomString());
+
+		for (int i = 0; i < 2; i++) {
+			JournalTestUtil.addArticle(
+				_group.getGroupId(), journalFolder.getFolderId());
+		}
+
+		try (CompanyConfigurationTemporarySwapper
+				cdnCompanyConfigurationTemporarySwapper =
+					_getCDNCompanyConfigurationTemporarySwapper(3)) {
+
+			// Moving a folder to the trash updates its articles through the
+			// persistence layer, and the four cache tags of its two articles
+			// do not fit in one request, so their site is purged instead
+
+			_journalFolderLocalService.moveFolderToTrash(
+				TestPropsValues.getUserId(), journalFolder.getFolderId());
+
+			_assertPurge("lfr-s" + _group.getGroupId());
 		}
 	}
 
@@ -572,6 +681,66 @@ public class CDNModelListenerTest {
 
 	@FeatureFlag("LPD-107638")
 	@Test
+	public void testObjectEntryModelListenerWithBulkSelection()
+		throws Throwable {
+
+		_objectDefinition = ObjectDefinitionTestUtil.publishObjectDefinition(
+			Collections.singletonList(
+				new TextObjectFieldBuilder(
+				).labelMap(
+					RandomTestUtil.randomLocaleStringMap()
+				).name(
+					"name"
+				).build()));
+
+		ObjectEntry objectEntry1 = _addObjectEntry();
+		ObjectEntry objectEntry2 = _addObjectEntry();
+
+		try (CompanyConfigurationTemporarySwapper
+				cdnCompanyConfigurationTemporarySwapper =
+					_getCDNCompanyConfigurationTemporarySwapper()) {
+
+			BulkSelectionFactory<Object> bulkSelectionFactory =
+				_bulkSelectionFactoryRegistry.getBulkSelectionFactory(
+					Object.class.getName());
+
+			BulkSelection<Object> bulkSelection = bulkSelectionFactory.create(
+				HashMapBuilder.put(
+					"rowIds",
+					new String[] {
+						_objectDefinition.getClassName() + StringPool.SPACE +
+							objectEntry1.getObjectEntryId(),
+						_objectDefinition.getClassName() + StringPool.SPACE +
+							objectEntry2.getObjectEntryId()
+					}
+				).build());
+
+			// The bulk selection action deletes the entries one by one
+
+			TransactionInvokerUtil.invoke(
+				_transactionConfig,
+				() -> {
+					_deleteObjectEntryBulkSelectionAction.execute(
+						TestPropsValues.getUser(), bulkSelection,
+						HashMapBuilder.<String, Serializable>put(
+							"objectDefinitionId",
+							_objectDefinition.getObjectDefinitionId()
+						).build());
+
+					return null;
+				});
+
+			_assertPurge(
+				"lfr-o" + objectEntry1.getObjectEntryId(),
+				"lfr-o" + objectEntry2.getObjectEntryId(),
+				"lfr-l0-" +
+					_portal.getClassNameId(_objectDefinition.getClassName()),
+				"lfr-x0");
+		}
+	}
+
+	@FeatureFlag("LPD-107638")
+	@Test
 	public void testSiteNavigationMenuItemModelListener() throws Exception {
 		SiteNavigationMenu siteNavigationMenu =
 			_siteNavigationMenuLocalService.addSiteNavigationMenu(
@@ -591,6 +760,23 @@ public class CDNModelListenerTest {
 
 			_assertPurge("lfr-s" + _group.getGroupId());
 		}
+	}
+
+	private FileEntry _addFileEntry(long folderId) throws Exception {
+		return _dlAppLocalService.addFileEntry(
+			null, TestPropsValues.getUserId(), _group.getGroupId(), folderId,
+			RandomTestUtil.randomString() + ".txt", ContentTypes.TEXT_PLAIN,
+			RandomTestUtil.randomBytes(), null, null, null, _serviceContext);
+	}
+
+	private ObjectEntry _addObjectEntry() throws Exception {
+		return _objectEntryLocalService.addObjectEntry(
+			0, TestPropsValues.getUserId(),
+			_objectDefinition.getObjectDefinitionId(), 0, null,
+			HashMapBuilder.<String, Serializable>put(
+				"name", RandomTestUtil.randomString()
+			).build(),
+			_serviceContext);
 	}
 
 	private void _assertNoPurge() throws Exception {
@@ -658,10 +844,19 @@ public class CDNModelListenerTest {
 	private final BlockingQueue<String> _bodies = new LinkedBlockingQueue<>();
 
 	@Inject
+	private BulkSelectionFactoryRegistry _bulkSelectionFactoryRegistry;
+
+	@Inject(filter = "bulk.selection.action.key=delete.object.entry")
+	private BulkSelectionAction<Object> _deleteObjectEntryBulkSelectionAction;
+
+	@Inject
 	private DLAppLocalService _dlAppLocalService;
 
 	@Inject
 	private DLTrashLocalService _dlTrashLocalService;
+
+	@Inject
+	private DLTrashService _dlTrashService;
 
 	@Inject
 	private FragmentEntryLocalService _fragmentEntryLocalService;
@@ -673,6 +868,9 @@ public class CDNModelListenerTest {
 
 	@Inject
 	private JournalArticleLocalService _journalArticleLocalService;
+
+	@Inject
+	private JournalFolderLocalService _journalFolderLocalService;
 
 	@Inject
 	private LayoutLocalService _layoutLocalService;
