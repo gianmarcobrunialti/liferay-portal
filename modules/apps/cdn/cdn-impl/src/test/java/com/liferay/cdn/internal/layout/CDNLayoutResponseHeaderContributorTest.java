@@ -6,13 +6,16 @@
 package com.liferay.cdn.internal.layout;
 
 import com.liferay.cdn.configuration.CDNConfiguration;
+import com.liferay.cdn.internal.cacheability.CDNCacheabilityRuleRegistry;
 import com.liferay.cdn.internal.template.CDNTemplateRegistry;
 import com.liferay.cdn.internal.template.ConfiguredCDNTemplate;
 import com.liferay.cdn.internal.template.FastlyCDNTemplate;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
+import com.liferay.portal.kernel.cookies.constants.CookiesConstants;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.servlet.HttpMethods;
+import com.liferay.portal.kernel.servlet.MetaInfoCacheServletResponse;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -46,6 +49,13 @@ public class CDNLayoutResponseHeaderContributorTest {
 	@Before
 	public void setUp() throws Exception {
 		Mockito.when(
+			_cdnCacheabilityRuleRegistry.isShareable(
+				Mockito.any(), Mockito.any(), Mockito.any())
+		).thenReturn(
+			true
+		);
+
+		Mockito.when(
 			_cdnConfiguration.cdnCacheControlMaxAge()
 		).thenReturn(
 			300
@@ -66,6 +76,9 @@ public class CDNLayoutResponseHeaderContributorTest {
 				RandomTestUtil.randomLong())
 		);
 
+		ReflectionTestUtil.setFieldValue(
+			_cdnLayoutResponseHeaderContributor, "_cdnCacheabilityRuleRegistry",
+			_cdnCacheabilityRuleRegistry);
 		ReflectionTestUtil.setFieldValue(
 			_cdnLayoutResponseHeaderContributor, "_cdnTemplateRegistry",
 			_cdnTemplateRegistry);
@@ -147,6 +160,24 @@ public class CDNLayoutResponseHeaderContributorTest {
 			_getCDNCacheControlHeaderValue(
 				"Surrogate-Control", mockHttpServletResponse));
 
+		mockHttpServletResponse = new MockHttpServletResponse();
+
+		mockHttpServletResponse.addCookie(
+			new Cookie(
+				CookiesConstants.NAME_JSESSIONID,
+				RandomTestUtil.randomString()));
+
+		MetaInfoCacheServletResponse metaInfoCacheServletResponse =
+			new MetaInfoCacheServletResponse(mockHttpServletResponse);
+
+		metaInfoCacheServletResponse.addCookie(
+			new Cookie(
+				RandomTestUtil.randomString(), RandomTestUtil.randomString()));
+
+		Assert.assertNull(
+			_getCDNCacheControlHeaderValue(
+				"Surrogate-Control", metaInfoCacheServletResponse));
+
 		// Error
 
 		mockHttpServletResponse = new MockHttpServletResponse();
@@ -170,7 +201,61 @@ public class CDNLayoutResponseHeaderContributorTest {
 		_themeDisplay.setI18nLanguageId(null);
 		_themeDisplay.setLanguageId("en_US");
 
-		// New session
+		// Redirect
+
+		mockHttpServletResponse = new MockHttpServletResponse();
+
+		mockHttpServletResponse.setStatus(
+			HttpServletResponse.SC_MOVED_TEMPORARILY);
+
+		Assert.assertNull(
+			_getCDNCacheControlHeaderValue(
+				"Surrogate-Control", mockHttpServletResponse));
+
+		// Rule
+
+		Mockito.when(
+			_cdnCacheabilityRuleRegistry.isShareable(
+				Mockito.any(), Mockito.any(), Mockito.any())
+		).thenReturn(
+			false
+		);
+
+		Assert.assertNull(_getCDNCacheControlHeaderValue("Surrogate-Control"));
+
+		Mockito.when(
+			_cdnCacheabilityRuleRegistry.isShareable(
+				Mockito.any(), Mockito.any(), Mockito.any())
+		).thenReturn(
+			true
+		);
+
+		// Session ID in the URLs
+
+		_themeDisplay.setAddSessionIdToURL(true);
+
+		Assert.assertNull(_getCDNCacheControlHeaderValue("Surrogate-Control"));
+	}
+
+	@Test
+	public void testContributeWhenResponseSetsIgnoredCookies()
+		throws Exception {
+
+		MockHttpServletResponse mockHttpServletResponse =
+			new MockHttpServletResponse();
+
+		mockHttpServletResponse.addCookie(
+			new Cookie(
+				CookiesConstants.NAME_COOKIE_SUPPORT,
+				RandomTestUtil.randomString()));
+		mockHttpServletResponse.addCookie(
+			new Cookie(
+				CookiesConstants.NAME_GUEST_LANGUAGE_ID,
+				RandomTestUtil.randomString()));
+		mockHttpServletResponse.addCookie(
+			new Cookie(
+				CookiesConstants.NAME_JSESSIONID,
+				RandomTestUtil.randomString()));
 
 		HttpSession httpSession = Mockito.mock(HttpSession.class);
 
@@ -182,18 +267,30 @@ public class CDNLayoutResponseHeaderContributorTest {
 
 		_mockHttpServletRequest.setSession(httpSession);
 
-		Assert.assertNull(_getCDNCacheControlHeaderValue("Surrogate-Control"));
-
-		// Redirect
+		Assert.assertEquals(
+			"max-age=300",
+			_getCDNCacheControlHeaderValue(
+				"Surrogate-Control", mockHttpServletResponse));
 
 		mockHttpServletResponse = new MockHttpServletResponse();
 
-		mockHttpServletResponse.setStatus(
-			HttpServletResponse.SC_MOVED_TEMPORARILY);
+		mockHttpServletResponse.addCookie(
+			new Cookie(
+				CookiesConstants.NAME_JSESSIONID,
+				RandomTestUtil.randomString()));
 
-		Assert.assertNull(
+		MetaInfoCacheServletResponse metaInfoCacheServletResponse =
+			new MetaInfoCacheServletResponse(mockHttpServletResponse);
+
+		metaInfoCacheServletResponse.addCookie(
+			new Cookie(
+				CookiesConstants.NAME_COOKIE_SUPPORT,
+				RandomTestUtil.randomString()));
+
+		Assert.assertEquals(
+			"max-age=300",
 			_getCDNCacheControlHeaderValue(
-				"Surrogate-Control", mockHttpServletResponse));
+				"Surrogate-Control", metaInfoCacheServletResponse));
 	}
 
 	@Test
@@ -211,20 +308,22 @@ public class CDNLayoutResponseHeaderContributorTest {
 	}
 
 	private String _getCDNCacheControlHeaderValue(
-			String name, MockHttpServletResponse mockHttpServletResponse)
+			String name, HttpServletResponse httpServletResponse)
 		throws Exception {
 
 		try (SafeCloseable safeCloseable =
 				CTCollectionThreadLocal.setProductionModeWithSafeCloseable()) {
 
 			_cdnLayoutResponseHeaderContributor.contribute(
-				_mockHttpServletRequest, mockHttpServletResponse,
+				_mockHttpServletRequest, httpServletResponse,
 				Mockito.mock(Layout.class));
 		}
 
-		return mockHttpServletResponse.getHeader(name);
+		return httpServletResponse.getHeader(name);
 	}
 
+	private final CDNCacheabilityRuleRegistry _cdnCacheabilityRuleRegistry =
+		Mockito.mock(CDNCacheabilityRuleRegistry.class);
 	private final CDNConfiguration _cdnConfiguration = Mockito.mock(
 		CDNConfiguration.class);
 	private final CDNLayoutResponseHeaderContributor

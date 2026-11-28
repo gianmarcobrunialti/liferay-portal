@@ -32,6 +32,9 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.segments.model.SegmentsExperience;
+import com.liferay.segments.service.SegmentsExperienceLocalServiceUtil;
+import com.liferay.segments.test.util.SegmentsTestUtil;
 
 import java.io.InputStream;
 
@@ -126,7 +129,10 @@ public class CDNLayoutResponseHeaderContributorTest {
 			Map<String, List<String>> headerFields = _getHeaderFields(
 				contentLayout, null, false);
 
-			Assert.assertNull(headerFields.get("CDN-Cache-Control"));
+			Assert.assertEquals(
+				Collections.singletonList("max-age=300"),
+				headerFields.get("CDN-Cache-Control"));
+			Assert.assertNotNull(headerFields.get("Set-Cookie"));
 
 			String cookie = _getCookie(headerFields);
 
@@ -192,6 +198,47 @@ public class CDNLayoutResponseHeaderContributorTest {
 				false);
 
 			Assert.assertNull(headerFields.get("CDN-Cache-Control"));
+		}
+	}
+
+	@FeatureFlag("LPD-107638")
+	@Test
+	public void testContributeWhenLayoutHasSegmentsExperiences()
+		throws Exception {
+
+		Layout layout = LayoutTestUtil.addTypeContentPublishedLayout(
+			_group, RandomTestUtil.randomString(),
+			WorkflowConstants.STATUS_APPROVED);
+
+		try (CompanyConfigurationTemporarySwapper
+				companyConfigurationTemporarySwapper =
+					_getCompanyConfigurationTemporarySwapper(
+						TestPropsValues.getCompanyId())) {
+
+			Map<String, List<String>> headerFields = _getHeaderFields(
+				layout, null, false);
+
+			Assert.assertEquals(
+				Collections.singletonList("max-age=300"),
+				headerFields.get("CDN-Cache-Control"));
+
+			SegmentsExperience segmentsExperience =
+				SegmentsTestUtil.addSegmentsExperience(
+					_group.getGroupId(), layout.getPlid());
+
+			headerFields = _getHeaderFields(layout, null, false);
+
+			Assert.assertNotNull(headerFields.get("Cache-Tag"));
+			Assert.assertNull(headerFields.get("CDN-Cache-Control"));
+
+			SegmentsExperienceLocalServiceUtil.deleteSegmentsExperience(
+				segmentsExperience);
+
+			headerFields = _getHeaderFields(layout, null, false);
+
+			Assert.assertEquals(
+				Collections.singletonList("max-age=300"),
+				headerFields.get("CDN-Cache-Control"));
 		}
 	}
 
