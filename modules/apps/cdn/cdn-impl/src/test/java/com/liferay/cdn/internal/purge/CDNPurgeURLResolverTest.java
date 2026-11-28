@@ -29,13 +29,17 @@ import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PrefsProps;
+import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.TreeMapBuilder;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -67,7 +71,8 @@ public class CDNPurgeURLResolverTest {
 			_layoutDisplayPageProviderRegistry, _layoutLocalService,
 			_layoutSetLocalService,
 			Mockito.mock(ObjectDefinitionLocalService.class),
-			Mockito.mock(ObjectEntryLocalService.class), _portal, true);
+			Mockito.mock(ObjectEntryLocalService.class), _portal, _prefsProps,
+			true);
 
 		Company company = Mockito.mock(Company.class);
 
@@ -125,7 +130,7 @@ public class CDNPurgeURLResolverTest {
 			invocation -> "https://" + invocation.getArgument(0)
 		);
 
-		_mockGroup(20L, "/site", false, null);
+		_mockGroup(20L, "/site", false, new TreeMap<>());
 	}
 
 	@Test
@@ -174,7 +179,11 @@ public class CDNPurgeURLResolverTest {
 
 		// Site with a virtual host
 
-		_mockGroup(21L, "/virtual", false, "www.example.com");
+		_mockGroup(
+			21L, "/virtual", false,
+			TreeMapBuilder.put(
+				"www.example.com", ""
+			).build());
 
 		Mockito.when(
 			_layoutLocalService.getDefaultPlid(21L, false)
@@ -200,7 +209,7 @@ public class CDNPurgeURLResolverTest {
 
 		// Default site of the company
 
-		_mockGroup(22L, "/guest", true, null);
+		_mockGroup(22L, "/guest", true, new TreeMap<>());
 
 		Mockito.when(
 			_layoutLocalService.getDefaultPlid(22L, false)
@@ -218,6 +227,123 @@ public class CDNPurgeURLResolverTest {
 					"https://localhost/web/guest/",
 					"https://localhost/es/web/guest",
 					"https://localhost/web/guest/page")));
+	}
+
+	@Test
+	public void testGetLayoutURLsOfLanguageVirtualHosts() {
+		_mockGroup(
+			23L, "/virtual", false,
+			TreeMapBuilder.put(
+				"de.example.com", "de_DE"
+			).put(
+				"es.example.com", "es_ES"
+			).put(
+				"www.example.com", ""
+			).build());
+
+		Mockito.when(
+			_language.isAvailableLocale(23L, "es_ES")
+		).thenReturn(
+			true
+		);
+
+		Mockito.when(
+			_layoutLocalService.getDefaultPlid(23L, false)
+		).thenReturn(
+			41L
+		);
+
+		_mockLayoutDisplayPageProvider(23L);
+
+		Layout layout = _mockLayout(41L, 23L);
+
+		// When the locale is never prepended to friendly URLs, a host bound
+		// to a language serves the page without a prefix in its language
+		// only, and every language under the language's prefix
+
+		Mockito.when(
+			_prefsProps.getInteger(
+				1L, PropsKeys.LOCALE_PREPEND_FRIENDLY_URL_STYLE)
+		).thenReturn(
+			0
+		);
+
+		Set<String> urls = _cdnPurgeURLResolver.getLayoutURLs(layout);
+
+		Assert.assertEquals(
+			SetUtil.fromArray(
+				"https://es.example.com", "https://es.example.com/",
+				"https://es.example.com/en", "https://es.example.com/en/",
+				"https://es.example.com/en/page",
+				"https://es.example.com/en/page/", "https://es.example.com/es",
+				"https://es.example.com/es/",
+				"https://es.example.com/es/pagina",
+				"https://es.example.com/es/pagina/",
+				"https://es.example.com/pagina",
+				"https://es.example.com/pagina/"),
+			_getURLs(urls, "https://es.example.com"));
+
+		// A host without a language, or bound to a language that is not one
+		// of the site's languages, serves every localized path without a
+		// prefix
+
+		for (String portalURL :
+				new String[] {
+					"https://de.example.com", "https://www.example.com"
+				}) {
+
+			Set<String> portalURLs = _getURLs(urls, portalURL);
+
+			Assert.assertEquals(portalURLs.toString(), 14, portalURLs.size());
+			Assert.assertTrue(
+				portalURLs.containsAll(
+					Arrays.asList(
+						portalURL + "/page", portalURL + "/page/",
+						portalURL + "/pagina", portalURL + "/pagina/")));
+		}
+
+		// The display page resolves the URL title with the locale of the
+		// guest's session, so the host serves the URL title of every language
+		// without a prefix
+
+		urls = _cdnPurgeURLResolver.getURLCDNPurgeRequest(
+			1L, "ns-",
+			CDNPurgeRequest.builder(
+			).tags(
+				"ns-wc52"
+			).build(),
+			true
+		).getURLs();
+
+		Assert.assertTrue(
+			urls.containsAll(
+				Arrays.asList(
+					"https://es.example.com/w/article",
+					"https://es.example.com/w/articulo",
+					"https://es.example.com/es/w/articulo")));
+
+		// Otherwise, the guest's session and cookies decide the language of
+		// the page without a prefix
+
+		for (int localePrependFriendlyURLStyle : new int[] {1, 2, 3}) {
+			Mockito.when(
+				_prefsProps.getInteger(
+					1L, PropsKeys.LOCALE_PREPEND_FRIENDLY_URL_STYLE)
+			).thenReturn(
+				localePrependFriendlyURLStyle
+			);
+
+			Set<String> portalURLs = _getURLs(
+				_cdnPurgeURLResolver.getLayoutURLs(layout),
+				"https://es.example.com");
+
+			Assert.assertEquals(portalURLs.toString(), 14, portalURLs.size());
+			Assert.assertTrue(
+				portalURLs.containsAll(
+					Arrays.asList(
+						"https://es.example.com/page",
+						"https://es.example.com/pagina")));
+		}
 	}
 
 	@Test
@@ -295,51 +421,7 @@ public class CDNPurgeURLResolverTest {
 			Collections.singletonList(layoutClassedModelUsage)
 		);
 
-		LayoutDisplayPageObjectProvider<?> layoutDisplayPageObjectProvider =
-			Mockito.mock(LayoutDisplayPageObjectProvider.class);
-
-		Mockito.when(
-			layoutDisplayPageObjectProvider.getGroupId()
-		).thenReturn(
-			20L
-		);
-
-		Mockito.when(
-			layoutDisplayPageObjectProvider.getURLTitle(LocaleUtil.SPAIN)
-		).thenReturn(
-			"articulo"
-		);
-
-		Mockito.when(
-			layoutDisplayPageObjectProvider.getURLTitle(LocaleUtil.US)
-		).thenReturn(
-			"article"
-		);
-
-		LayoutDisplayPageProvider<?> layoutDisplayPageProvider = Mockito.mock(
-			LayoutDisplayPageProvider.class);
-
-		Mockito.doReturn(
-			layoutDisplayPageObjectProvider
-		).when(
-			layoutDisplayPageProvider
-		).getLayoutDisplayPageObjectProvider(
-			Mockito.any(InfoItemReference.class)
-		);
-
-		Mockito.when(
-			layoutDisplayPageProvider.getURLSeparator()
-		).thenReturn(
-			"/w/"
-		);
-
-		Mockito.doReturn(
-			layoutDisplayPageProvider
-		).when(
-			_layoutDisplayPageProviderRegistry
-		).getLayoutDisplayPageProviderByClassName(
-			1L, JournalArticle.class.getName()
-		);
+		_mockLayoutDisplayPageProvider(20L);
 
 		cdnPurgeRequest = _cdnPurgeURLResolver.getURLCDNPurgeRequest(
 			1L, "ns-",
@@ -456,9 +538,23 @@ public class CDNPurgeURLResolverTest {
 			).size());
 	}
 
+	private Set<String> _getURLs(Set<String> urls, String portalURL) {
+		Set<String> portalURLs = new HashSet<>();
+
+		for (String url : urls) {
+			if (!url.equals(portalURL) && !url.startsWith(portalURL + "/")) {
+				continue;
+			}
+
+			portalURLs.add(url);
+		}
+
+		return portalURLs;
+	}
+
 	private void _mockGroup(
 		long groupId, String friendlyURL, boolean guest,
-		String virtualHostname) {
+		TreeMap<String, String> virtualHostnames) {
 
 		Group group = Mockito.mock(Group.class);
 
@@ -493,12 +589,6 @@ public class CDNPurgeURLResolverTest {
 		);
 
 		LayoutSet layoutSet = Mockito.mock(LayoutSet.class);
-
-		TreeMap<String, String> virtualHostnames = new TreeMap<>();
-
-		if (virtualHostname != null) {
-			virtualHostnames.put(virtualHostname, "");
-		}
 
 		Mockito.when(
 			layoutSet.getVirtualHostnames()
@@ -558,6 +648,54 @@ public class CDNPurgeURLResolverTest {
 		return layout;
 	}
 
+	private void _mockLayoutDisplayPageProvider(long groupId) {
+		LayoutDisplayPageObjectProvider<?> layoutDisplayPageObjectProvider =
+			Mockito.mock(LayoutDisplayPageObjectProvider.class);
+
+		Mockito.when(
+			layoutDisplayPageObjectProvider.getGroupId()
+		).thenReturn(
+			groupId
+		);
+
+		Mockito.when(
+			layoutDisplayPageObjectProvider.getURLTitle(LocaleUtil.SPAIN)
+		).thenReturn(
+			"articulo"
+		);
+
+		Mockito.when(
+			layoutDisplayPageObjectProvider.getURLTitle(LocaleUtil.US)
+		).thenReturn(
+			"article"
+		);
+
+		LayoutDisplayPageProvider<?> layoutDisplayPageProvider = Mockito.mock(
+			LayoutDisplayPageProvider.class);
+
+		Mockito.doReturn(
+			layoutDisplayPageObjectProvider
+		).when(
+			layoutDisplayPageProvider
+		).getLayoutDisplayPageObjectProvider(
+			Mockito.any(InfoItemReference.class)
+		);
+
+		Mockito.when(
+			layoutDisplayPageProvider.getURLSeparator()
+		).thenReturn(
+			"/w/"
+		);
+
+		Mockito.doReturn(
+			layoutDisplayPageProvider
+		).when(
+			_layoutDisplayPageProviderRegistry
+		).getLayoutDisplayPageProviderByClassName(
+			1L, JournalArticle.class.getName()
+		);
+	}
+
 	private CDNPurgeURLResolver _cdnPurgeURLResolver;
 	private final CompanyLocalService _companyLocalService = Mockito.mock(
 		CompanyLocalService.class);
@@ -575,5 +713,6 @@ public class CDNPurgeURLResolverTest {
 	private final LayoutSetLocalService _layoutSetLocalService = Mockito.mock(
 		LayoutSetLocalService.class);
 	private final Portal _portal = Mockito.mock(Portal.class);
+	private final PrefsProps _prefsProps = Mockito.mock(PrefsProps.class);
 
 }

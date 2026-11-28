@@ -11,6 +11,7 @@ import com.liferay.cdn.purge.CDNPurgeManager;
 import com.liferay.cdn.purge.CDNPurgeRequest;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.io.StreamUtil;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.configuration.test.util.CompanyConfigurationTemporarySwapper;
@@ -25,6 +26,7 @@ import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
+import com.liferay.portal.kernel.test.util.PrefsPropsTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.transaction.Propagation;
@@ -32,7 +34,12 @@ import com.liferay.portal.kernel.transaction.TransactionConfig;
 import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.TreeMapBuilder;
 import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -43,8 +50,10 @@ import java.io.InputStream;
 
 import java.net.InetSocketAddress;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Dictionary;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
@@ -179,6 +188,53 @@ public class CDNPurgeManagerImplTest {
 		}
 	}
 
+	@FeatureFlag("LPD-107638")
+	@Test
+	public void testPurgeByURLOfLanguageVirtualHosts() throws Exception {
+		Group group = GroupTestUtil.addGroup();
+
+		try {
+			GroupTestUtil.updateDisplaySettings(
+				group.getGroupId(),
+				Arrays.asList(LocaleUtil.SPAIN, LocaleUtil.US), LocaleUtil.US);
+
+			LayoutTestUtil.addTypePortletLayout(group);
+
+			String name = RandomTestUtil.randomString();
+
+			Layout layout = LayoutTestUtil.addTypePortletLayout(
+				group.getGroupId(), false,
+				HashMapBuilder.put(
+					LocaleUtil.SPAIN, name
+				).put(
+					LocaleUtil.US, name
+				).build(),
+				HashMapBuilder.put(
+					LocaleUtil.SPAIN, "/" + _randomLowerCaseString()
+				).put(
+					LocaleUtil.US, "/" + _randomLowerCaseString()
+				).build());
+
+			String esHostname = _randomLowerCaseString() + ".com";
+			String hostname = _randomLowerCaseString() + ".com";
+
+			_layoutSetLocalService.updateVirtualHosts(
+				group.getGroupId(), false,
+				TreeMapBuilder.put(
+					esHostname, "es_ES"
+				).put(
+					hostname, ""
+				).build());
+
+			_testPurgeByURLOfLanguageVirtualHosts(esHostname, hostname, layout);
+		}
+		finally {
+			_waitForCDNDisabled();
+
+			_groupLocalService.deleteGroup(group);
+		}
+	}
+
 	@FeatureFlag(enable = false, value = "LPD-107638")
 	@Test
 	public void testPurgeWhenFeatureFlagIsDisabled() throws Exception {
@@ -257,6 +313,23 @@ public class CDNPurgeManagerImplTest {
 	}
 
 	/**
+	 * Returns the paths of the URLs of the host.
+	 */
+	private Set<String> _getPaths(Set<String> urls, String hostname) {
+		Set<String> paths = new HashSet<>();
+
+		for (String url : urls) {
+			if (!hostname.equals(HttpComponentsUtil.getDomain(url))) {
+				continue;
+			}
+
+			paths.add(HttpComponentsUtil.getPath(url));
+		}
+
+		return paths;
+	}
+
+	/**
 	 * Returns the URLs of the next purge by URL.
 	 */
 	private Set<String> _pollURLs() throws Exception {
@@ -272,6 +345,10 @@ public class CDNPurgeManagerImplTest {
 
 		return SetUtil.fromList(
 			JSONUtil.toStringList(jsonObject.getJSONArray("urls")));
+	}
+
+	private String _randomLowerCaseString() {
+		return StringUtil.toLowerCase(RandomTestUtil.randomString());
 	}
 
 	private void _testPurgeByURL(Group group, Layout homeLayout, Layout layout)
@@ -322,6 +399,72 @@ public class CDNPurgeManagerImplTest {
 
 			Assert.assertTrue(urls.toString(), _containsURL(urls, sitePath));
 		}
+	}
+
+	private void _testPurgeByURLOfLanguageVirtualHosts(
+			String esHostname, String hostname, Layout layout)
+		throws Exception {
+
+		String esPath = layout.getFriendlyURL(LocaleUtil.SPAIN);
+		String path = layout.getFriendlyURL(LocaleUtil.US);
+
+		try (CompanyConfigurationTemporarySwapper
+				companyConfigurationTemporarySwapper =
+					_getCDNCompanyConfigurationTemporarySwapper(
+						TestPropsValues.getCompanyId(),
+						HashMapBuilder.<String, Object>put(
+							"urlPurgeOnly", true
+						).build())) {
+
+			_waitForURLPurgeOnly();
+
+			// When the locale is never prepended to friendly URLs, the host
+			// bound to Spanish serves the page without a prefix in Spanish
+			// only. Both hosts serve every language under its prefix.
+
+			try (SafeCloseable safeCloseable =
+					PrefsPropsTestUtil.swapWithSafeCloseable(
+						TestPropsValues.getCompanyId(),
+						PropsKeys.LOCALE_PREPEND_FRIENDLY_URL_STYLE, "0")) {
+
+				layout = _updateLayout(layout);
+
+				Set<String> urls = _pollURLs();
+
+				Set<String> paths = _getPaths(urls, hostname);
+
+				Assert.assertTrue(
+					paths.toString(),
+					paths.containsAll(
+						Arrays.asList(
+							"/en" + path, "/en" + path + "/", "/es" + esPath,
+							"/es" + esPath + "/", esPath, esPath + "/", path,
+							path + "/")));
+
+				paths.removeAll(Arrays.asList(path, path + "/"));
+
+				Assert.assertEquals(paths, _getPaths(urls, esHostname));
+			}
+
+			// Otherwise, the guest's session and cookies decide the language
+			// of the page without a prefix, so both hosts serve every
+			// localized path without a prefix
+
+			_updateLayout(layout);
+
+			Set<String> urls = _pollURLs();
+
+			Set<String> paths = _getPaths(urls, esHostname);
+
+			Assert.assertTrue(paths.toString(), paths.contains(path));
+			Assert.assertEquals(_getPaths(urls, hostname), paths);
+		}
+	}
+
+	private Layout _updateLayout(Layout layout) throws Exception {
+		layout.setTitle(RandomTestUtil.randomString());
+
+		return _layoutLocalService.updateLayout(layout);
 	}
 
 	/**
